@@ -1046,7 +1046,7 @@ void cDvdPlayer::Action(void) {
 	            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
             if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
-                cSpuDecoder::eScaleMode mode = SPUdecoder->getScaleMode();
+                cSpuDecoder::eScaleMode mode = SPUdecoder ? SPUdecoder->getScaleMode() : cSpuDecoder::eSpuNormal;
 
                 /* !!! Bit 7 set means hide, and only let Forced display show (see vm.c from libdvdnav) */
 		        if (mode == cSpuDecoder::eSpuLetterBox ) {
@@ -1087,7 +1087,7 @@ void cDvdPlayer::Action(void) {
    					DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
                 currentNavAudioTrack = id;
 
-		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%X, phys=%d, 0x%X\n",
+		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%02X, phys=%d, 0x%X\n",
 			    id, id, ev->physical, ev->physical);
     			SetCurrentNavAudioTrackUsrLocked(false);
 	        } else {
@@ -1255,8 +1255,8 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
 
     if(hlevt) {
             DEBUG_NAV("DVD NAV SPU highlight evt: %d: %d/%d %d/%d (%dx%d)\n",
-		hlevt->buttonN, hlevt->sx, hlevt->sy, hlevt->ex, hlevt->ey,
-		hlevt->ex-hlevt->sx+1, hlevt->ey-hlevt->sy+1);
+		        hlevt->buttonN, hlevt->sx, hlevt->sy, hlevt->ex, hlevt->ey,
+		        hlevt->ex-hlevt->sx+1, hlevt->ey-hlevt->sy+1);
     } else {
             DEBUG_NAV("DVD NAV SPU highlight evt: NULL\n");
     }
@@ -1267,32 +1267,30 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
     dvdnav_get_current_highlight(nav, &buttonN);
     ClearButtonHighlight();
 
-    if (SPUdecoder && current_pci && TakeOsd())
-    {
-	if (dvdnav_get_highlight_area(current_pci,
-				      buttonN, 0, &hl) == DVDNAV_STATUS_OK)
-        {
+    if (SPUdecoder && current_pci && TakeOsd()) {
+	    if (dvdnav_get_highlight_area(current_pci, buttonN, 0, &hl) == DVDNAV_STATUS_OK) {
             DEBUG_NAV("DVD NAV SPU highlight button: %d: %d/%d %d/%d (%dx%d)\n",
-		buttonN, hl.sx, hl.sy, hl.ex, hl.ey, hl.ex-hl.sx+1, hl.ey-hl.sy+1);
+		        buttonN, hl.sx, hl.sy, hl.ex, hl.ey, hl.ex-hl.sx+1, hl.ey-hl.sy+1);
 
-            if ( (hl.ex-hl.sx+1) & 0x03 ) {
-                hl.ex +=4-((hl.ex-hl.sx+1) & 0x03);
+            if ((hl.ex - hl.sx + 1) & 0x03) {
+                hl.ex += 4 - ((hl.ex - hl.sx + 1) & 0x03);
             }
             DEBUG_NAV("\t\t-> %d/%d %d/%d (%dx%d)\n",
-		hl.sx, hl.sy, hl.ex, hl.ey, hl.ex-hl.sx+1, hl.ey-hl.sy+1);
+		        hl.sx, hl.sy, hl.ex, hl.ey, hl.ex-hl.sx+1, hl.ey-hl.sy+1);
 
-	    SPUdecoder->setHighlight(hl.sx, hl.sy, hl.ex, hl.ey, hl.palette);
+            if (SPUdecoder)
+    	        SPUdecoder->setHighlight(hl.sx, hl.sy, hl.ex, hl.ey, hl.palette);
             if(pktpts != 0xFFFFFFFF)
-		    seenVPTS(pktpts);
-	} else {
-	    // this should never happen anyway
-	    /**
-	    DEBUG_NAV("DVD NAV SPU clear & select 1 %s:%d\n", __FILE__, __LINE__);
-	    dvdnav_button_select(nav, current_pci, 1);
-	    ClearButtonHighlight();
-	    */
+		        seenVPTS(pktpts);
+	    } else {
+	        // this should never happen anyway
+	        /**
+	        DEBUG_NAV("DVD NAV SPU clear & select 1 %s:%d\n", __FILE__, __LINE__);
+	        dvdnav_button_select(nav, current_pci, 1);
+	        ClearButtonHighlight();
+	        */
             buttonN = -1;
-	}
+	    }
     } else {
 	    DEBUG_NAV("not current pci button: %d, SPUdecoder=%d, current_pci=0x%p\n",
 	    	buttonN, SPUdecoder!=NULL, current_pci);
@@ -2461,7 +2459,7 @@ void cDvdPlayer::setAllAudioTracks(void)
     for(int i = 0; nav!=NULL && i < MaxAudioTracks; i++) {
         uint16_t audioLanguageCode = GetNavAudioTrackLangCode(i);
         int logChannel = dvdnav_get_audio_logical_stream(nav, i);
-        if (logChannel >= AUDIO_STREAM_S && audioLanguageCode != 0xffff) {
+        if (audioLanguageCode != 0xffff) {
             notifySeenAudioTrack(logChannel);
         }
     }
