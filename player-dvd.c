@@ -400,18 +400,18 @@ void cDvdPlayer::Action(void) {
     printf("dvd player: BitStreamOutActive=%d, HasBitStreamOut=%d (%d)\n",
     BitStreamOutActive, HasBitStreamOut, slBitStreamOutActive!=NULL);
 
-        //resume initialisation
-    const char * diskStamp;
-    bool doResume;
-    int lastTitlePlayed=-1, lastBlocksPlayed=0, lastArrayIndex=-1;
-    doResume = setDiskStamp( &diskStamp, nav );
-    if( doResume && DVDSetup.ResumeDisk ) {    
-        checkDiskStamps( diskStamp, lastTitlePlayed, lastBlocksPlayed, lastArrayIndex);
-        }
-        else {
-            controller->setResumeValue(2);
-        }
-        //end resume initialisation
+   //resume initialisation
+   const char * diskStamp;
+   bool doResume;
+   int lastTitlePlayed=-1, lastBlocksPlayed=0, lastArrayIndex=-1;
+   doResume = setDiskStamp( &diskStamp, nav );
+   if( doResume && DVDSetup.ResumeDisk ) {    
+      checkDiskStamps( diskStamp, lastTitlePlayed, lastBlocksPlayed, lastArrayIndex);
+   }
+   else {
+      controller->setResumeValue(2);
+   }
+   //end resume initialisation
 
     if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) == DVDNAV_STATUS_ERR) {
         running = false;
@@ -2542,15 +2542,15 @@ bool cDvdPlayer::setDiskStamp(const char ** stamp_str, dvdnav_t * nav ) const
     else
         dvdnav_set_region_mask(nav, 0xffff);
 
-        //try to get infos
-        if( dvdnav_get_title_string(nav, &titleString ) != DVDNAV_STATUS_OK)
-            return false;
-    if( dvdnav_get_number_of_titles(nav, &titleNumber) != DVDNAV_STATUS_OK)
-        return false;
-    if( dvdnav_current_title_info(nav, &titleNo, &chapterNo) != DVDNAV_STATUS_OK)
-        return false;
-    if( dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber) != DVDNAV_STATUS_OK)
-            return false;
+   //try to get infos
+   if( dvdnav_get_title_string(nav, &titleString ) != DVDNAV_STATUS_OK)
+      return false;
+   if( dvdnav_get_number_of_titles(nav, &titleNumber) != DVDNAV_STATUS_OK)
+      return false;
+   if( dvdnav_current_title_info(nav, &titleNo, &chapterNo) != DVDNAV_STATUS_OK)
+      return false;
+   if( dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber) != DVDNAV_STATUS_OK)
+      return false;
 
     while( dvdnav_get_position( nav, &currentblock, &totalblocks) != DVDNAV_STATUS_OK ) {
         if( dvdnav_get_next_block(nav, bufi, &event, &len) != DVDNAV_STATUS_OK )
