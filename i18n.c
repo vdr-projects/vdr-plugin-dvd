@@ -8,11 +8,7 @@
  *
  */
 
-#ifndef __QNXNTO__
 #include "i18n.h"
-#else
-#include "vdr/i18n.h"
-#endif
 
 const char *ISO639code[] = {
   // Language ISO 639 codes for DVD

@@ -81,6 +81,7 @@ class A52decoder {
   int convertSample (int flags, a52_state_t * _state, uint32_t pktpts);
  public:
   A52decoder(cDvdPlayer &ThePlayer);
+  ~A52decoder();
   void setSyncMode(eSyncMode mode) { syncMode = mode; };
   eSyncMode getSyncMode(void) { return syncMode; }
   void decode(uint8_t * start, int size, uint32_t pktpts);

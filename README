@@ -2,7 +2,11 @@ This is the DVD plugin for the Video Disk Recorder (VDR).
 
 +++
 
-Project's homepage:          http://www.jausoft.com/Files/vdr/vdr-dvd/
+Project's homepage:          
+	http://www.jausoft.com/Files/vdr/vdr-dvd/
+
+sf.net's CVS Archive:
+	http://sourceforge.net/projects/dvdplugin/
 
 Written by:                  
 
@@ -13,6 +17,11 @@ Written by:
 	Sven Goethel    		New Maintainer
 		http://www.jausoft.com/Files/vdr/
 
+	Marco Schluessler
+		- cvs team
+
+	Miko Wohlgemuth
+		- cvs team
 
 +++
 
@@ -21,7 +30,7 @@ See the file COPYING for license information.
 Requirements:
 -------------
 
-vdr >= 1.3.10		http://cadsoft.de/vdr/, ftp://ftp.cadsoft.de/vdr/Developer/
+vdr >= 1.3.11		http://cadsoft.de/vdr/, ftp://ftp.cadsoft.de/vdr/Developer/
 libdvdcss >= 20030724	http://www.videolan.org/libdvdcss/download.html
 libdvdnav >= 0.1.10	http://dvd.sf.net
 a52dec >= 0.7.4		http://liba52.sourceforge.net/
@@ -32,7 +41,7 @@ libdvdcss:	20030724 (cvs)
 libdvdnav:	0.1.10
 liba52:		0.7.4
 
-(untestet with vdr < 1.3.10 )
+(untestet with vdr < 1.3.11 )
 
 +++
 

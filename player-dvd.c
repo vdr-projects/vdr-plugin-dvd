@@ -700,6 +700,8 @@ void cDvdPlayer::Action(void) {
 			// we played an IFrame with DeviceStillPicture, or else -> reset !
                         DEBUG_CONTROL("clearing device because of IframeCnt < 0 && VideoFrame\n");
 			IframeCnt = 0;
+                        while (!DeviceFlush(100))
+                          ;
 	  		DeviceReset();
 		}
 
@@ -775,6 +777,8 @@ void cDvdPlayer::Action(void) {
 	    {
 		    DEBUG_CONTROL("clearing device because of IframeCnt > 0, vid %d, aud %d\n",
 		    	cntVidBlocksPlayed, cntAudBlocksPlayed);
+                    while (!DeviceFlush(100))
+                      ;
 	            DeviceReset();
 	    }
             int iframeSize=iframeAssembler->Available();
@@ -793,7 +797,10 @@ void cDvdPlayer::Action(void) {
 	        fclose(f);
 #endif
 	    	DeviceStillPicture(iframe, iframeSize);
-                DEBUG_IFRAME("SEND !\n");
+                DEBUG_IFRAME("SEND; ");
+                while (!DeviceFlush(100))
+                  ;
+                DEBUG_IFRAME("FLUSH!\n");
 	    }
         iframeAssembler->Clear();
 	    IframeCnt = -1; // mark that we played an IFrame 
@@ -1742,7 +1749,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		      lapts = pktpts;
 		  }
           
-          if ( currentNavAudioTrack == (*data & AC3AudioTrackMask) ) 
+		  if ( currentNavAudioTrack == (*data & AC3AudioTrackMask) ) 
 		  {
                       playedPacket |= pktAudio;
                       SetCurrentNavAudioTrackType(audioType);
@@ -1776,6 +1783,14 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 			     int  numFrameA = ((uint8_t)(data[4]) & 0x1F )     ;
 
 			     int  qwl       = ((uint8_t)(data[5]) & 0xC0 ) >> 6;
+			     int  bits      = 0;
+			     switch ( audioin_fmt.bits ) {
+				case 0: bits=16; break;
+				case 1: bits=20; break;
+				case 2: bits=24; break;
+				case 3: bits=32; break;
+				default: bits=16; break;
+			     }
 			     int  sfr       = ((uint8_t)(data[5]) & 0x30 ) >> 4;
 			     switch (sfr) {
 			     	case 0: sfr=48000; break;
@@ -1788,8 +1803,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
 			     int  dyn_range = ((uint8_t)(data[6]) & 0xff )     ;
 
-			     DEBUG_AUDIO_PLAY2("dvd pcm: nf:%d, of:%d, e:%d, mu:%d, r1:%d, nfa:%d, qwl:%d, sfr:%d, r2:%d, ch:%d, dr:%d\n",
-			     	numFrame, offset, emph, mute, res1, numFrameA, qwl, sfr, res2,
+			     DEBUG_AUDIO_PLAY2("dvd pcm: nf:%d, of:%d, e:%d, mu:%d, r1:%d, nfa:%d, bits=%d(qwl:%d), sfr:%d, r2:%d, ch:%d, dr:%d\n",
+			     	numFrame, offset, emph, mute, res1, numFrameA, bits, qwl, sfr, res2,
 				channels, dyn_range);
 		      }
 #endif
