@@ -137,7 +137,7 @@
 #endif
 
 #ifdef AC3_FIRMWARE
-  #define playMULTICHANNEL         Setup.PlayMultichannelAudio
+  #define playMULTICHANNEL         true
 #else
   #if defined( HAVE_AC3_OVER_DVB )
   #define playMULTICHANNEL         Setup.PlayMultichannelAudio
