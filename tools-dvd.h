@@ -14,11 +14,17 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+
 #ifdef __QNXNTO__
 #include <strings.h>
 #endif
 
 #include "mpegtypes.h"
+
+#ifndef AARONS_TYPES
+#define AARONS_TYPES
+typedef unsigned long long uint_64;
+#endif
 
 class cPStream {
  public:
@@ -49,17 +55,17 @@ class cPStream {
                 lpts |= (((uint64_t)p[2]) & 0xfe) << 14;
                 lpts |= ( (uint64_t)p[3])         <<  7;
                 lpts |= (((uint64_t)p[4]) & 0xfe) >>  1;
-
                 return lpts;
+
     }
 
-    static void toPTS(uint8_t *p, uint64_t lpts, bool ptsFlag)
+    static void toPTS(uint8_t *p, uint64_t lpts)
     {
-        	p[0] =        (uint8_t)((lpts >> 29) & 0x0e) | ptsFlag ? 0x21 : 0x01;
-            p[1] =        (uint8_t) (lpts >> 22);
-            p[2] = 0x01 | (uint8_t) (lpts >> 14);
-            p[3] =        (uint8_t) (lpts >> 7);
-            p[4] = 0x01 | (uint8_t) (lpts << 1);
+            p[0] =       ((uint8_t)(lpts >> 29) & 0x0e) | 0x21;
+            p[1] =        (uint8_t)(lpts >> 22);
+            p[2] = 0x01 | (uint8_t)(lpts >> 14);
+            p[3] =        (uint8_t)(lpts >> 7);
+            p[4] = 0x01 | (uint8_t)(lpts << 1);
     }
 
 

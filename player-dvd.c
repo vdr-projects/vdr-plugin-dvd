@@ -137,7 +137,7 @@
 #endif
 
 #ifdef AC3_FIRMWARE
-  #define playMULTICHANNEL         true
+  #define playMULTICHANNEL         Setup.PlayMultichannelAudio
 #else
   #if defined( HAVE_AC3_OVER_DVB )
   #define playMULTICHANNEL         Setup.PlayMultichannelAudio
@@ -424,11 +424,9 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
   lastFrameType     = 0xff;
   VideoPts          = 0xFFFFFFFF;
   stcPTS            = 0xFFFFFFFF;
-  stcPTSLast        = 0xFFFFFFFF;
   stcPTSAudio       = 0xFFFFFFFF;
   stcPTSLastAudio   = 0xFFFFFFFF;
   pktpts            = 0xFFFFFFFF;
-  pktptsLast        = 0xFFFFFFFF;
   pktptsAudio       = 0xFFFFFFFF;
   pktptsLastAudio   = 0xFFFFFFFF;
   prev_e_ptm = 0;
@@ -449,9 +447,12 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
 
   skipPlayVideo=false;
 
-  if(emptyDeviceToo) {
-	  DeviceClear();
-  }
+    memset(&pktPtsVideo, 0x00, sizeof(pktPtsVideo));
+    memset(&pktPtsAudio, 0x00, sizeof(pktPtsAudio));
+
+    if(emptyDeviceToo) {
+	    DeviceClear();
+    }
 }
 
 void cDvdPlayer::StillSkip()
@@ -605,43 +606,34 @@ void cDvdPlayer::Action(void) {
 
   running = true;
   eFrameType frameType=ftUnknown;
-  while( running && nav ) 
-  {
-      if ( !pframe ) {
+    while( running && nav ) {
+        if (!pframe) {
             pframe=ringBuffer->Get();
             if ( pframe ) {
                 write_blk=pframe->Data();
                 blk_size=pframe->Count();
                 frameType=pframe->Type();
             }
-      }
+        }
 
-      // clip PTS values ..
-      if ( pktptsAudio<pktptsLastAudio )
-	pktptsLastAudio=pktptsAudio;
+        // clip PTS values ..
+        if ( pktptsAudio<pktptsLastAudio )
+	        pktptsLastAudio=pktptsAudio;
 
-      if ( stcPTSAudio<stcPTSLastAudio )
-        stcPTSLastAudio=stcPTSAudio;
+        if ( stcPTSAudio<stcPTSLastAudio )
+            stcPTSLastAudio=stcPTSAudio;
 
-      if ( pktpts<pktptsLast )
-	pktptsLast=pktpts;
+        if ( playedPacket==pktAudio ) {
+            uint64_t sleept_trial = 0; // in ticks !
 
-      if ( stcPTS<stcPTSLast )
-        stcPTSLast=stcPTS;
-
-      if ( playedPacket==pktAudio )
-      {
-          uint64_t sleept_trial = 0; // in ticks !
-
- 	  // do extra sleep, if stream's pts of audio diffs
-	  // against dvb device's seen pts more/equal than 1 ms == 90 ticks !
-          if ( pktptsAudio-pktptsLastAudio >= stcPTSAudio-stcPTSLastAudio+90 ) 
-	  {
-	      sleept_trial = (pktptsAudio-pktptsLastAudio) - 
-	                     (stcPTSAudio-stcPTSLastAudio) ;
-	      if(sleept_trial>sleept) sleept=sleept_trial;
-	  }
-      }
+ 	        // do extra sleep, if stream's pts of audio diffs
+	        // against dvb device's seen pts more/equal than 1 ms == 90 ticks !
+            if ( pktptsAudio-pktptsLastAudio >= stcPTSAudio-stcPTSLastAudio+90 ) {
+	            sleept_trial = (pktptsAudio-pktptsLastAudio) - 
+	                           (stcPTSAudio-stcPTSLastAudio) ;
+	            if(sleept_trial>sleept) sleept=sleept_trial;
+	        }
+        }
 
 /**
       DEBUG_CONTROL("dvd: menu=%d, v:%u, a:%u, p:%d, stc:%8ums, blk_size=%3d, skipPlayV=%d, IframeCnt=%d, stillTimer=%8ums\n",
@@ -665,16 +657,6 @@ void cDvdPlayer::Action(void) {
 		IframeCnt, stillTimer/90U);
       }
       sleept = 0;
-
-/**
-        DEBUG_PTS("dvd loop stc=%8ums (d%3ums,d%3ums) pts=%8ums (%3ums,d%3ums)\n",
-	(unsigned int)(stcPTS/90U), 
-	(unsigned int)((stcPTS-stcPTSLast)/90U), 
-	(unsigned int)((stcPTSAudio-stcPTSLastAudio)/90U), 
-	(unsigned int)(pktpts/90U), 
-	(unsigned int)((pktpts-pktptsLast)/90U), 
-	(unsigned int)((pktptsAudio-pktptsLastAudio)/90U));
- */
 
       if (playMode == pmPause || playMode == pmStill) {
 	  sleept = 10*90U;  // 10ms*90t/ms
@@ -1139,7 +1121,7 @@ void cDvdPlayer::Action(void) {
 	      DEBUG_NAV0("NAV: %x, prev_e_ptm: %8d, s_ptm: %8d, ", stillFrame, prev_e_ptm,
 		     current_pci->pci_gi.vobu_s_ptm);
 	      if (prev_e_ptm)
-		  ptm_offs += (prev_e_ptm - current_pci->pci_gi.vobu_s_ptm);
+		        ptm_offs += (prev_e_ptm - current_pci->pci_gi.vobu_s_ptm);
 	      DEBUG_NAV0("ptm_offs: %8d\n", ptm_offs);
 	      prev_e_ptm = current_pci->pci_gi.vobu_e_ptm;
 	      if (current_pci && (current_pci->hli.hl_gi.hli_ss & 0x03) == 1)
@@ -1467,31 +1449,30 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
     int offset = 14 + cPStream::stuffingLength(sector);
     sector += offset;
     int r = DVD_VIDEO_LB_LEN - offset;
-    int datalen = r;
-
-    sector[6] &= 0x8f;
-//    uchar ptsFlag=sector[7] >> 6;
-    bool ptsFlag = ((sector[7] & 0xC0)==0x80);
-    if (ptsFlag) {
-        pktptsLast = pktpts ;
-        pktpts = cPStream::fromPTS(sector + 9) + ptm_offs;
-        fflush(stdout);
-    }
-
-    uchar *data = sector;
     
-    stcPTSLast = stcPTS ;
+    sector[6] &= 0x8f;
+
+    
     int64_t rawSTC = -1;
 
     if ( !SoftDeviceOutActive ) {
-	    if ( (rawSTC=cDevice::PrimaryDevice()->GetSTC())>=0 )
-		    stcPTS=(uint64_t)rawSTC;
+//	    if ( (rawSTC=cDevice::PrimaryDevice()->GetSTC())>=0 )
+//		    stcPTS=(uint64_t)rawSTC;
     }
+
+    uchar *data = sector;
+    int datalen = r;
 
     pictureFlip=false;
 
     switch (cPStream::packetType(sector)) {
         case VIDEO_STREAM_S ... VIDEO_STREAM_E: {
+            
+            bool ptsFlag = ((sector[7] & 0x80) && sector[8]>=5);
+            if (ptsFlag) {
+                pktpts = cPStream::fromPTS(sector + 9) + (uint64_t)ptm_offs;
+            }
+            
             datalen = cPStream::packetLength(sector);
             //skip optional Header bytes
             datalen -= cPStream::PESHeaderLength(sector);
@@ -1562,7 +1543,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 			            data[3] |= (uchar) ( ( vaspect & 0x0f ) << 4);
 
 			            data += 3;
-		                datalen -=3;
+		                datalen -=7;
 		            } else if (ptype2 == PADDING_STREAM) {
         		        DEBUGDVD("PADDING_STREAM @ %d\n", data - sector);
 			        #if 0
@@ -1612,8 +1593,25 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        }
 
 	        if (ptsFlag) {
+                pktPtsVideo.lastpts = pktPtsVideo.currentpts;
+                pktPtsVideo.currentpts = pktpts;
+
+                uint64_t videodiff = pktPtsVideo.currentpts-pktPtsVideo.lastpts;
+                uint64_t audiodiff = pktPtsAudio.currentpts-pktPtsAudio.lastpts;
+                uint64_t ptsdiff = audiodiff-videodiff;
+
+                if (ptsdiff>0) {
+                    pktpts += ptsdiff;
+                    pktPtsVideo.currentpts = pktpts;
+                }
+
 	            VideoPts = lvpts = pktpts;
-	            cPStream::toPTS(sector + 9, pktpts, true);
+                cPStream::toPTS(sector + 9, pktpts);
+            }
+            
+            if (rawSTC>=0) {
+                pktPtsVideo.laststc = pktPtsVideo.currentstc;
+                pktPtsVideo.currentstc = stcPTS;
             }
 
             rframe = new cFrame(sector, r, ftVideo);
@@ -1642,13 +1640,31 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 return playedPacket;
 	        }
 
+            bool ptsFlag = ((sector[7] & 0xC0)==0x80) && sector[8]>=5;
+            if (ptsFlag) {
+                pktpts = cPStream::fromPTS(sector + 9) + (uint64_t)ptm_offs;
+            }
+
+
             playedPacket |= pktAudio;
             SetCurrentNavAudioTrackType(aMPEG);
 
 	        if (ptsFlag) {
+                pktPtsAudio.lastpts = pktPtsAudio.currentpts;
+                pktPtsAudio.currentpts = pktpts;
+
+                uint64_t videodiff = pktPtsVideo.currentpts-pktPtsVideo.lastpts;
+                uint64_t audiodiff = pktPtsAudio.currentpts-pktPtsAudio.lastpts;
+                uint64_t ptsdiff = videodiff-audiodiff;
+
+                if (ptsdiff>0) {
+                    pktpts += ptsdiff;
+                    pktPtsAudio.currentpts = pktpts;
+                }
+
 	            adiff = pktpts - lapts;
 	            lapts = pktpts;
-	            cPStream::toPTS(sector + 9, pktpts, true);
+	            cPStream::toPTS(sector + 9, pktpts);
 	        }
 
 	        if(rawSTC>=0) {
@@ -1695,6 +1711,12 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
 	        // skip PS header bytes
 	        data += 6;
+
+            bool ptsFlag = (sector[7] & 0xC0) && sector[8]>=5;
+            if (ptsFlag) {
+                pktpts = cPStream::fromPTS(sector + 9) + (uint64_t)ptm_offs;
+            }
+            
 	        // data now points to the beginning of the payload
 	        int audioType = ((int)*data) & 0xF8;
 
@@ -1712,9 +1734,20 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                     playedPacket |= pktAudio;
                     SetCurrentNavAudioTrackType(audioType);
 
-		            if (ptsFlag) {
-                        sector[6] |= 0x84;
-			            cPStream::toPTS(sector + 9, pktpts, false);
+                    if (ptsFlag) {
+                        pktPtsAudio.lastpts = pktPtsAudio.currentpts;
+                        pktPtsAudio.currentpts = pktpts;
+
+                        uint64_t videodiff = pktPtsVideo.currentpts-pktPtsVideo.lastpts;
+                        uint64_t audiodiff = pktPtsAudio.currentpts-pktPtsAudio.lastpts;
+                        uint64_t ptsdiff = videodiff-audiodiff;
+
+                        if (ptsdiff>0) {
+                            pktpts += ptsdiff;
+                            pktPtsAudio.currentpts = pktpts;
+                        }
+
+			            cPStream::toPTS(sector + 9, pktpts);
 		            }
 
 		            if(rawSTC>=0) {
@@ -1817,7 +1850,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 				            (unsigned int)(VideoPts/90U), datalen);
 		                if (ptsFlag && a52dec.getSyncMode()==A52decoder::ptsCopy)
 			                seenAPTS(pktpts);
-			            a52dec.decode(data, datalen, pktpts);
+                        a52dec.decode(data, datalen, ptsFlag ? pktpts : 0);
 		            } else if (audioType == aDTS && !BitStreamOutActive ) {
 			            // todo DTS ;-)
 			            DEBUG_AUDIO_PLAY2("dvd aDTS n.a. menu=%d\n", isInMenuDomain);
@@ -1877,7 +1910,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
         }
     }
     if( rframe && ringBuffer->Put(rframe) ) rframe=0;
-
+    
 #ifdef PTSDEBUG
     if (playMode != pmPlay)
         DEBUGPTS("SCR: %8Lx,%8Ld, %8d, %c %1d, %8d (%8d) - %8d (%8d)\n",

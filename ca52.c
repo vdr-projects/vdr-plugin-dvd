@@ -229,10 +229,7 @@ inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 // data=PCM samples, 16 bit, LSB first, 48kHz, stereo
 void A52decoder::init_ipack(int p_size, uint32_t pktpts)
 {
-    int header = 0;
-    
-    if (pktpts != 0)
-	header = 5;        // additional header bytes
+    int header = pktpts ? 5 :0;
     
     int length = 10 + header + p_size;
     
@@ -242,13 +239,14 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts)
     blk_ptr[3] = PRIVATE_STREAM1;
     blk_ptr[4] = (length >> 8) & 0xff;
     blk_ptr[5] = length & 0xff;
-    blk_ptr[6] = 0x84;              //'data alignment indicator' Bit is needed for AC3 Testfirmware
+    blk_ptr[6] = 0x80;
     blk_ptr[7] = pktpts ? 0x80 : 0;
     blk_ptr[8] = header;
     blk_ptr += 9;
     
-    if (header)
-        cPStream::toPTS(blk_ptr, pktpts, false);
+    if (header) {
+        cPStream::toPTS(blk_ptr, pktpts);
+    }
 
     blk_ptr += header;
 
@@ -272,10 +270,10 @@ struct LPCMHeader { int id:8;              // id
     blk_ptr[0] = aLPCM; // substream ID
     // other stuff (see DVB specs), may be ignored by driver
     // but try to set it up correctly ..
-    blk_ptr[1] = 0xff;  // number of frames
+    blk_ptr[1] = 0x07;  // number of frames
     blk_ptr[2] = 0x00;  // start of audio frame
-    blk_ptr[3] = 0x00;  // start of audio frame
-    blk_ptr[4] = 0x00;  // emph, mute, res, frame_num
+    blk_ptr[3] = 0x04;  // start of audio frame
+    blk_ptr[4] = 0x0C;  // emph, mute, res, frame_num
     blk_ptr[5] = 0x01;  // quantwlen, samplefreq, channels (48kHz, stereo)
     blk_ptr[6] = 0x80;  // dynam. range ctrl (off)
     blk_ptr += 7;
