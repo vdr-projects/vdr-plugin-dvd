@@ -42,7 +42,7 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name, "ReadAHead"))     ReadAHead     = atoi(Value);
     else if (!strcasecmp(Name, "ResumeDisk"))    ResumeDisk    = atoi(Value);
     else
-	return false;
+    return false;
     return true;
 }
 
@@ -50,16 +50,20 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
 
 cMenuSetupDVD::cMenuSetupDVD(void)
 {
+    spuOptionsText[0] = tr("never");
+    spuOptionsText[1] = tr("always");
+    spuOptionsText[2] = tr("Setup.DVD$forced only");
+
     data = DVDSetup;
     SetSection(tr("DVD"));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"),     &data.MenuLanguage,  I18nNumLanguages, Languages));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"),    &data.AudioLanguage, I18nNumLanguages, Languages));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage,   I18nNumLanguages, Languages));
-    Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),         &data.PlayerRCE));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Display subtitles"),          &data.ShowSubtitles, 3, SpuOptions));
-    Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),        &data.HideMainMenu));
-    Add(new cMenuEditBoolItem( tr("Setup.DVD$ReadAHead"),                  &data.ReadAHead));
-    Add(new cMenuEditBoolItem( tr("Setup.DVD$Set resume marks"),       &data.ResumeDisk));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"),     &data.MenuLanguage,  I18nNumLanguages, I18nLanguages()));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"),    &data.AudioLanguage, I18nNumLanguages, I18nLanguages()));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage,   I18nNumLanguages, I18nLanguages()));
+    Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),          &data.PlayerRCE));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles, 3, spuOptionsText));
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),         &data.HideMainMenu));
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                   &data.ReadAHead));
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$Set resume marks"),            &data.ResumeDisk));
 }
 
 void cMenuSetupDVD::Store(void)
