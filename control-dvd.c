@@ -707,6 +707,7 @@ void cDvdPlayerControl::updateShow(bool force)
      {
         Hide();
         timeoutShow = 0;
+        return;
      }
      if (modeOnly)
         ShowMode();
