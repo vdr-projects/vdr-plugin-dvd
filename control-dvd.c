@@ -101,6 +101,8 @@ cDvdPlayerControl::~cDvdPlayerControl()
     Stop();
     assert(dvd_active == true);
     dvd_active = false;
+    delete player;
+    player = NULL;
 }
 
 bool cDvdPlayerControl::Active(void)
@@ -112,8 +114,6 @@ void cDvdPlayerControl::Stop(void)
 {
     if(player) {
         player->Stop();
-        delete player;
-        player=NULL;
     }
 }
 
