@@ -235,6 +235,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     nav = 0;
     iframeAssembler=new cRingBufferLinear(KILOBYTE(CIF_MAXSIZE));
     IframeCnt = 0;
+    event_buf = new uint8_t[4096];
     current_pci = 0;
     prev_e_ptm = 0;
     ptm_offs = 0;
@@ -280,9 +281,9 @@ cDvdPlayer::~cDvdPlayer()
   DEBUGDVD("destructor cDvdPlayer::~cDvdPlayer()\n");
   Detach();
   Save();
-  delete iframeAssembler;
-  delete ringBuffer;
-  ringBuffer=NULL;
+  delete event_buf; event_buf=NULL;
+  delete iframeAssembler; iframeAssembler=NULL;
+  delete ringBuffer; ringBuffer=NULL;
   if(titleinfo_str) { free(titleinfo_str); titleinfo_str=0; }
   if(title_str) { free(title_str); title_str=0; }
   if(aspect_str) { free(aspect_str); aspect_str=0; }
@@ -531,8 +532,7 @@ void cDvdPlayer::Action(void) {
     dsyslog("input thread started (pid=%d)", getpid());
 #endif
 
-  unsigned char  event_buf[4096];
-  memset(event_buf, 0, sizeof(event_buf));
+  memset(event_buf, 0, sizeof(uint8_t)*4096);
 
   unsigned char *write_blk = NULL;
   int blk_size = 0;
@@ -972,9 +972,9 @@ void cDvdPlayer::Action(void) {
 	    }
       }
 
-      unsigned char *cache_ptr = event_buf;
-      int event;
-      int len;
+      uint8_t *cache_ptr = event_buf;
+      int32_t event;
+      int32_t len;
 
       // from here on, continue is not allowed,
       // as it would bypass dvdnav_free_cache_block
@@ -989,12 +989,15 @@ void cDvdPlayer::Action(void) {
       switch (event) {
 	  case DVDNAV_BLOCK_OK:
 	      // DEBUG_NAV("%s:%d:NAV BLOCK OK\n", __FILE__, __LINE__);
+#if 0
+//FIXME:
 	      if ( cntVidBlocksPlayed==0 && cntAudBlocksPlayed==0 ) 
 	      {
                         DEBUG_CONTROL("play device because of zero played blocks v:%u, a:%u..\n",
 				cntVidBlocksPlayed, cntAudBlocksPlayed);
 	  		DevicePlay();
 	      }
+#endif
 	      UpdateBlockInfo(); // TEST
               playedPacket = playPacket(cache_ptr, trickMode, noAudio);
 	      break;

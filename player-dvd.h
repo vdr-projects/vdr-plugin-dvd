@@ -95,6 +95,7 @@ class cDvdPlayer : public cPlayer, cThread {
 
     cRingBufferLinear *iframeAssembler;
     int IframeCnt;
+    uint8_t * event_buf;
 
     cRingBufferFrame *ringBuffer;
     cFrame *rframe, *pframe;
