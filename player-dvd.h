@@ -32,6 +32,7 @@ typedef struct pts_struct {
     uint64_t currentpts;
     uint64_t laststc;
     uint64_t currentstc;
+    int64_t  ptsdiff;
 };
 
 class IntegerListObject : public cListObject {
@@ -132,6 +133,7 @@ class cDvdPlayer : public cPlayer, cThread {
     uint64_t stcPTSLastAudio;
     uint64_t pktptsAudio;
     uint64_t pktptsLastAudio;
+    
     pts_struct pktPtsVideo;
     pts_struct pktPtsAudio;
 
