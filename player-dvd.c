@@ -206,10 +206,11 @@ bool cDvdPlayer::HasBitStreamOut = false;
 bool cDvdPlayer::HasSoftDeviceOut = false;
 bool cDvdPlayer::SoftDeviceOutActive = false;
 
-const int cDvdPlayer::MaxAudioTracks  = 0x20;
-const int cDvdPlayer::AudioTrackMask  = 0x1F;
-const int cDvdPlayer::MaxSubpStreams  = 0x20;
-const int cDvdPlayer::SubpStreamMask  = 0x1F;
+const int cDvdPlayer::MaxAudioTracks    = 0x20;
+const int cDvdPlayer::AudioTrackMask    = 0x1F;
+const int cDvdPlayer::AC3AudioTrackMask = 0x07;
+const int cDvdPlayer::MaxSubpStreams    = 0x20;
+const int cDvdPlayer::SubpStreamMask    = 0x1F;
 
 const char * cDvdPlayer::dummy_title     = "DVD Title";
 const char * cDvdPlayer::dummy_n_a       = "n.a.";
@@ -1659,7 +1660,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
          // no sound in trick mode
          if (noAudio)
             return playedPacket;
-
+            
 	 if (currentNavAudioTrack != (cPStream::packetType(sector) & AudioTrackMask))
 	 {
 /*
@@ -1740,8 +1741,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		      adiff = pktpts - lapts;
 		      lapts = pktpts;
 		  }
-
-		  if ( currentNavAudioTrack == (*data & AudioTrackMask) ) 
+          
+          if ( currentNavAudioTrack == (*data & AC3AudioTrackMask) ) 
 		  {
                       playedPacket |= pktAudio;
                       SetCurrentNavAudioTrackType(audioType);

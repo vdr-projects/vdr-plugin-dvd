@@ -215,8 +215,9 @@ class cDvdPlayer : public cPlayer, cThread {
 
  public:
 
-    static const int MaxAudioTracks ;
-    static const int AudioTrackMask ;
+    static const int MaxAudioTracks;
+    static const int AudioTrackMask;
+    static const int AC3AudioTrackMask;
     static const int MaxSubpStreams;
     static const int SubpStreamMask;
 
