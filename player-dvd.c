@@ -205,7 +205,7 @@ bool cDvdPlayer::HasSoftDeviceOut = false;
 bool cDvdPlayer::SoftDeviceOutActive = false;
 
 const int cDvdPlayer::MaxAudioTracks  = 0x20;
-const int cDvdPlayer::AudioTrackMask  = 0x1F;
+const int cDvdPlayer::AudioTrackMask  = 0x07;
 const int cDvdPlayer::MaxSubpStreams  = 0x20;
 const int cDvdPlayer::SubpStreamMask  = 0x1F;
 
