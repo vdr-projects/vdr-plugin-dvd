@@ -2,6 +2,8 @@ VDR Plugin 'dvd' Revision History
 ---------------------------------
 
 2005-??-??: Version 0.3.5-b07
+    - change audio switch from '1' to 'Audio'
+    - changes for vdr-1.3.18 (is not ready yet)
     - add gain in setup for analog output
     - fixed backward play
     - add fields for Danish language texts

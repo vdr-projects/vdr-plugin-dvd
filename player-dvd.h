@@ -137,7 +137,7 @@ class cDvdPlayer : public cPlayer, cThread {
     bool  currentNavAudioTrackUsrLocked;
 
     cList<IntegerListObject> navAudioTracksSeen;
-    void notifySeenAudioTrack( int navAudioTrack );
+    int notifySeenAudioTrack(int navAudioTrack);
     void clearSeenAudioTrack(void);
     void setAllAudioTracks(void);
     uint16_t GetNavAudioTrackLangCode(int channel) const;
@@ -182,18 +182,30 @@ class cDvdPlayer : public cPlayer, cThread {
     int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
     bool playSPU(int spuId, unsigned char *data, int datalen);
 
- protected:
+protected: //Player
     virtual void Activate(bool On);
     virtual void Action(void);
     void DeviceReset(void);
     void DeviceClear(void);
     void DevicePlay(void);
-    void seenSpuPts(uint64_t pts);
 
+public:
+    /**
+     * returns the CurrentFrame and TotalFrame of the actual PGC !
+     * the timebase is accurate (BlockNumber/Ticks), but the resulting
+     * "frame" number is calculated using the magic number FRAMESPERSEC ;-)
+     *
+     * optional snap to the next IFrame (not functional now)
+     */
+    bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame);
+    bool GetReplayMode(bool &Play, bool &Forward, int &Speed) ;
+    void SetAudioTrack(eTrackType Type, const tTrackId *TrackId);
+
+protected:
+    void seenSpuPts(uint64_t pts);
     uint64_t time_ticks(void);
     uint64_t delay_ticks(uint64_t ticks);
-
- public:
+public:
 
     static const int MaxAudioTracks;
     static const int AudioTrackMask;
@@ -219,7 +231,6 @@ class cDvdPlayer : public cPlayer, cThread {
     void Stop(void);
     void Forward(void);
     void Backward(void);
-    bool GetReplayMode(bool &Play, bool &Forward, int &Speed) ;
 
     /**
      * these getter returns a new allocated memory area ..
@@ -265,15 +276,6 @@ class cDvdPlayer : public cPlayer, cThread {
      * 90000 ticks are 1 second, acording to MPEG !
      */
     void PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum) ;
-
-    /**
-     * returns the CurrentFrame and TotalFrame of the actual PGC !
-     * the timebase is accurate (BlockNumber/Ticks), but the resulting
-     * "frame" number is calculated using the magic number FRAMESPERSEC ;-)
-     *
-     * optional snap to the next IFrame (not functional now)
-     */
-    bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame) ;
 
     bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) ;
     bool GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) ;
@@ -351,30 +353,14 @@ class cDvdPlayer : public cPlayer, cThread {
     int NextSubpStream();
     void GetSubpLangCode( const char ** subplang_str ) const ;
 
-    /**
-     * set the AudioID
-     *
-     * return set audio id ..
-     */
-    int SetAudioID(int id);
-
-    /**
-     * jump to the next audio id (rotate)
-     */
-    int NextAudioID();
-
     bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
     uint16_t GetCurrentNavAudioTrackLangCode(void) const;
-    int  GetNavAudioTrackNumber (void) const ;
+    int  GetNavAudioTrackNumber(void) const ;
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
     int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
-    void GetAudioLangCode( const char ** audiolang_str ) const ;
-
-    virtual void SetAudioTrack(int Index) { (void) SetAudioID( Index ); }
-    virtual int NumAudioTracks(void) const { return GetNavAudioTrackNumber(); }
-    virtual const char **GetAudioTracks(int *CurrentTrack = NULL) const ;
+    void GetAudioLangCode(const char ** audiolang_str) const ;
 
     void selectUpButton(void);
     void selectDownButton(void);

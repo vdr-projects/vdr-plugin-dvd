@@ -35,8 +35,6 @@
 #include "control-dvd.h"
 #include "dvd.h"
 
-//#define AC3_FIRMWARE
-
 /**
  * this was "weak"'s solution of a forced
  * SPU only stream choice,
@@ -118,7 +116,6 @@
 #define DEBUG_AUDIO_PLAY2(format, args...) printf (format, ## args); fflush(NULL)
  */
 
-
 #endif
 
 
@@ -134,16 +131,6 @@
 #define POLLTIMEOUTS_BEFORE_DEVICECLEAR 3
 #else
 #warning using patched POLLTIMEOUTS_BEFORE_DEVICECLEAR
-#endif
-
-#ifdef AC3_FIRMWARE
-  #define playMULTICHANNEL         true
-#else
-  #if defined( HAVE_AC3_OVER_DVB )
-  #define playMULTICHANNEL         Setup.PlayMultichannelAudio
-  #else
-  #define playMULTICHANNEL         false
-  #endif
 #endif
 
 #define OsdInUse() ((controller!=NULL)?controller->OsdVisible(this):false)
@@ -408,11 +395,6 @@ void cDvdPlayer::DeviceReset(void)
     DEBUG_CONTROL("DeviceReset: Clear & Play\n");
     cntVidBlocksPlayed=0;
     cntAudBlocksPlayed=0;
-
-#ifdef AC3_FIRMWARE
-    (void)PlayPES(NULL, 0);
-#endif
-
     cPlayer::DeviceClear();
     cPlayer::DevicePlay();
 }
@@ -420,11 +402,7 @@ void cDvdPlayer::DeviceReset(void)
 void cDvdPlayer::DeviceClear(void)
 {
     DEBUG_CONTROL("DeviceClear\n");
-
-#ifdef AC3_FIRMWARE
-    (void)PlayPES(NULL, 0);
-#endif
-
+    PlayPes(NULL, 0);
     cPlayer::DeviceClear();
 }
 
@@ -502,9 +480,6 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
     skipPlayVideo=false;
 
     if(emptyDeviceToo) {
-#ifdef AC3_FIRMWARE
-        PlayPES(NULL, 0);
-#endif
 	    DeviceClear();
     }
 }
@@ -748,11 +723,7 @@ void cDvdPlayer::Action(void) {
 	  		        if (!firstClear) DeviceReset();
 		        }
 
-#ifdef AC3_FIRMWARE
-                res = PlayPES(write_blk, blk_size, (0xC0 | currentNavAudioTrack), frameType==ftDolby);
-#else
-		        res = PlayVideo(write_blk, blk_size);
-#endif
+                res = PlayPes(write_blk, blk_size);
 		        if (trickMode) {
 		            DEBUG_CONTROL("PLAYED  : todo=%d, written=%d\n", blk_size, res);
 		        }
@@ -1096,23 +1067,25 @@ void cDvdPlayer::Action(void) {
 	      }
 	      break;
 	  }
-	  case DVDNAV_AUDIO_STREAM_CHANGE: {
-	      DEBUG_NAV("%s:%d:NAV AUDIO STREAM CHANGE\n", __FILE__, __LINE__);
-	      dvdnav_audio_stream_change_event_t *ev;
-	      ev = (dvdnav_audio_stream_change_event_t *)cache_ptr;
-	      if( ! currentNavAudioTrackUsrLocked )
-	      {
-		      currentNavAudioTrack = dvdnav_get_active_audio_stream(nav);
-                      currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
-		      DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%X, phys=%d, 0x%X\n",
-			  currentNavAudioTrack, currentNavAudioTrack, ev->physical, ev->physical);
-	      } else {
-		      DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: ignore (locked) phys=%d, 0x%X\n",
-			  ev->physical, ev->physical);
-	      }
+	    case DVDNAV_AUDIO_STREAM_CHANGE: {
+	        DEBUG_NAV("%s:%d:NAV AUDIO STREAM CHANGE\n", __FILE__, __LINE__);
+	        dvdnav_audio_stream_change_event_t *ev;
+	        ev = (dvdnav_audio_stream_change_event_t *)cache_ptr;
+	        if(!currentNavAudioTrackUsrLocked) {
+		        currentNavAudioTrack = dvdnav_get_active_audio_stream(nav);
+                currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
 
+//                if (!cDevice::PrimareDevice->SetCurrentAudioTrack(eTrackType(ttAudio + currentNavAudioTrack)))
+//                    cDevice::PrimareDevice->SetCurrentAudioTrack(eTrackType(ttDolby + currentNavAudioTrack))
+
+		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%X, phys=%d, 0x%X\n",
+			    currentNavAudioTrack, currentNavAudioTrack, ev->physical, ev->physical);
+	        } else {
+		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: ignore (locked) phys=%d, 0x%X\n",
+			    ev->physical, ev->physical);
+	        }
 //          firstClear=true;
-	      break;
+	        break;
 	  }
 	  case DVDNAV_VTS_CHANGE:
 	      DEBUG_NAV("%s:%d:NAV VTS CHANGE -> Empty, setAll-spu&audio \n", __FILE__, __LINE__);
@@ -1641,7 +1614,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
         case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
             lastFrameType = AUDIO_STREAM_S;
             int audioId = cPStream::packetType(sector) & AudioTrackMask;
-            notifySeenAudioTrack(audioId);
+            int audioTrackIndex = notifySeenAudioTrack(audioId);
+
+            DeviceSetAvailableTrack(ttAudio, audioTrackIndex, cPStream::packetType(sector));
 
             // no sound in trick mode
             if (noAudio)
@@ -1678,15 +1653,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		        pktptsAudio = pktpts;
 		        stcPTSAudio = stcPTS;
 	        }
-
- 	        if ( !playMULTICHANNEL ) {
-		        DEBUG_AUDIO_PLAY2("dvd PlayAudio mp2 menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
-                    isInMenuDomain,
-			        (unsigned int)(stcPTS/90U),
-			        (unsigned int)(ptsFlag?pktpts/90U:0),
-			        (unsigned int)(VideoPts/90U), r);
-	  	        PlayAudio(sector, r);
-            }
 
 	        rframe = new cFrame(sector, r, ftAudio);
 
@@ -1728,14 +1694,19 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        if(audioType == aAC3 || audioType == aDTS || audioType == aLPCM) {
                 int audioId = (*data & AC3AudioTrackMask);
 		        ptype = 'A';
-                notifySeenAudioTrack(audioId);
+
+                int audioTrackIndex = notifySeenAudioTrack(audioId);
+                int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
+                audioLanguageCode = audioLanguageCode >> 8 | (audioLanguageCode & 0xff) << 8;
+
+                DeviceSetAvailableTrack(ttDolby, audioTrackIndex, *data, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
 
 		        if (ptsFlag) {
 		            adiff = pktpts - lapts;
 		            lapts = pktpts;
 		        }
 
-                if ( currentNavAudioTrack == audioId ) {
+                if (currentNavAudioTrack == audioId) {
                     playedPacket |= pktAudio;
                     SetCurrentNavAudioTrackType(audioType);
 
@@ -1794,36 +1765,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 #endif
 
 
- 		            if (!playMULTICHANNEL) {
-		                if (audioType == aAC3 && !SoftDeviceOutActive && !BitStreamOutActive ) {
-				            // for vdr external ac3 player _ONLY_ this time
-				            //
-			                DEBUG_AUDIO_PLAY2("dvd PlayAudio ac3(ext) menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
-                                isInMenuDomain,
-				                (unsigned int)(stcPTS/90U),
-				                (unsigned int)(ptsFlag?pktpts/90U:0),
-				                (unsigned int)(VideoPts/90U), r);
-
-				            //remove AC3 Header
-				            int ac3offset = sector[8] + 9;
-				            int ac3length = cPStream::packetLength(sector) - 4;
-				            cPStream::SetPacketLength(sector, ac3length);
-				            //backward to save data
-				            memmove(sector+4, sector, ac3offset);
-				            PlayAudio(sector+4, r-4);
-			            } else {
-			                DEBUG_AUDIO_PLAY2("dvd PlayAudio %d/0x%X menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
-                                isInMenuDomain,
-				                audioType, audioType,
-				                (unsigned int)(stcPTS/90U),
-				                (unsigned int)(ptsFlag?pktpts/90U:0),
-				                (unsigned int)(VideoPts/90U), r);
-
-				            PlayAudio(sector, r);
-			            }
-		            }
-                    if (playMULTICHANNEL || (audioType == aLPCM && !SoftDeviceOutActive // else 2 pcm's -> 1 device
-			        )) {
+                    if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) { // else 2 pcm's -> 1 device
                         rframe = new cFrame(sector, r, ftDolby);
 			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
                             isInMenuDomain,
@@ -2644,27 +2586,24 @@ void cDvdPlayer::setAllAudioTracks(void)
     uint16_t lang_code1;
 
     for(int i = 0; nav!=NULL && i < MaxAudioTracks; i++) {
-      lang_code1=GetNavAudioTrackLangCode( i );
-      if(lang_code1!=0xffff) {
-	notifySeenAudioTrack( i );
-      }
+        lang_code1=GetNavAudioTrackLangCode( i );
+        if(lang_code1!=0xffff) {
+	        notifySeenAudioTrack(i);
+        }
     }
 }
 
 
-void cDvdPlayer::notifySeenAudioTrack( int navAudioTrack )
+int cDvdPlayer::notifySeenAudioTrack(int navAudioTrack)
 {
-    int i=navAudioTracksSeen.Count()-1;
-
-    while ( i >= 0)
-    {
-	if ( navAudioTrack == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue() )
-		break; // found
-	i--;
+    int i = navAudioTracksSeen.Count()-1;
+    while ( i >= 0) {
+	    if (navAudioTrack == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
+	    	break; // found
+	    i--;
     }
 
-    if ( i < 0 )
-    {
+    if (i < 0) {
 #ifdef SUBPDEBUG
 	    char buff2[12];
 	    int channel, channel_active=0;
@@ -2675,19 +2614,21 @@ void cDvdPlayer::notifySeenAudioTrack( int navAudioTrack )
 	    buff2[0]=0;
 	    if(nav!=NULL)
 	    {
-		    lang_code1=GetNavAudioTrackLangCode( channel );
+		    lang_code1=GetNavAudioTrackLangCode(channel);
 		    if(lang_code1!=0xffff) {
 				buff2[0]=p1[1];
 				buff2[1]=p1[0];
 				buff2[2]=0;
 		    }
-	    	    channel_active = dvdnav_get_active_audio_stream(nav);
+	    	channel_active = dvdnav_get_active_audio_stream(nav);
 	    }
-            printf("cDvdPlayer::cDvdPlayer: seen new audio id: 0x%X (%d), <%s>; 0x%X (%d)\n",
-			channel, channel, buff2, channel_active, channel_active);
+        printf("cDvdPlayer::cDvdPlayer: seen new audio id: 0x%X (%d), <%s>; 0x%X (%d)\n",
+            channel, channel, buff2, channel_active, channel_active);
 #endif
-	navAudioTracksSeen.Add(new IntegerListObject(navAudioTrack));
-    }
+	    navAudioTracksSeen.Add(new IntegerListObject(navAudioTrack));
+        return navAudioTracksSeen.Count() - 1;
+    } else
+        return i;
 }
 
 bool cDvdPlayer::GetCurrentNavAudioTrackUsrLocked(void) const
@@ -2753,103 +2694,34 @@ int cDvdPlayer::GetNavAudioTrackNumber (void) const
     return navAudioTracksSeen.Count();
 }
 
-int cDvdPlayer::SetAudioID(int id)
+void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 {
     static char buffer[10];
     const char * p1 = (char *)&currentNavAudioTrackLangCode;
-    int i=navAudioTracksSeen.Count()-1;
+    int i = navAudioTracksSeen.Count() - 1;
 
-    if(!DVDActiveAndRunning()) return -1;
+    if(!DVDActiveAndRunning()) return;
 
     LOCK_THREAD;
 
-    while ( i >= 0)
-    {
-	if ( id == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue() )
-		break; // found
-	i--;
+    int id = TrackId->id & (Type == ttAudio ? AudioTrackMask : AC3AudioTrackMask);
+
+    while ( i >= 0) {
+        if (id == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
+            break; // found
+        i--;
     }
 
     if( i<0 ) {
-	id = ((IntegerListObject *)navAudioTracksSeen.Get(0))->getValue();
+        id = ((IntegerListObject *)navAudioTracksSeen.Get(0))->getValue();
     }
-
     SetCurrentNavAudioTrackUsrLocked(true);
     currentNavAudioTrack = id;
     currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
 
     sprintf(buffer,"%c%c", p1[1], p1[0]);
     dvdnav_audio_language_select(nav, buffer);
-
     Empty();
-
-    DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: curNavAu set to 0x%X, %s\n",
-		currentNavAudioTrack, buffer);
-
-    return id;
-}
-
-int cDvdPlayer::NextAudioID()
-{
-    static char buffer[10];
-    const char * p1 = (char *)&currentNavAudioTrackLangCode;
-    int i=navAudioTracksSeen.Count()-1;
-
-    if(!DVDActiveAndRunning()) return 0;
-
-    LOCK_THREAD;
-
-    while ( i >= 0)
-    {
-	if ( currentNavAudioTrack == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue() )
-		break; // found
-	i--;
-    }
-
-    if( i<0 ) {
-	      esyslog("ERROR: internal error current audio track 0x%X not seen !\n",
-			currentNavAudioTrack);
-	      return -1;
-    }
-
-    DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: found curNavAu(0x%X) at idx = %d\n",
-		currentNavAudioTrack, i);
-
-    Empty();
-
-    SetCurrentNavAudioTrackUsrLocked(true);
-    i = ( i + 1 ) % navAudioTracksSeen.Count();
-    currentNavAudioTrack = ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue();
-    currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
-
-    sprintf(buffer,"%c%c", p1[1], p1[0]);
-    dvdnav_audio_language_select(nav, buffer);
-
-    DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: curNavAu next to 0x%X, %s\n",
-		currentNavAudioTrack, buffer);
-    return 0;
-}
-
-const char **cDvdPlayer::GetAudioTracks(int *CurrentTrack) const
-{
-  if (NumAudioTracks()) {
-     if (CurrentTrack)
-        *CurrentTrack = currentNavAudioTrack & 0x0F ;
-     static const char *audioTracks1[] = { "Audio 1", NULL };
-     static const char *audioTracks2[] = { "Audio 1", "Audio 2", NULL };
-     static const char *audioTracks3[] = { "Audio 1", "Audio 2", "Audio 3", NULL };
-     static const char *audioTracks4[] = { "Audio 1", "Audio 2", "Audio 3", "Audio 4", NULL };
-     switch (NumAudioTracks()) {
-	case 0: return NULL;
-	case 1: return audioTracks1;
-	case 2: return audioTracks2;
-	case 3: return audioTracks3;
-	case 4: return audioTracks4;
-	default:
-	        return audioTracks4;
-     }
-  }
-  return NULL;
 }
 
 char * cDvdPlayer::GetTitleString() const
@@ -2910,7 +2782,7 @@ void cDvdPlayer::SetTitleInfoString()
         return;
 }
 
-void cDvdPlayer::GetAudioLangCode( const char ** audiolang_str ) const
+void cDvdPlayer::GetAudioLangCode(const char ** audiolang_str) const
 {
 	static char buffer[100];
 	static char buff2[4];
