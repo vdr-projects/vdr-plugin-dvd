@@ -9,6 +9,7 @@ VDR Plugin 'dvd' Revision History
     - move RegisterI18n(...) from Start() to Initialize()
     - fixed hightlight in menu
     - correct subtitle position (test)
+    - fix audiostream selection
 
 2004-06-24: Version 0.3.5-b06
     - fixed segfault at plugin exit
