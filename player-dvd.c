@@ -665,7 +665,7 @@ void cDvdPlayer::Action(void) {
  */
 /**
       DEBUG_CONTROL("dvd: menu=%d, v:%u, a:%u, p:%d, stc:%8ums, blk_size=%3d, skipPlayV=%d, IframeCnt=%d, stillTimer=%8ums\n",
-		isInMenuDomain, cntVidBlocksPlayed, cntAudBlocksPlayed, playedPacket,
+        IsInMenuDomain(), cntVidBlocksPlayed, cntAudBlocksPlayed, playedPacket,
 		(unsigned int)(stcPTS/90U),
 		blk_size, skipPlayVideo, IframeCnt, stillTimer/90U);
  */
@@ -1002,7 +1002,7 @@ void cDvdPlayer::Action(void) {
 	  case DVDNAV_STILL_FRAME: {
 	      uint64_t currentTicks = time_ticks();
 	      DEBUG_PTS2("%s:%d:NAV STILL FRAME (menu=%d), rem. stillTimer=%ut(%ums), currTicks=%llut(%llums)\n",
-			__FILE__, __LINE__, isInMenuDomain,
+            __FILE__, __LINE__, IsInMenuDomain(),
 			stillTimer, stillTimer/90, currentTicks, currentTicks/90);
 	      dvdnav_still_event_t *still = (dvdnav_still_event_t *)cache_ptr;
 	      if (stillTimer != 0) {
@@ -1045,7 +1045,7 @@ void cDvdPlayer::Action(void) {
 		    ev->logical, ev->logical,
 	            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
-	      if( isInMenuDomain || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
+          if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
 		      cSpuDecoder::eScaleMode mode = getSPUScaleMode();
 
 		      if (mode == cSpuDecoder::eSpuLetterBox ) {
@@ -1064,7 +1064,7 @@ void cDvdPlayer::Action(void) {
 		      DEBUG_SUBP_ID("DVDNAV_SPU_STREAM_CHANGE: ignore (locked=%d/%d|not enabled=%d), menu=%d, feature=%d \n",
 		          currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell,
 			  DVDSetup.ShowSubtitles,
-		          isInMenuDomain, isInFeature);
+                  IsInMenuDomain(), isInFeature);
 	      }
 	      break;
 	  }
@@ -1313,7 +1313,7 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
     // nothing has to be done, if
     //		TV	16:9
     // 		DVD 	 4:3
-    if (!Setup.VideoFormat && dvd_aspect != 0 && isInMenuDomain) {
+    if (!Setup.VideoFormat && dvd_aspect != 0 && IsInMenuDomain()) {
     	//
 	// if we are here, then
 	//	TV==4:3 && DVD==16:9
@@ -1433,10 +1433,10 @@ bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
     SPUassembler.Get(buffer, SPUassembler.getSize());
     bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced();
     DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, spu_size:%d, menuDomain=%d, pts: %12lld\n",
-        forcedSubsOnly, spuSize, isInMenuDomain, SPUassembler.getPts());
+        forcedSubsOnly, spuSize, IsInMenuDomain(), SPUassembler.getPts());
 
 	SPUdecoder->processSPU(SPUassembler.getPts(), buffer, allowedShow);
-	if(isInMenuDomain) seenVPTS(pktpts); // else should be seen later ..
+    if(IsInMenuDomain()) seenVPTS(pktpts); // else should be seen later ..
     return true;
 }
 
@@ -1614,7 +1614,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             rframe = new cFrame(sector, r, ftVideo);
 
             playedPacket |= pktVideo;
-            if ( !isInMenuDomain ) seenVPTS(VideoPts);
+            if ( !IsInMenuDomain() ) seenVPTS(VideoPts);
 	        ptype = 'V';
             break;
         }
@@ -1788,7 +1788,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                     if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) { // else 2 pcm's -> 1 device
                         rframe = new cFrame(sector, r, ftDolby);
 			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
-                            isInMenuDomain,
+                            IsInMenuDomain(),
 				            (unsigned int)(stcPTS/90U),
 				            (unsigned int)(ptsFlag?pktpts/90U:0),
 				            (unsigned int)(VideoPts/90U), r);
@@ -1799,7 +1799,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 			            // header: 3 (mandatory) + 6 (PS) + 4 (AC3)
 			            datalen -= 13;
 			            DEBUG_AUDIO_PLAY2("dvd a52dec menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
-                            isInMenuDomain,
+                            IsInMenuDomain(),
 				            (unsigned int)(stcPTS/90U),
 				            (unsigned int)(ptsFlag?pktpts/90U:0),
 				            (unsigned int)(VideoPts/90U), datalen);
@@ -1808,7 +1808,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                         a52dec.decode(data, datalen, pktpts, audioId);
 		            } else if (audioType == aDTS && !BitStreamOutActive ) {
 			            // todo DTS ;-)
-			            DEBUG_AUDIO_PLAY2("dvd aDTS n.a. menu=%d\n", isInMenuDomain);
+                        DEBUG_AUDIO_PLAY2("dvd aDTS n.a. menu=%d\n", IsInMenuDomain());
 		                if (ptsFlag)
 			                seenAPTS(pktpts);
 		            }
@@ -1838,7 +1838,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                              *
                             DEBUG_SUBP_ID("packet not shown spu stream: got=%d, cur=%d, SPUdecoder=%d, menu=%d, feature=%d, forcedSubsOnly=%d\n",
                                 thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
-                                isInMenuDomain, isInFeature, forcedSubsOnly);
+                                IsInMenuDomain(), isInFeature, forcedSubsOnly);
                              */
                         }
 	                }
@@ -2118,7 +2118,7 @@ void cDvdPlayer::UpdateVTSInfo()
     if(nav) {
 	    dvd_aspect = dvdnav_get_video_aspect(nav);
 	    dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
-    	    isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
+        isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav) || dvdnav_is_domain_vtsm(nav) || dvdnav_is_domain_vts(nav);
 	    isInFeature    = dvdnav_is_domain_vts(nav);
     }
 }
