@@ -237,13 +237,12 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    		//special case: command offset within 1st packet, but data spanning packets
    		if ( next_cs_offset+2 < size && spu_size > size )
    		   special = true;
-   		if ( next_cs_offset > size ) return (next_cs_offset - size);
+   		if ( next_cs_offset > size ) return (next_cs_offset - size + 2);
 
    		// set data pointer to begin of the control sequence
    		setByte( packet+next_cs_offset );
 
-   		// first 2 bytes of the control sequence contains the start time
-   		getNextBytes(2);
+   		// first 2 bytes of the control sequence contains the start time   		
    		//cout << "Start Time: " << start_time << endl;
    		next_cs_offset = getNextBytes(2);
    	}
