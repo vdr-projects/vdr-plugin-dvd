@@ -463,8 +463,8 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
     prev_e_ptm = 0;
     ptm_offs = 0;
 
-    delete rframe;
-    rframe=NULL; pframe=NULL;
+    DELETENULL(rframe);
+    pframe=NULL;
     ringBuffer->Clear();
     cntVidBlocksPlayed=0;
     cntAudBlocksPlayed=0;
@@ -1602,7 +1602,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		            do_copy=false;
 		        } else {
                     DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", r, iframeAssembler->Available());
-                        iframeAssembler->Put(sector, r);
+                    iframeAssembler->Put(sector, r);
                     DEBUG_IFRAME2("%d (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%d,p:%llu)\n",
 		                iframeAssembler->Available(),
 		    	        currentFrameType, lastFrameType,
@@ -1863,7 +1863,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             return playedPacket;
         }
     }
-    if( rframe && ringBuffer->Put(rframe) ) rframe=0;
+    if(rframe && !ringBuffer->Put(rframe))
+        delete rframe;
+    rframe = NULL;
 
 #ifdef PTSDEBUG
     if (playMode != pmPlay)
