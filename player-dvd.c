@@ -35,6 +35,8 @@
 #include "control-dvd.h"
 #include "dvd.h"
 
+//#define AC3_FIRMWARE
+
 /**
  * this was "weak"'s solution of a forced 
  * SPU only stream choice,
@@ -134,10 +136,14 @@
 #warning using patched POLLTIMEOUTS_BEFORE_DEVICECLEAR
 #endif
 
-#if defined( HAVE_AC3_OVER_DVB )
-#define playMULTICHANNEL         Setup.PlayMultichannelAudio
+#ifdef AC3_FIRMWARE
+  #define playMULTICHANNEL         true
 #else
-#define playMULTICHANNEL         false
+  #if defined( HAVE_AC3_OVER_DVB )
+  #define playMULTICHANNEL         Setup.PlayMultichannelAudio
+  #else
+  #define playMULTICHANNEL         false
+  #endif
 #endif
 
 #define OsdInUse() ((controller!=NULL)?controller->OsdVisible(this):false)
@@ -711,8 +717,11 @@ void cDvdPlayer::Action(void) {
 	  		DeviceReset();
 		}
 
+#ifdef AC3_FIRMWARE
+        res = (frameType==ftDolby || frameType==ftAudio ) ? PlayPES(write_blk, blk_size, (0xC0 | currentNavAudioTrack), frameType==ftDolby) : PlayVideo(write_blk, blk_size);
+#else
 		res = PlayVideo(write_blk, blk_size); 
-
+#endif
 		if (trickMode) {
 		      DEBUG_CONTROL("PLAYED  : todo=%d, written=%d\n",
 				blk_size, res);
@@ -1704,7 +1713,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                     SetCurrentNavAudioTrackType(audioType);
 
 		            if (ptsFlag) {
-			            cPStream::toPTS(sector + 9, pktpts, true);
+                        sector[6] |= 0x84;
+			            cPStream::toPTS(sector + 9, pktpts, false);
 		            }
 
 		            if(rawSTC>=0) {
