@@ -50,7 +50,24 @@ void A52decoder::setup(void)
   bias = 384;
 }
 
-#define convert(x) x>0x43c07fff ? bswap_16(0x7fff) : x < 0x43bf8000 ? bswap_16(0x8000) : bswap_16(x - 0x43c00000);
+static inline int16_t bswap(int16_t i)
+{
+  return bswap_16(i);
+}
+
+#define convert(x) x>0x43c07fff ? bswap_16(32767) : x < 0x43bf8000 ? bswap_16(-32768) : bswap_16(x - 0x43c00000);
+
+/*
+inline int16_t A52decoder::convert (int32_t i)
+{
+    if (i > 0x43c07fff)
+    return bswap(32767);
+    else if (i < 0x43bf8000)
+    return bswap(-32768);
+    else
+    return bswap(i - 0x43c00000);
+}
+*/
 
 inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 {
@@ -484,21 +501,6 @@ int A52assembler::parse_syncinfo(uint8_t *data)
     frmsizecod = data[2] & 63;
     if (frmsizecod >= 38)
         return 0;
-    bitrate = rate [frmsizecod >> 1];
-
-    switch (data[2] & 0xc0) {
-    case 0:
-        return 4 * bitrate;
-    case 0x40:
-        return 2 * (320 * bitrate / 147 + (frmsizecod & 1));
-    case 0x80:
-        return 6 * bitrate;
-    default:
-        return 0;
-    }
-}
-
- 0;
     bitrate = rate [frmsizecod >> 1];
 
     switch (data[2] & 0xc0) {
