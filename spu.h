@@ -67,8 +67,7 @@ class cSPUassembler: public simpleFIFO
     unsigned int spu_size;
 
     /* offset to the command sequence section */
-    static unsigned int spuOffsetLast;
+    unsigned int spuOffsetLast;
 };
 
 #endif
-

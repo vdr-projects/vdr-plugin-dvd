@@ -134,7 +134,6 @@ const char *cDvdPlayer::PTSTicksToHMSm(int64_t ticks, bool WithMS)
 int cDvdPlayer::Speeds[] = { 0, 0, 0, 0, 0, 0, 0, -2, -4, -8, 1, 2, 4, 12, 0, 0, 0, 0, 0, 0, 0 };
 bool cDvdPlayer::BitStreamOutActive = false;
 bool cDvdPlayer::HasBitStreamOut = false;
-unsigned int cSPUassembler::spuOffsetLast = 0;
 
 const int cDvdPlayer::MaxAudioTracks  =  8;
 const int cDvdPlayer::MaxSubpStreams  = 16;
@@ -164,6 +163,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     prev_e_ptm = 0;
     ptm_offs = 0;
 	DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
+	SPUassembler.spuOffsetLast = 0;
 
     skipPlayVideo=0;
     fastWindFactor=1;
@@ -1391,8 +1391,8 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
  							}*/
 			      			//data is spanning packets
 			      			if( spuh > 5 ) {
-						       	cSPUassembler::spuOffsetLast = spuh;
-						      	//DEBUG_SPU("next offset: %d", cSPUassembler::spuOffsetLast);
+						       	SPUassembler.spuOffsetLast = spuh;
+						      	//DEBUG_SPU("next offset: %d", SPUassembler.spuOffsetLast);
 			      			}
 			  			}
 
@@ -2053,7 +2053,7 @@ void cDvdPlayer::NextSubpStream()
     if( forcedSubsOnly || currentNavSubpStream==-1 ) {
     	i = ( i + 1 ) % navSubpStreamSeen.Count();
     	forcedSubsOnly = false;
-    	cSPUassembler::spuOffsetLast = 0;
+    	SPUassembler.spuOffsetLast = 0;
     }
     else {
     	i = ( i ) % navSubpStreamSeen.Count();
@@ -2427,5 +2427,4 @@ bool cDvdPlayer::GetReplayMode(bool &Play, bool &Forward, int &Speed)
      Speed = -1;
   return true;
 }
-
 
