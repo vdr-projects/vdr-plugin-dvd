@@ -1,6 +1,10 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2004-06-17: Version 0.3.5-b05...  
+    - div by zero ..
+    - dvd aspect ..
+
 2004-06-17: Version 0.3.5-b04  
     - many merges/fixes ..
     	- highlight

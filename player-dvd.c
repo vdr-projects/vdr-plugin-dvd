@@ -958,7 +958,9 @@ void cDvdPlayer::Action(void) {
 	    /**
 	     * dont jump over the end .. 10s tolerance ..
 	     */
-            if (playDir == pdForward && pos+1 == len && pgcPosTicks>90000L*10L)
+            if (playDir == pdForward && pos+1 == len && 
+	        pgcPosTicks>90000L*10L && pgcTicksPerBlock>0
+	       )
 	    {
 		      pgcPosTicks-=90000L*10L;
 
@@ -2168,7 +2170,10 @@ void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks,
   int64_t TotalTicks = GetPGCLengthInTicks();
 
   TotalBlockNum = pgcTotalBlockNum;
-  BlockNum = Ticks * TotalBlockNum / TotalTicks ;
+  if(TotalTicks>0)
+	  BlockNum = Ticks * TotalBlockNum / TotalTicks ;
+  else
+	  BlockNum = 0;
 }
 
 
