@@ -199,7 +199,7 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
      "Setup.DVD$ReadAHead",
-        "ReadAHead"                                         // Deutsch
+        "ReadAHead",                                        // Deutsch
         "ReadAHead",                                        // Slovenski
         "ReadAHead",                                        // Italiano
         "ReadAHead",                                        // Nederlands
