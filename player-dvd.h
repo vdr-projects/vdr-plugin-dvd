@@ -432,14 +432,14 @@ inline bool cDvdPlayer::IsInMenuDomainOrStillFrame() const
 inline int cDvdPlayer::cbPlayVideo(uchar *Data, int Length)
 {
     rframe = new cFrame(Data, Length, ftVideo);
-    if( rframe && ringBuffer && ringBuffer->Put(rframe) ) rframe=0;
+    if( rframe && ringBuffer && ringBuffer->Put(rframe) ) rframe = NULL;
     return Length;
 }
 
 inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
 {
-    rframe = new cFrame(Data, Length, ftAudio);
-    if( rframe && ringBuffer && ringBuffer->Put(rframe) ) rframe=0;
+    rframe = new cFrame(Data, Length, ftDolby);
+    if( rframe && ringBuffer && ringBuffer->Put(rframe) ) rframe = NULL;
     return Length;
 }
 

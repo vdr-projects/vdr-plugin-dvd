@@ -739,29 +739,26 @@ void cDvdPlayer::Action(void) {
                 write_blk += res;
 	  }
 
-	  if (blk_size > 0) {
-	      sleept = 5*90U;  // 5ms*90t/ms
-	  } else 
-	  {
-              if ( frameType==ftVideo )
-	      {
-		      if(!skipPlayVideo) {
-			cntVidBlocksPlayed++;
-		      } else {
-			cntVidBlocksSkipped++;
-		      }
-	      } else if ( frameType==ftAudio )
-	      {
-		  cntAudBlocksPlayed++;
-              }
+	    if (blk_size > 0) {
+	        sleept = 5*90U;  // 5ms*90t/ms
+	    } else {
+            if ( frameType==ftVideo ) {
+		        if(!skipPlayVideo) {
+			        cntVidBlocksPlayed++;
+		        } else {
+			        cntVidBlocksSkipped++;
+		        }
+	        } else if ( frameType==ftAudio || frameType==ftDolby ) {
+		        cntAudBlocksPlayed++;
+            }
 
-              playedPacket = pktNone;
-              frameType=ftUnknown;
-              ringBuffer->Drop(pframe);
-              pframe=0;
+            playedPacket = pktNone;
+            frameType=ftUnknown;
+            ringBuffer->Drop(pframe);
+            pframe=0;
 
-	  }
-	  continue;
+	    }
+	    continue;
       } else {
             if ( playedPacket==pktAudio )
 	    {
@@ -1790,7 +1787,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		            }
                     if (playMULTICHANNEL || (audioType == aLPCM && !SoftDeviceOutActive // else 2 pcm's -> 1 device
 			        )) {
-                        rframe = new cFrame(sector, r, ftAudio);
+                        rframe = new cFrame(sector, r, ftDolby);
 			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
                             isInMenuDomain,
 				            (unsigned int)(stcPTS/90U), 
