@@ -19,7 +19,7 @@ diff -ur vdr-1.3.11_orig/dvbspu.c vdr-1.3.11/dvbspu.c
  
  int cDvbSpuDecoder::setTime(uint32_t pts)
  {
-+   setTime(pts, true);
++   return setTime(pts, true);
 +}
 +
 +int cDvbSpuDecoder::setTime(uint32_t pts, bool allowedShow)
