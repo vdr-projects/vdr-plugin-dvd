@@ -222,11 +222,11 @@ unsigned char *cIframeAssembler::Get(int &Length) {
 
 void cIframeAssembler::Put(unsigned char *Data, int Length) {
     Lock();
-    if (head+Length < size) {
+    if (head + Length < size) {
         memcpy(buf + head, Data, Length);
         head += Length;
     } else
-        esyslog("iframeassembler full %d", head+Length);
+        esyslog("ERROR: dvd-plugin iframeassembler full %d", head + Length);
     Unlock();
 }
 
@@ -579,17 +579,16 @@ void cDvdPlayer::Action(void) {
 	    if(slBitStreamOutActive!=NULL)
 		    BitStreamOutActive = atoi ( slBitStreamOutActive->Value() ) ? true: false ;
     }
-    dsyslog("dvd player: BitStreamOutActive=%d, HasBitStreamOut=%d (%d)", BitStreamOutActive, HasBitStreamOut, slBitStreamOutActive!=NULL);
+    dsyslog("dvd-plugin: BitStreamOutActive=%d, HasBitStreamOut=%d (%d)", BitStreamOutActive, HasBitStreamOut, slBitStreamOutActive!=NULL);
 
     if(HasSoftDeviceOut) {
   	    SoftDeviceOutActive = true;
     }
-    dsyslog("dvd player: SoftDeviceOutActive=%d, HasSoftDeviceOut=%d", SoftDeviceOutActive, HasSoftDeviceOut);
+    dsyslog("dvd-plugin: SoftDeviceOutActive=%d, HasSoftDeviceOut=%d", SoftDeviceOutActive, HasSoftDeviceOut);
 
     if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) != DVDNAV_STATUS_OK) {
-        dsyslog("input thread ended (pid=%d)", getpid());
         Skins.Message(mtError, tr("Error.DVD$Error opening DVD!"));
-        esyslog("dvd player: cannot open dvdnav device %s -> input thread ended (pid=%d) !", const_cast<char *>(cDVD::getDVD()->DeviceName()), getpid());
+        esyslog("ERROR: dvd-plugin cannot open dvdnav device %s -> input thread ended (pid=%d) !", const_cast<char *>(cDVD::getDVD()->DeviceName()), getpid());
         active = running = false;
         nav=NULL;
         fflush(NULL);
@@ -692,7 +691,7 @@ void cDvdPlayer::Action(void) {
         if (!DevicePoll(Poller, 100)) {
             PollTimeouts++;
             if (PollTimeouts == POLLTIMEOUTS_BEFORE_DEVICECLEAR) {
-	            dsyslog("clearing device because of consecutive poll timeouts %d",
+	            dsyslog("dvd-plugin: clearing device because of consecutive poll timeouts %d",
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
                 DEBUG_CONTROL("clearing device because of consecutive poll timeouts %d\n",
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
@@ -736,8 +735,8 @@ void cDvdPlayer::Action(void) {
 
 	        if (res < 0) {
 	            if (errno != EAGAIN && errno != EINTR) {
-		            esyslog("ERROR: PlayVideo, %s (workaround activ)\n", strerror(errno));
-		            DEBUG_CONTROL("ERROR: PlayVideo, %s (workaround activ)\n", strerror(errno));
+		            esyslog("ERROR: dvd-plugin PlayVideo, %s (workaround activ)", strerror(errno));
+		            DEBUG_CONTROL("PlayVideo, %s (workaround activ)\n", strerror(errno));
 	            }
 	            DEBUG_CONTROL("PLAYED zero -> Clear/Play\n");
 	            DeviceReset();
@@ -859,7 +858,7 @@ void cDvdPlayer::Action(void) {
 		      pos = (pgcPosTicks+pgcPosTicksIncr)/pgcTicksPerBlock;
 
 		        if (dvdnav_sector_search( nav, pos, SEEK_SET) != DVDNAV_STATUS_OK)
-		      	    esyslog("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
+                    esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
 	    }
 	    cntVidBlocksPlayed=0;
 	    cntVidBlocksSkipped=0;
@@ -931,7 +930,7 @@ void cDvdPlayer::Action(void) {
 					(long)pos, (long)posdiff, (long)forcedBlockPosition,
 					slomoloop);
 		        if (dvdnav_sector_search( nav, forcedBlockPosition, SEEK_SET) != DVDNAV_STATUS_OK)
-		      	    esyslog("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
+                    esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
 	    } else {
 		      DEBUG_CONTROL("dvd %d %4.4u/%4.4u bwd get block: %4.4ldb d%4.4ldb, slo=%d\n",
 				playDir == pdBackward,
@@ -963,7 +962,7 @@ void cDvdPlayer::Action(void) {
             if (playDir == pdForward && pos+1 == len && pgcPosTicks>90000L*10L && pgcTicksPerBlock>0) {
 		        pgcPosTicks-=90000L*10L;
 		        if (dvdnav_sector_search( nav, pgcPosTicks/pgcTicksPerBlock, SEEK_SET) != DVDNAV_STATUS_OK )
-		      	    esyslog("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
+                    esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
 	        }
       }
 
@@ -1328,7 +1327,7 @@ void cDvdPlayer::DoScaleMode(int &vaspect)
     	    else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed ..
 	        	vaspect = 0x02;   // 4:3
                 if (vaspect==2 && dvd_aspect==3) // use letterbox (honor dvd_aspect)
-    	        vaspect = 0x03;   // 16:9
+    	            vaspect = 0x03;   // 16:9
             }
         }
     }
@@ -1390,7 +1389,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
     //make sure we got a PS packet header
     if (!cPStream::packetStart(sector, DVD_VIDEO_LB_LEN) && cPStream::packetType(sector) != 0xBA) {
-        esyslog("ERROR: got unexpected packet: %x %x %x %x", sector[0], sector[1], sector[2], sector[3]);
+        esyslog("ERROR: dvd-plugin got unexpected packet: %x %x %x %x", sector[0], sector[1], sector[2], sector[3]);
         return playedPacket;
     }
 
@@ -1787,9 +1786,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
         case PROG_STREAM_MAP:
         default: {
             lastFrameType = 0xff;
-            esyslog("ERROR: don't know what to do - packetType: %x",
+            esyslog("ERROR: dvd-plugin don't know what to do - packetType: %x",
 		    cPStream::packetType(sector));
-            DEBUGDVD("ERROR: don't know what to do - packetType: %x",
+            DEBUGDVD("don't know what to do - packetType: %x",
 		    cPStream::packetType(sector));
             return playedPacket;
         }
