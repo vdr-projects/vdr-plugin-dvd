@@ -351,12 +351,11 @@ public:
     int  GetCurrentNavSubpStreamIdx(void) const ;
     uint16_t GetCurrentNavSubpStreamLangCode(void) const;
     int  GetNavSubpStreamNumber (void) const ;
-    int NextSubpStream();
+    int  NextSubpStream();
     void GetSubpLangCode( const char ** subplang_str ) const ;
 
     bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
-    uint16_t GetCurrentNavAudioTrackLangCode(void) const;
     int  GetNavAudioTrackNumber(void) const ;
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;

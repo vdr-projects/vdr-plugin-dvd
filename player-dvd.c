@@ -294,7 +294,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     currentNavSubpStreamLangCode = 0xFFFF;
 
     currentNavAudioTrackType = -1;
-    currentNavAudioTrackLangCode=0xFFFF;
+    currentNavAudioTrackLangCode = 0xFFFF;
     lastNavAudioTrackType = -1;
 
     pgcCurrentBlockNum=1;
@@ -1560,7 +1560,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             int audioTrackIndex = notifySeenAudioTrack(audioId);
 
             int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
-            audioLanguageCode = audioLanguageCode >> 8 | (audioLanguageCode & 0xff) << 8;
 
             DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
 	        (void) audioTrackIndex;
@@ -1648,7 +1647,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
                 int audioTrackIndex = notifySeenAudioTrack(audioId);
                 int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
-                audioLanguageCode = audioLanguageCode >> 8 | (audioLanguageCode & 0xff) << 8;
 
 				if (!Setup.UseDolbyDigital && audioType == aAC3)
                 	DeviceSetAvailableTrack(ttAudio, audioId, aLPCM + audioId, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
@@ -2271,27 +2269,24 @@ void cDvdPlayer::PreviousPG()
 
 void cDvdPlayer::clearSeenSubpStream( )
 {
-        LOCK_THREAD;
+    LOCK_THREAD;
 
 	navSubpStreamSeen.Clear();
-	currentNavSubpStream=-1;
-        currentNavSubpStreamLangCode=0xFFFF;
+	currentNavSubpStream = -1;
+    currentNavSubpStreamLangCode = 0xFFFF;
 	notifySeenSubpStream(-1); // no subp ..
 	DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: seen subp cleared\n");
-        SetCurrentNavSubpStreamUsrLocked(false);
+    SetCurrentNavSubpStreamUsrLocked(false);
 }
 
 void cDvdPlayer::setAllSubpStreams(void)
 {
     clearSeenSubpStream();
 
-    uint16_t lang_code1;
-
     for(int i = 0; nav!=NULL && i < MaxSubpStreams; i++) {
-      lang_code1=GetNavSubpStreamLangCode( i );
-      if(lang_code1!=0xffff) {
-	notifySeenSubpStream( i );
-      }
+        uint16_t subpStreamLanguageCode = GetNavSubpStreamLangCode(i);
+        if(subpStreamLanguageCode != 0xffff)
+	        notifySeenSubpStream(i);
     }
 }
 
@@ -2311,25 +2306,21 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
 
     if (i < 0) {
 #ifdef SUBPDEBUG
-	    char buff2[12];
 	    int channel, channel_active=0;
-            uint16_t lang_code1;
-            const char * p1 = (char *)&lang_code1;
-
+        uint16_t subpStreamLanguageCode = 0;
 	    channel = navSubpStream;
 	    buff2[0]=0;
-	    if(nav!=NULL)
-	    {
-		    lang_code1=GetNavSubpStreamLangCode( channel );
+	    if(nav != NULL) {
+            subpStreamLanguageCode = GetNavSubpStreamLangCode(channel);
 		    if(lang_code1!=0xffff) {
-				buff2[0]=p1[1];
-				buff2[1]=p1[0];
-				buff2[2]=0;
+				buff2[0] = p1[1];
+				buff2[1] = p1[0];
+				buff2[2] = 0;
 		    }
 	    	channel_active = dvdnav_get_active_spu_stream(nav);
 	    }
-            printf("cDvdPlayer::cDvdPlayer: seen new subp id: 0x%X (%d), <%s>; 0x%X (%d)\n",
-			channel, channel, buff2, channel_active, channel_active);
+        printf("cDvdPlayer::cDvdPlayer: seen new subp id: 0x%X (%d), <%s>; 0x%X (%d)\n",
+            channel, channel, (char *)&subpStreamLanguageCode, channel_active, channel_active);
 #endif
 	    navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
     }
@@ -2347,24 +2338,25 @@ void cDvdPlayer::SetCurrentNavSubpStreamUsrLocked(bool lock)
   	    currentNavSubpStreamUsrLocked ? "true" : "false");
 }
 
-int  cDvdPlayer::GetCurrentNavSubpStream(void) const
+int cDvdPlayer::GetCurrentNavSubpStream(void) const
 {
     return currentNavSubpStream;
 }
 
-int  cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
+int cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
 {
-    return SearchSubpStream(currentNavSubpStream & SubpStreamMask);
+    return SearchSubpStream(currentNavSubpStream != -1 ? (currentNavSubpStream & SubpStreamMask) : currentNavSubpStream);
 }
 
 uint16_t cDvdPlayer::GetNavSubpStreamLangCode(int channel) const
 {
-	uint16_t lang_code1=0xFFFF;
-	if(nav!=NULL) {
-		int logchan=dvdnav_get_spu_logical_stream(nav, channel);
-		lang_code1=dvdnav_spu_stream_to_lang( nav, logchan>=0?logchan:channel );
+	uint16_t subpStreamLanguageCode = 0xFFFF;
+	if(nav != NULL) {
+		int logchan = dvdnav_get_spu_logical_stream(nav, channel);
+        subpStreamLanguageCode = dvdnav_spu_stream_to_lang(nav, logchan >= 0 ? logchan : channel);
+        subpStreamLanguageCode = subpStreamLanguageCode >> 8 | (subpStreamLanguageCode & 0xff) << 8;
 	}
-	return lang_code1;
+    return subpStreamLanguageCode;
 }
 
 uint16_t cDvdPlayer::GetCurrentNavSubpStreamLangCode(void) const
@@ -2379,11 +2371,8 @@ int cDvdPlayer::GetNavSubpStreamNumber (void) const
 
 int cDvdPlayer::SetSubpStream(int id)
 {
-    static char buffer[10];
-    uint16_t lang_code1;
-    const char * p1 = (char *)&lang_code1;
-
     LOCK_THREAD;
+
     int i = SearchSubpStream(id);
 
     if(i < 0) {
@@ -2394,16 +2383,11 @@ int cDvdPlayer::SetSubpStream(int id)
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
     SetCurrentNavSubpStreamUsrLocked(true);
 
-    if( currentNavSubpStream!=-1 && nav!=NULL) {
-	    lang_code1=GetCurrentNavSubpStreamLangCode();
-	    sprintf(buffer,"%c%c", p1[1], p1[0]);
-	    dvdnav_spu_language_select ( nav, buffer );
-    } else {
-	    sprintf(buffer,"auto");
-    }
+    if(currentNavSubpStreamLangCode != 0xFFFF && nav)
+        dvdnav_spu_language_select(nav, (char *)&currentNavSubpStreamLangCode);
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
-		currentNavSubpStream, i, buffer,
+        currentNavSubpStream, i, (char *)&currentNavSubpStreamLangCode,
 		currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
     return id;
@@ -2411,16 +2395,12 @@ int cDvdPlayer::SetSubpStream(int id)
 
 int cDvdPlayer::NextSubpStream()
 {
-    static char buffer[10];
-    uint16_t lang_code1;
-    const char * p1 = (char *)&lang_code1;
-
     if (navSubpStreamSeen.Count() == 0)
        return 0;
 
     LOCK_THREAD;
 
-    int i = SearchSubpStream(currentNavSubpStream);
+    int i = SearchSubpStream(currentNavSubpStream != -1 ? (currentNavSubpStream & SubpStreamMask) : currentNavSubpStream);
 
     i = ( i + 1 ) % navSubpStreamSeen.Count();
 
@@ -2430,50 +2410,32 @@ int cDvdPlayer::NextSubpStream()
     currentNavSubpStream = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
 
-    if( currentNavSubpStream!=-1 && nav!=NULL) {
-	    lang_code1=GetCurrentNavSubpStreamLangCode();
-	    sprintf(buffer,"%c%c", p1[1], p1[0]);
-	    dvdnav_spu_language_select ( nav, buffer );
-    } else {
-	    sprintf(buffer,"auto");
-    }
+    if(currentNavSubpStreamLangCode != 0xFFFF && nav)
+        dvdnav_spu_language_select(nav, (char *)&currentNavSubpStreamLangCode);
 
     SetCurrentNavSubpStreamUsrLocked(true);
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
-		currentNavSubpStream, i, buffer,
+        currentNavSubpStream, i, /(char *)&currentNavSubpStreamLangCode,
 		currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
     return 0;
 }
 
-void cDvdPlayer::GetSubpLangCode( const char ** subplang_str ) const
+void cDvdPlayer::GetSubpLangCode(const char ** subplang_str) const
 {
     static char buffer[100];
-    static char buff2[20];
-    const char * p1 = (char *)&currentNavSubpStreamLangCode;
 
-    if(!DVDActiveAndRunning()) { *subplang_str="n.a."; return; }
-
-    if( currentNavSubpStream == -1 ) {
-        strcpy(buff2,"auto");
-    } else {
-        if(currentNavSubpStreamLangCode==0xffff) {
-            buff2[0]=0;
-        } else  {
-	    buff2[0]=p1[1];
-	    buff2[1]=p1[0];
-	    buff2[2]=0;
-        }
+    if(!DVDActiveAndRunning() || GetNavSubpStreamNumber() == 0) {
+        *subplang_str="n.a.";
+        return;
     }
 
-    if( GetNavSubpStreamNumber() > 2 )
-        sprintf(buffer,"%s %d/%d",
-            buff2, GetCurrentNavSubpStreamIdx(), GetNavSubpStreamNumber()-1);
-    else if( GetNavSubpStreamNumber() > 1 )
-        sprintf(buffer,"%s", buff2);
-    else
-        buffer[0]=0;
+    int subpStreamLanguageCode = GetCurrentNavSubpStreamLangCode();
 
+    if(GetNavSubpStreamNumber() > 2)
+        sprintf(buffer,"%s %d/%d", subpStreamLanguageCode !=0xFFFF ? (char *)&subpStreamLanguageCode : "", GetCurrentNavSubpStreamIdx(), GetNavSubpStreamNumber() - 1);
+    else if(GetNavSubpStreamNumber() > 1)
+        sprintf(buffer,"%s", subpStreamLanguageCode !=0xFFFF ? (char *)&subpStreamLanguageCode : "n.a.");
     *subplang_str = buffer;
 }
 
@@ -2490,9 +2452,9 @@ void cDvdPlayer::setAllAudioTracks(void)
     clearSeenAudioTrack();
 
     for(int i = 0; nav!=NULL && i < MaxAudioTracks; i++) {
-        uint16_t lang_code1 = GetNavAudioTrackLangCode( i );
+        uint16_t audioLanguageCode = GetNavAudioTrackLangCode(i);
         int logChannel = dvdnav_get_audio_logical_stream(nav, i);
-        if (logChannel >= AUDIO_STREAM_S && lang_code1!=0xffff) {
+        if (logChannel >= AUDIO_STREAM_S && audioLanguageCode != 0xffff) {
             notifySeenAudioTrack(logChannel);
         }
     }
@@ -2514,25 +2476,16 @@ int cDvdPlayer::notifySeenAudioTrack(int navAudioTrack)
 
     if (i < 0) {
 #ifdef AUDIOIDDEBUG
-	    char buff2[12];
+        int audioLanguageCode = 0xFFFF;
 	    int channel, channel_active=0;
-            uint16_t lang_code1;
-            const char * p1 = (char *)&lang_code1;
 
 	    channel = navAudioTrack;
-	    buff2[0]=0;
-	    if(nav!=NULL)
-	    {
-		    lang_code1=GetNavAudioTrackLangCode(channel);
-		    if(lang_code1!=0xffff) {
-				buff2[0]=p1[1];
-				buff2[1]=p1[0];
-				buff2[2]=0;
-		    }
+	    if(nav!=NULL) {
+            audioLanguageCode = GetNavAudioTrackLangCode(channel);
 	    	channel_active = dvdnav_get_active_audio_stream(nav);
 	    }
         printf("cDvdPlayer::cDvdPlayer: seen new audio id: 0x%X (%d), <%s>; 0x%X (%d)\n",
-            channel, channel, buff2, channel_active, channel_active);
+            channel, channel, (char *)&audioLanguageCode, channel_active, channel_active);
         fflush(NULL);
 #endif
 	    navAudioTracksSeen.Add(new IntegerListObject(navAudioTrack));
@@ -2582,17 +2535,13 @@ int  cDvdPlayer::GetCurrentNavAudioTrackType(void) const
 
 uint16_t cDvdPlayer::GetNavAudioTrackLangCode(int channel) const
 {
-    uint16_t lang_code1=0xFFFF;
-    if( nav!=NULL ) {
-        int logchan=dvdnav_get_audio_logical_stream(nav, channel);
-        lang_code1=dvdnav_audio_stream_to_lang(nav, logchan>=0 ? logchan : channel);
+    uint16_t audioStreamLanguageCode = 0xFFFF;
+    if(nav != NULL) {
+        int logchan = dvdnav_get_audio_logical_stream(nav, channel);
+        audioStreamLanguageCode = dvdnav_audio_stream_to_lang(nav, logchan >= 0 ? logchan : channel);
+        audioStreamLanguageCode = audioStreamLanguageCode >> 8 | (audioStreamLanguageCode & 0xff) << 8;
     }
-    return lang_code1;
-}
-
-uint16_t cDvdPlayer::GetCurrentNavAudioTrackLangCode(void) const
-{
-    return currentNavAudioTrackLangCode;
+    return audioStreamLanguageCode;
 }
 
 int cDvdPlayer::GetNavAudioTrackNumber (void) const
@@ -2602,12 +2551,8 @@ int cDvdPlayer::GetNavAudioTrackNumber (void) const
 
 void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 {
-
-    static char buffer[10];
-    const char * p1 = (char *)&currentNavAudioTrackLangCode;
-
-    if(!DVDActiveAndRunning()) return;
-
+    if(!DVDActiveAndRunning())
+        return;
 
     LOCK_THREAD;
 
@@ -2633,8 +2578,7 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
 
         if (currentNavAudioTrackLangCode != 0xFFFF) {
-            sprintf(buffer,"%c%c", p1[1], p1[0]);
-            dvdnav_audio_language_select(nav, buffer);
+            dvdnav_audio_language_select(nav, (char *)&currentNavAudioTrackLangCode);
         }
 //        Empty();
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: SWITCHED !\n");
@@ -2702,40 +2646,37 @@ void cDvdPlayer::SetTitleInfoString()
 void cDvdPlayer::GetAudioLangCode(const char ** audiolang_str) const
 {
 	static char buffer[100];
-	static char buff2[4];
 	char * audioTypeDescr = NULL;
-        const char * p1 = (char *)&currentNavAudioTrackLangCode;
 
-        if(!DVDActiveAndRunning()) { *audiolang_str="n.a."; return; }
+    if(!DVDActiveAndRunning()) {
+        *audiolang_str="n.a.";
+        return;
+    }
 
-	switch ( currentNavAudioTrackType )
-	{
-	     case aAC3:
-		audioTypeDescr = "ac3"; break;
-	     case aDTS:
-		audioTypeDescr = "dts"; break;
-	     case aLPCM:
-		audioTypeDescr = "pcm"; break;
-	     case aMPEG:
-		audioTypeDescr = "mp2"; break;
-	     default:
-		audioTypeDescr = "non"; break;
+	switch (currentNavAudioTrackType) {
+        case aAC3:
+            audioTypeDescr = "ac3";
+            break;
+        case aDTS:
+            audioTypeDescr = "dts";
+            break;
+        case aLPCM:
+            audioTypeDescr = "pcm";
+            break;
+        case aMPEG:
+            audioTypeDescr = "mp2";
+            break;
+        default:
+            audioTypeDescr = "non";
+            break;
 	}
 
-	if(currentNavAudioTrackLangCode==0xffff)
-		buff2[0]=0;
-	else  {
-		buff2[0]=p1[1];
-		buff2[1]=p1[0];
-		buff2[2]=0;
-	}
-
-	if( GetNavAudioTrackNumber() > 1 )
+	if(GetNavAudioTrackNumber() > 1)
 		sprintf(buffer,"%s %d/%d %s",
-			buff2, GetCurrentNavAudioTrackIdx()+1, GetNavAudioTrackNumber(),
+            currentNavAudioTrackLangCode != 0xFFFF ? (char *)&currentNavAudioTrackLangCode : "", GetCurrentNavAudioTrackIdx()+1, GetNavAudioTrackNumber(),
 			audioTypeDescr);
 	else
-		sprintf(buffer,"%s %s", buff2, audioTypeDescr);
+        sprintf(buffer,"%s %s", currentNavAudioTrackLangCode != 0xFFFF ? (char *)&currentNavAudioTrackLangCode : "", audioTypeDescr);
 
 	*audiolang_str = buffer;
 }
