@@ -1,8 +1,31 @@
 Thanks to:
 
+Major
+======
+
 * FIXME: add all contributors ..
 
-* Sascha Volkenandt
-    - for the HideMainMenu patch
+Marco Schluessler
+	- cvs team
+
+Miko, aka weak
+	- cvs team
+
+Sven Goethel
+	- cvs team
+	- successor dev.
+
+Andreas Schultz 		
+	- Original Author
+
+Minor
+======
+
+Martin Hammerschmid 
+	- lcdproc hint
+
+Sascha Volkenandt
+	- for the HideMainMenu patch
 
 
+... and all the many testers and test case contributors ..
