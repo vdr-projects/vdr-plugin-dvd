@@ -1648,18 +1648,17 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		}
 	   }
 
-	   if (ptsFlag)
-	   {
-	       VideoPts = lvpts = pktpts;
-	       cPStream::toPTS(sector + 9, pktpts, true);
-           }
+	        if (ptsFlag) {
+	            VideoPts = lvpts = pktpts;
+	            cPStream::toPTS(sector + 9, pktpts, true);
+            }
 
-           rframe = new cFrame(sector, r, ftVideo);
+            rframe = new cFrame(sector, r, ftVideo);
 
-           playedPacket |= pktVideo;
-	   seenVPTS(VideoPts);
-	   ptype = 'V';
-           break;
+            playedPacket |= pktVideo;
+            if ( !isInMenuDomain ) seenVPTS(VideoPts);
+	        ptype = 'V';
+            break;
          }
     case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
          lastFrameType = AUDIO_STREAM_S;
