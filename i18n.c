@@ -10,31 +10,6 @@
 
 #include "i18n.h"
 
-const char *Languages[] = {
-    "English",
-    "Deutsch",
-    "Slovenski",
-    "Italiano",
-    "Nederlands",
-    "Português",
-    "Français",
-    "Norsk",
-    "Suomi",
-    "Polski",
-    "Español",
-    "Ellinika",
-    "Svenska",
-    "Romaneste",
-    "Magyar",
-    "Català",
-#if VDRVERSNUM>=10300
-    "ÀãááÚØÙ", // Russian
-#endif
-#if VDRVERSNUM>=10307
-    "Hrvatski",
-#endif
-};
-
 const char *ISO639code[] = {
   // Language ISO 639 codes for DVD
     "en",
@@ -52,20 +27,13 @@ const char *ISO639code[] = {
     "se",
     "ro",
     "hu",
-    "",
+    "ca",
 #if VDRVERSNUM>=10300
     "ru",
 #endif
 #if VDRVERSNUM>=10307
     "",
 #endif
-};
-
-const char *SpuOptions[] = {
-	// options for the subtitles
-	"no",
-	"yes",
-	"forced only",
 };
 
 const tI18nPhrase DvdPhrases[] = {
@@ -190,7 +158,100 @@ const tI18nPhrase DvdPhrases[] = {
 #endif
     },
     {
-    "Setup.DVD$Hide Mainmenu Entry",
+    "Setup.DVD$forced only",                            // English
+        "nur geforderte"                                // Deutsch
+        "",                                             // Slovenski
+        "",                                             // Italiano
+        "",                                             // Nederlands
+        "",                                             // Português
+        "",                                             // Français
+        "",                                             // Norsk
+        "",                                             // Suomi
+        "",                                             // Polski
+        "",                                             // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
+        "",
+        "",
+#if VDRVERSNUM>=10300
+        "",                                             // Russian
+#endif
+#if VDRVERSNUM>=10307
+        "",
+#endif
+    },
+    {
+     "Setup.DVD$Hide Mainmenu Entry",
+        "Hauptmenüeintrag verstecken"                   // Deutsch
+        "",                                             // Slovenski
+        "",                                             // Italiano
+        "",                                             // Nederlands
+        "",                                             // Português
+        "",                                             // Français
+        "",                                             // Norsk
+        "",                                             // Suomi
+        "",                                             // Polski
+        "",                                             // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
+        "",
+        "",
+#if VDRVERSNUM>=10300
+        "",                                             // Russian
+#endif
+#if VDRVERSNUM>=10307
+        "",
+#endif
+    },
+    {
+    "Error.DVD$Error opening DVD!",                     // English
+        "Fehler beim öffnen der DVD!",                  // Deutsch
+        "",                                             // Slovenski
+        "",                                             // Italiano
+        "",                                             // Nederlands
+        "",                                             // Português
+        "",                                             // Français
+        "",                                             // Norsk
+        "",                                             // Suomi
+        "",                                             // Polski
+        "",                                             // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
+        "",
+        "",
+#if VDRVERSNUM>=10300
+        "",                                             // Russian
+#endif
+#if VDRVERSNUM>=10307
+        "",
+#endif
+    },
+    {
+    "Error.DVD$Error fetching data from DVD!",          // English
+        "Fehler beim lesen von der DVD!",               // Deutsch
+        "",                                             // Slovenski
+        "",                                             // Italiano
+        "",                                             // Nederlands
+        "",                                             // Português
+        "",                                             // Français
+        "",                                             // Norsk
+        "",                                             // Suomi
+        "",                                             // Polski
+        "",                                             // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
+        "",
+        "",
+#if VDRVERSNUM>=10300
+      "",                                             // Russian
+#endif
+#if VDRVERSNUM>=10307
+        "",
+#endif
     },
     { NULL }
 };
