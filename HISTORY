@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - fix aspectratio in pan and scan mode (need patch vdr-1.3.20_aspectratio.diff)
     - fix stillpicture in menu
     - fix allways showed subtitles
     - fix audiotrackcount and audiolanguage in progress display

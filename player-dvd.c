@@ -1046,7 +1046,7 @@ void cDvdPlayer::Action(void) {
 	            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
             if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
-		        cSpuDecoder::eScaleMode mode = getSPUScaleMode();
+                cSpuDecoder::eScaleMode mode = SPUdecoder->getScaleMode();
 
                 /* !!! Bit 7 set means hide, and only let Forced display show (see vm.c from libdvdnav) */
 		        if (mode == cSpuDecoder::eSpuLetterBox ) {
@@ -1311,97 +1311,27 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
  */
 void cDvdPlayer::DoScaleMode(int &vaspect)
 {
-    int o_hsize=hsize, o_vsize=vsize, o_vaspect=vaspect;
-
-    cSpuDecoder::eScaleMode newMode     = cSpuDecoder::eSpuNormal;
-    // eVideoDisplayFormat vdf          = vaspect==2?vdfPAN_SCAN:vdfLETTER_BOX;
-
     // nothing has to be done, if
     //		TV	16:9
     // 		DVD 	 4:3
-    if (!Setup.VideoFormat && dvd_aspect != 0 && IsInMenuDomain()) {
+    if (!Setup.VideoFormat && dvd_aspect!=0 && IsInMenuDomain()) {
     	//
 	// if we are here, then
 	//	TV==4:3 && DVD==16:9
 	//
-        if ( (vaspect != 2) || ( vaspect==2 && dvd_aspect==3 ) ) {
+        if (vaspect != 2 || (vaspect==2 && dvd_aspect==3)) {
 	        //
 	        //and the actual material on the DVD is not 4:3
 	        //
-            if ( !(dvd_scaleperm & 1) )
-	        {  // letterbox is allowed, keep 16:9 and wxh
-                newMode = cSpuDecoder::eSpuLetterBox;
+            if (!(dvd_scaleperm & 1))  // letterbox is allowed, keep 16:9 and wxh
 	        	vaspect = 0x03;
-	        } else if ( !(dvd_scaleperm & 2) ) {    // pan& scan allowed ..
-	        	newMode = cSpuDecoder::eSpuPanAndScan;
+    	    else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed ..
 	        	vaspect = 0x02;   // 4:3
-                // vdf = vdfCENTER_CUT_OUT;
-	        	// hsize  = o_hsize  / ( 4 * 3 ) * 16 ; // streched hsize
-	        	// hsize  = o_hsize  / 16 * 3 * 4; // shorten hsize
-	        	// vsize = o_vsize /  9 * 4 * 3; // stretched vsize
-	        	// vsize = o_vsize /  ( 3 * 4 ) * 9 ; // shorten vsize
-     	    } else if ( vaspect==2 && dvd_aspect==3 ) {
-                // use letterbox (honor dvd_aspect)
-    	        newMode = cSpuDecoder::eSpuLetterBox;
+                if (vaspect==2 && dvd_aspect==3) // use letterbox (honor dvd_aspect)
     	        vaspect = 0x03;   // 16:9
             }
         }
     }
-
-    if (SPUdecoder) SPUdecoder->setScaleMode(newMode);
-    // cDevice::PrimaryDevice()->SetDisplayFormat(vdf);
-
-#if 0
-    DEBUG_SUBP_ID("dvd doScaleMode: have TV %s, DVD %s(0x%x), actual material %s (0x%hx: %hux%hu) -> %s (0x%hx: %hux%hu), menu=%d, set spu scale mode: %s\n",
-    	(Setup.VideoFormat==0)?"4:3":"16:9",
-	(dvd_aspect==0)?"4:3":"16:9",
-	dvd_aspect,
-	(o_vaspect==3)?"16:9":"4:3",
-	o_vaspect, o_hsize, o_vsize,
-	(vaspect==3)?"16:9":"4:3",
-	vaspect, hsize, vsize,
-	IsInMenuDomain(),
-	(newMode==cSpuDecoder::eSpuNormal)?"normal":
-		(newMode==cSpuDecoder::eSpuLetterBox)?"LetterBox":"PanAndScan" );
-#endif
-
-    (void)o_hsize;
-    (void)o_vsize;
-    (void)o_vaspect;
-}
-
-/*
- * current video parameter have been set by ScanVideoPacket,
- * update the state struct now appropriatly
- */
-cSpuDecoder::eScaleMode cDvdPlayer::getSPUScaleMode()
-{
-    cSpuDecoder::eScaleMode newMode     = cSpuDecoder::eSpuNormal;
-
-    // nothing has to be done, if we display 16:9
-    // or if the DVD is 4:3
-    if (!Setup.VideoFormat && dvd_aspect != 0) {
-    	//
-	// if we are here, then the TV is 4:3, but the DVD says it is 16:9
-	//
-        newMode = cSpuDecoder::eSpuLetterBox;
-
-/**
-	    if (!(dvd_scaleperm & 1)) {  // letterbox is allowed
-		newMode = cSpuDecoder::eSpuLetterBox;
-	    } else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed
-		newMode = cSpuDecoder::eSpuPanAndScan;
-	    }
- */
-    }
-
-    DEBUG_SUBP_ID("dvd getSPUScaleMode: have TV %s, DVD %s, set spu scale mode: %s\n",
-    	(Setup.VideoFormat==0)?"4:3":"16:9",
-	(dvd_aspect==0)?"4:3":"16:9",
-	(newMode==cSpuDecoder::eSpuNormal)?"normal":
-		(newMode==cSpuDecoder::eSpuLetterBox)?"LetterBox":"PanAndScan" );
-
-    return newMode;
 }
 
 void cDvdPlayer::seenVPTS(uint64_t pts)
@@ -2122,6 +2052,13 @@ void cDvdPlayer::UpdateVTSInfo()
 	    dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
         isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
 	    isInFeature    = dvdnav_is_domain_vts(nav);
+
+        eVideoDisplayFormat videoDisplayformat = vdfCenterCutOut;
+        if (!(dvd_scaleperm & 1))
+           videoDisplayformat = vdfLetterBox;
+        else if (!(dvd_scaleperm & 2))
+           videoDisplayformat = vdfPanAndScan;
+        cDevice::cDevice::PrimaryDevice()->SetVideoDisplayFormat(videoDisplayformat);
     }
 }
 
