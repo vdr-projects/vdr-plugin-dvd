@@ -38,24 +38,24 @@ const char *ISO639code[] = {
 
 const tI18nPhrase DvdPhrases[] = {
     {
-    "Setup.DVD$Preferred menu language",                    // English
-        "Bevorzugte Spache für Menüs",                      // Deutsch
-        "",                                                 // Slovenski
-        "menu - linguaggio preferito",                      // Italiano
-        "Taalkeuze voor menu",                              // Nederlands
-        "",                                                 // Português
-        "Langage préféré pour les menus",                   // Français
-        "",                                                 // Norsk
-        "Haluttu valikkokieli",                             // suomi
-        "",                                                 // Polski
-        "Idioma preferido para los menús",                  // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
-        "",                                                 // Svenska
-        "",                                                 // Romaneste
-        "",                                                 // Magyar
-        "",                                                 // Català
-        "",                                                 // ÀãááÚØÙ (Russian)
-        "",                                                 // Hrvatski (Croatian)
+    "Plugin.DVD$DVD",                                       // English
+        "DVD",                                              // Deutsch
+        "DVD",                                              // Slovenski
+        "DVD",                                              // Italiano
+        "DVD",                                              // Nederlands
+        "DVD",                                              // Português
+        "DVD",                                              // Français
+        "DVD",                                              // Norsk
+        "DVD",                                              // suomi
+        "DVD",                                              // Polski
+        "DVD",                                              // Español
+        "DVD",                                              // ÅëëçíéêÜ (Greek)
+        "DVD",                                              // Svenska
+        "DVD",                                              // Romaneste
+        "DVD",                                              // Magyar
+        "DVD",                                              // Català
+        "DVD",                                              // ÀãááÚØÙ (Russian)
+        "DVD",                                              // Hrvatski (Croatian)
     },
     {
     "Plugin.DVD$turn VDR into an (almost) full featured DVD player",    // English
@@ -76,6 +76,26 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                             // Català
         "",                                                             // ÀãááÚØÙ (Russian)
         "",                                                             // Hrvatski (Croatian)
+    },
+    {
+    "Setup.DVD$Preferred menu language",                    // English
+        "Bevorzugte Spache für Menüs",                      // Deutsch
+        "",                                                 // Slovenski
+        "menu - linguaggio preferito",                      // Italiano
+        "Taalkeuze voor menu",                              // Nederlands
+        "",                                                 // Português
+        "Langage préféré pour les menus",                   // Français
+        "",                                                 // Norsk
+        "Haluttu valikkokieli",                             // suomi
+        "",                                                 // Polski
+        "Idioma preferido para los menús",                  // Español
+        "",                                                 // ÅëëçíéêÜ (Greek)
+        "",                                                 // Svenska
+        "",                                                 // Romaneste
+        "",                                                 // Magyar
+        "",                                                 // Català
+        "",                                                 // ÀãááÚØÙ (Russian)
+        "",                                                 // Hrvatski (Croatian)
     },
     {
     "Setup.DVD$Preferred audio language",                   // English

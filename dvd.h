@@ -24,7 +24,7 @@
 
 static const char *VERSION        = "0.3.5-b06";
 static const char *DESCRIPTION    = "Plugin.DVD$turn VDR into an (almost) full featured DVD player";
-static const char *MAINMENUENTRY  = "DVD";
+static const char *MAINMENUENTRY  = "Plugin.DVD$DVD";
 
 // --- cPluginDvd ------------------------------------------------------------
 
@@ -45,7 +45,7 @@ public:
   virtual bool Start(void);
   virtual void Housekeeping(void);
   virtual const char *MainMenuEntry(void) { 
-		return DVDSetup.HideMainMenu ? NULL : MAINMENUENTRY; 
+		return DVDSetup.HideMainMenu ? NULL : tr(MAINMENUENTRY);
 	}
   virtual cOsdMenu *MainMenuAction(void);
   virtual cMenuSetupPage *SetupMenu(void);
