@@ -27,28 +27,6 @@ class cDvdPlayer;
 #include "dvdspu.h"
 #include "ca52.h"
 
-#define SYSTEM_HEADER    0xBB
-#define SEQUENCE_HEADER  0xB3
-#define PROG_STREAM_MAP  0xBC
-#ifndef PRIVATE_STREAM1
-#define PRIVATE_STREAM1  0xBD
-#endif
-#define PADDING_STREAM   0xBE
-#ifndef PRIVATE_STREAM2
-#define PRIVATE_STREAM2  0xBF
-#endif
-#define AUDIO_STREAM_S   0xC0
-#define AUDIO_STREAM_E   0xDF
-#define VIDEO_STREAM_S   0xE0
-#define VIDEO_STREAM_E   0xEF
-#define ECM_STREAM       0xF0
-#define EMM_STREAM       0xF1
-#define DSM_CC_STREAM    0xF2
-#define ISO13522_STREAM  0xF3
-#define PROG_STREAM_DIR  0xFF
-
-#define I_TYPE       0x01
-
 class IntegerListObject : public cListObject {
     private:
         int value;
@@ -112,7 +90,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int dvd_scaleperm;
     void UpdateVTSInfo(void);
 
-    int skipPlayVideo;
+    bool skipPlayVideo;
     int fastWindFactor;
     uint32_t cntVidBlocksPlayed;
     uint32_t cntAudBlocksPlayed;
@@ -149,6 +127,9 @@ class cDvdPlayer : public cPlayer, cThread {
     uint64_t stcPTSLastAudio;
     uint64_t pktptsAudio;
     uint64_t pktptsLastAudio;
+
+    uint64_t pictureNumber;
+    bool     pictureFlip;
 
     int   currentNavAudioTrack;
     uint16_t currentNavAudioTrackLangCode;

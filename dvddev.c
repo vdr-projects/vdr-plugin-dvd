@@ -15,6 +15,11 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
+
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "dvddev.h"
 
 #ifndef __QNXNTO__
@@ -25,7 +30,9 @@
 #define DVDDEBUG
 #undef DEBUG
 #else
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #endif
 
 #ifdef DVDDEBUG

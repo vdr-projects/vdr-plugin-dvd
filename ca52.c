@@ -33,6 +33,10 @@
 
 #endif
 
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "dvddev.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"

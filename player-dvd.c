@@ -22,6 +22,10 @@
 #include <vdr/device.h>
 #include <vdr/plugin.h>
 
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "common-dvd.h"
 #include "i18n.h"
 #include "dvddev.h"
@@ -238,7 +242,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
     DEBUG_SUBP_ID("SPU showSubs=%d, forcedSubsOnly=%d\n", DVDSetup.ShowSubtitles, forcedSubsOnly);
 
-    skipPlayVideo=0;
+    skipPlayVideo=false;
     fastWindFactor=1;
 
     clearSeenSubpStream();
@@ -434,8 +438,10 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
   stillFrame = 0;
   IframeCnt = 0;
   iframeAssembler->Clear();
+  pictureNumber=0;
+  pictureFlip=false;
 
-  skipPlayVideo=0;
+  skipPlayVideo=false;
 
   if(emptyDeviceToo) {
 	  DeviceClear();
@@ -1286,9 +1292,6 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
     currButtonN = buttonN;
 }
 
-#define NO_PICTURE 0
-#define SC_PICTURE 0x00
-
 /*
  * current video parameter have been set by ScanVideoPacket,
  * update the state struct now appropriatly
@@ -1528,6 +1531,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	  rawSTC=-1;
   }
 
+  pictureFlip=false;
+
   switch (cPStream::packetType(sector)) {
     case VIDEO_STREAM_S ... VIDEO_STREAM_E:
          {
@@ -1539,7 +1544,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
            data += 3;
 
 	   uint8_t currentFrameType = 0;
-	   bool do_copy =  (lastFrameType == I_TYPE) && 
+	   bool do_copy =  (lastFrameType == I_FRAME) && 
                           !(data[0] == 0 && data[1] == 0 && data[2] == 1);
 	   bool havePictureHeader = false;
 	   bool haveSequenceHeader = false;
@@ -1559,7 +1564,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		           currentFrameType = lastFrameType;
 		       //
 		       // in trickMode, only play assembled .. I-Frames ..
-		       skipPlayVideo= lastFrameType > I_TYPE && trickMode;
+		       skipPlayVideo= lastFrameType > I_FRAME && trickMode;
 
 		       data += 5;
 		       datalen -=5;
@@ -1620,31 +1625,43 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		   {
 	                  if( !havePictureHeader && iframeAssembler->Available()==0 )
 				  haveSliceBeforePicture = true;
+
+			  int mb_y= ptype2 * 16;
+			  if ( mb_y == vsize) 
+			  {
+    				pictureNumber++;
+    				pictureFlip=true;
+        		        DEBUGDVD("pic flip - num: %llu\n", pictureNumber);
+			  } /** else {
+        		        DEBUGDVD("pic vsize %d, mb_y*16: %d ; pn: %llu\n", 
+					vsize, mb_y, pictureNumber);
+
+			  } */
 		   }
 	       }
 	       data++;
 	       datalen--;
 	   }
 
-	   if ( stillFrame && (currentFrameType <= I_TYPE || do_copy)) 
+	   if ( stillFrame && (currentFrameType <= I_FRAME || do_copy)) 
 	   {
 	        if ( haveSliceBeforePicture ) {
-                    DEBUG_IFRAME2("I-Frame: clr  (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%u) !\n",
+                    DEBUG_IFRAME2("I-Frame: clr  (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%u,p:%llu) !\n",
 			currentFrameType, lastFrameType, 
 			(int)do_copy, (int)havePictureHeader, (int)haveSequenceHeader, 
 			(int)haveSliceBeforePicture,
-			cntVidBlocksPlayed);
+			cntVidBlocksPlayed, pictureNumber);
 	            currentFrameType = 0;
 	            lastFrameType = 0xff;
 		    do_copy=false;
 		} else {
                     DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", r, iframeAssembler->Available());
                     iframeAssembler->Put(sector, r);
-                    DEBUG_IFRAME2("%d (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%d)\n", 
+                    DEBUG_IFRAME2("%d (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%d,p:%llu)\n", 
 			iframeAssembler->Available(),
 			currentFrameType, lastFrameType, 
 			do_copy, havePictureHeader, haveSequenceHeader, haveSliceBeforePicture,
-			cntVidBlocksPlayed);
+			cntVidBlocksPlayed, pictureNumber);
 		}
 	   }
 

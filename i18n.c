@@ -8,6 +8,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "i18n.h"
 
 const char *ISO639code[] = {

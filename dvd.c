@@ -8,6 +8,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "dvd.h"
 
 // --- cPluginDvd ------------------------------------------------------------
@@ -43,6 +47,7 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 #ifndef __QNXNTO__
     while ((c = getopt_long(argc, argv, "C:", long_options, NULL)) != -1) {
 #else
+    optind = 1;
     while ((c = getopt(argc, argv, "C:")) != -1) {
 #endif
         switch (c) {

@@ -9,6 +9,10 @@
 
 #include <vdr/menuitems.h>
 
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "setup-dvd.h"
 #include "i18n.h"
 #ifdef __QNXNTO__

@@ -12,6 +12,11 @@
 #include <vdr/i18n.h>
 #include <vdr/thread.h>
 #include <vdr/skins.h>
+
+#ifdef HAVE_CONFIG_H 
+#include "config.h"
+#endif
+
 #include "tools-dvd.h"
 #include "player-dvd.h"
 #include "control-dvd.h"
