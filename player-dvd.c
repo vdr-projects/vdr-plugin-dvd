@@ -357,55 +357,50 @@ bool cDvdPlayer::IsDvdNavigationForced() const
 
 void cDvdPlayer::TrickSpeed(int Increment)
 {
-  int nts = trickSpeed + Increment;
-  cntVidBlocksPlayed=0;
-  cntAudBlocksPlayed=0;
+    int nts = trickSpeed + Increment;
+    cntVidBlocksPlayed=0;
+    cntAudBlocksPlayed=0;
 
-  if ( nts>0 && nts-NORMAL_SPEED <= MAX_SPEEDS && Speeds[nts] == 1) {
-     fastWindFactor  = 1;
-     trickSpeed = nts;
+    if (nts>0 && nts-NORMAL_SPEED <= MAX_SPEEDS && Speeds[nts] == 1) {
+        fastWindFactor  = 1;
+        trickSpeed = nts;
 
-     if (playMode == pmFast)
-        Play();
-     else
-        Pause();
-  } else
-  if ( nts>0 && nts-NORMAL_SPEED <= MAX_SPEEDS && Speeds[nts]) {
-     fastWindFactor  = 1;
-     if ( playDir == pdBackward && DVDSetup.ReadAHead>0 )
-	     dvdnav_set_readahead_flag(nav, 0);
-     trickSpeed = nts;
-     int Mult = ( playMode == pmSlow ) ? 1 : SPEED_MULT;
-     int sp = (Speeds[nts] > 0) ? Mult / Speeds[nts] : -Speeds[nts] * Mult;
+        if (playMode == pmFast)
+            Play();
+        else
+            Pause();
+    } else if (nts>0 && nts-NORMAL_SPEED <= MAX_SPEEDS && Speeds[nts]) {
+        fastWindFactor  = 1;
+        if (playDir == pdBackward && DVDSetup.ReadAHead>0)
+	        dvdnav_set_readahead_flag(nav, 0);
+        trickSpeed = nts;
+        int Mult = ( playMode == pmSlow ) ? 1 : SPEED_MULT;
+        int sp = (Speeds[nts] > 0) ? Mult / Speeds[nts] : -Speeds[nts] * Mult;
 
-     if (sp > MAX_VIDEO_SLOWMOTION)
-        sp = MAX_VIDEO_SLOWMOTION;
+        if (sp > MAX_VIDEO_SLOWMOTION)
+            sp = MAX_VIDEO_SLOWMOTION;
 
-     if ( playDir == pdBackward )
-     {
-	     fastWindFactor  = ( playMode == pmSlow ) ? trickSpeed - NORMAL_SPEED     :
-	     					        trickSpeed - NORMAL_SPEED + 1 ;
-	     if ( playMode == pmSlow ) sp=2;
-     }
-     DeviceTrickSpeed(sp);
+        if (playDir == pdBackward) {
+            fastWindFactor  = ( playMode == pmSlow ) ? trickSpeed - NORMAL_SPEED : trickSpeed - NORMAL_SPEED + 1 ;
+	        if (playMode == pmSlow)
+                sp=2;
+        }
+        DeviceTrickSpeed(sp);
 
-  } else
-  if ( nts>0 && nts-NORMAL_SPEED <= MAX_MAX_SPEEDS ) {
-     fastWindFactor  = 1;
-     trickSpeed = nts;
-     if ( playDir == pdBackward )
-     	  if ( playMode == pmSlow )
-	          fastWindFactor  = trickSpeed - NORMAL_SPEED ;
-	  else
-	  	  fastWindFactor  = ( trickSpeed - NORMAL_SPEED - MAX_SPEEDS + 1 ) * 2 ;
-     else if ( playDir == pdForward && playMode == pmFast )
-	  fastWindFactor  = ( trickSpeed - NORMAL_SPEED - MAX_SPEEDS + 1 ) * 2 ;
+    } else if ( nts>0 && nts-NORMAL_SPEED <= MAX_MAX_SPEEDS ) {
+        fastWindFactor  = 1;
+        trickSpeed = nts;
+        if ( playDir == pdBackward )
+            if ( playMode == pmSlow )
+	            fastWindFactor  = trickSpeed - NORMAL_SPEED ;
+	        else
+	  	        fastWindFactor  = ( trickSpeed - NORMAL_SPEED - MAX_SPEEDS + 1 ) * 2 ;
+        else if ( playDir == pdForward && playMode == pmFast )
+	        fastWindFactor  = ( trickSpeed - NORMAL_SPEED - MAX_SPEEDS + 1 ) * 2 ;
+    }
 
-  }
-
-  DEBUG_CONTROL("dvd TRICKSPEED: %d (%d), fastWindFactor=%d fwd=%d, slow=%d, fast=%d\n",
+    DEBUG_CONTROL("dvd TRICKSPEED: %d (%d), fastWindFactor=%d fwd=%d, slow=%d, fast=%d\n",
      	trickSpeed, Increment, fastWindFactor, playDir == pdForward, playMode == pmSlow, playMode == pmFast);
-
 }
 
 void cDvdPlayer::DeviceReset(void)
@@ -441,71 +436,70 @@ void cDvdPlayer::DevicePlay(void)
 
 void cDvdPlayer::DrawSPU()
 {
-  if (SPUdecoder && !SPUdecoder->IsVisible() && TakeOsd()) {
-	  SPUdecoder->Draw();
-  }
+    if (SPUdecoder && !SPUdecoder->IsVisible() && TakeOsd()) {
+        SPUdecoder->Draw();
+    }
 }
 
 void cDvdPlayer::HideSPU()
 {
-  if (SPUdecoder) {
-	  SPUdecoder->Hide();
-  }
+    if (SPUdecoder) {
+        SPUdecoder->Hide();
+    }
 }
 
 void cDvdPlayer::EmptySPU()
 {
-  if (SPUdecoder) {
-	  ClearButtonHighlight();
-	  SPUdecoder->Empty();
-  }
+    if (SPUdecoder) {
+        ClearButtonHighlight();
+        SPUdecoder->Empty();
+    }
 }
 
 void cDvdPlayer::Empty(bool emptyDeviceToo)
 {
-  DEBUG_CONTROL("dvd .. Empty ...\n");
+    DEBUG_CONTROL("dvd .. Empty ...\n");
 
-  LOCK_THREAD;
+    LOCK_THREAD;
 
-  if( IframeCnt < 0 && cntVidBlocksPlayed > 0 )
-  {
-            DEBUG_IFRAME("I-Frame: Empty: Iframe used, VidBlocksPlayed -> emptyDevice\n");
+    if( IframeCnt < 0 && cntVidBlocksPlayed > 0 ) {
+        DEBUG_IFRAME("I-Frame: Empty: Iframe used, VidBlocksPlayed -> emptyDevice\n");
 	    emptyDeviceToo=true;
-  }
+    }
 
-  DEBUG_CONTROL("dvd .. Empty IframeCnt=%d, emptyDeviceToo=%d!\n", IframeCnt, emptyDeviceToo);
+    DEBUG_CONTROL("dvd .. Empty IframeCnt=%d, emptyDeviceToo=%d!\n", IframeCnt, emptyDeviceToo);
 
-  if (SPUdecoder) {
-	  DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-          EmptySPU();
-  }
-  currButtonN = -1;
-  a52dec.clear();
-  lastFrameType     = 0xff;
-  VideoPts          = 0xFFFFFFFF;
-  stcPTS            = 0xFFFFFFFF;
-  stcPTSAudio       = 0xFFFFFFFF;
-  stcPTSLastAudio   = 0xFFFFFFFF;
-  pktpts            = 0xFFFFFFFF;
-  pktptsAudio       = 0xFFFFFFFF;
-  pktptsLastAudio   = 0xFFFFFFFF;
-  prev_e_ptm = 0;
-  ptm_offs = 0;
+    if (SPUdecoder) {
+	    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+        EmptySPU();
+    }
+    currButtonN = -1;
+    a52dec.clear();
+    lastFrameType     = 0xff;
+    VideoPts          = 0xFFFFFFFF;
+    stcPTS            = 0xFFFFFFFF;
+    stcPTSAudio       = 0xFFFFFFFF;
+    stcPTSLastAudio   = 0xFFFFFFFF;
+    pktpts            = 0xFFFFFFFF;
+    pktptsAudio       = 0xFFFFFFFF;
+    pktptsLastAudio   = 0xFFFFFFFF;
+    prev_e_ptm = 0;
+    ptm_offs = 0;
 
-  delete rframe;
-  rframe=NULL; pframe=NULL;
-  ringBuffer->Clear();
-  cntVidBlocksPlayed=0;
-  cntAudBlocksPlayed=0;
+    delete rframe;
+    rframe=NULL; pframe=NULL;
+    ringBuffer->Clear();
+    cntVidBlocksPlayed=0;
+    cntAudBlocksPlayed=0;
 
-  stillTimer = 0;
-  stillFrame = 0;
-  IframeCnt = 0;
-  iframeAssembler->Clear();
-  pictureNumber=0;
-  pictureFlip=false;
+    stillTimer = 0;
+    stillFrame = 0;
+    IframeCnt = 0;
+    iframeAssembler->Clear();
+    pictureNumber=0;
+    pictureFlip=false;
 
-  skipPlayVideo=false;
+    skipPlayVideo=false;
 
     if(emptyDeviceToo) {
 #ifdef AC3_FIRMWARE
@@ -517,15 +511,13 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
 
 void cDvdPlayer::StillSkip()
 {
-      DEBUGDVD("cDvdPlayer::StillSkip()\n");
-      if(stillTimer!=0)
-      {
-          stillTimer = 0;
-          if(nav!=NULL)
-          {
-	      dvdnav_still_skip(nav);
-          }
-      }
+    DEBUGDVD("cDvdPlayer::StillSkip()\n");
+    if(stillTimer!=0) {
+        stillTimer = 0;
+        if(nav!=NULL) {
+	        dvdnav_still_skip(nav);
+        }
+    }
 }
 
 #ifdef DVDDEBUG
