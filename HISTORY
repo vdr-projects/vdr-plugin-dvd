@@ -2,6 +2,7 @@ VDR Plugin 'dvd' Revision History
 ---------------------------------
 
 2005-??-??: Version 0.3.5-b07
+    - add gain in setup for analog output
     - fixed backward play
     - add fields for Danish language texts
     - add fields for Estonian language texts

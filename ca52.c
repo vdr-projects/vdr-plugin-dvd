@@ -33,7 +33,7 @@
 
 #endif
 
-#ifdef HAVE_CONFIG_H 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -65,7 +65,7 @@ A52decoder::A52decoder(cDvdPlayer &ThePlayer): player(ThePlayer)
   blk_buf = (uchar *)malloc(25*1024);
   blk_ptr = blk_buf;
   blk_size = 0;
-  
+
   setup();
 }
 
@@ -78,7 +78,7 @@ void A52decoder::setup(void)
 {
   flags = A52_DOLBY;
 
-  level = 4;
+  level = DVDSetup.Gain;
   bias = 384;
 }
 
@@ -230,9 +230,9 @@ inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 void A52decoder::init_ipack(int p_size, uint32_t pktpts)
 {
     int header = pktpts ? 5 :0;
-    
+
     int length = 10 + header + p_size;
-    
+
     blk_ptr[0] = 0x00;
     blk_ptr[1] = 0x00;
     blk_ptr[2] = 0x01;
@@ -243,7 +243,7 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts)
     blk_ptr[7] = pktpts ? 0x80 : 0;
     blk_ptr[8] = header;
     blk_ptr += 9;
-    
+
     if (header) {
         cPStream::toPTS(blk_ptr, pktpts);
     }
@@ -355,7 +355,7 @@ void A52decoder::decode(uint8_t * start, int size,
 			 uint32_t pktpts)
 {
     int bit_rate;
-    
+
     //do we enter with an empty buffer
     bool sendPTS = a52asm.used() < 40;
 
@@ -396,9 +396,9 @@ void A52decoder::decode(uint8_t * start, int size,
 		pktpts  = apts;
 		sendPTS = true;
 	    }
-		
+
 	    int i;
-		
+
 	    setup();
 	    flags |= A52_ADJUST_LEVEL;
 	    if (a52_frame (state, frm->frame, &flags, &level, bias))
@@ -412,7 +412,7 @@ void A52decoder::decode(uint8_t * start, int size,
 		    player.seenAPTS(pktpts);
 		    DEBUG_A52("sending PTS\n");
 		}
-		if (convertSample (flags, state, 
+		if (convertSample (flags, state,
 				   sendPTS ? pktpts : 0))
 		    goto error;
 		pktpts  = 0;
@@ -511,7 +511,7 @@ int A52assembler::put(uint8_t *buf, int len, uint32_t pts)
 	    }
         syncword = (syncword << 8) | *data++;
     }
-    
+
     int frmsize  = 0;
     if (!curfrm) {
 	    int datasize = 1920;
@@ -528,7 +528,7 @@ int A52assembler::put(uint8_t *buf, int len, uint32_t pts)
 	    }
     } else
 	    frmsize = curfrm->size - curfrm->pos;
-    
+
     if (frmsize > end - data)
 	    frmsize = end - data;
     if (frmsize<0) return 0;

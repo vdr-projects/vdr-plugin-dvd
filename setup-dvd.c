@@ -3,13 +3,13 @@
  *
  * Copyright (C) 2001.2002 Andreas Schultz <aschultz@warp10.net>
  *
- * This code is distributed under the terms and conditions of the 
+ * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. Read the file COPYING for details.
  */
 
 #include <vdr/menuitems.h>
 
-#ifdef HAVE_CONFIG_H 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -32,7 +32,8 @@ cDVDSetup::cDVDSetup(void)
     ShowSubtitles = 0;
     HideMainMenu  = 0;
     ReadAHead     = 0;
-    
+    Gain          = 4;
+
     AC3dynrng  = 0;
 }
 
@@ -46,6 +47,7 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name, "ShowSubtitles")) ShowSubtitles = atoi(Value);
     else if (!strcasecmp(Name, "HideMainMenu"))  HideMainMenu  = atoi(Value);
     else if (!strcasecmp(Name, "ReadAHead"))     ReadAHead     = atoi(Value);
+    else if (!strcasecmp(Name, "Gain"))          Gain          = atoi(Value);
     else
 	return false;
     return true;
@@ -64,6 +66,7 @@ cMenuSetupDVD::cMenuSetupDVD(void)
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),         &data.HideMainMenu));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                   &data.ReadAHead));
+    Add(new cMenuEditIntItem( tr("Setup.DVD$Gain (analog)"),                        &data.Gain, -10, 10));
 }
 
 void cMenuSetupDVD::Store(void)
@@ -76,6 +79,7 @@ void cMenuSetupDVD::Store(void)
     SetupStore("ShowSubtitles", DVDSetup.ShowSubtitles );
     SetupStore("HideMainMenu",  DVDSetup.HideMainMenu  );
     SetupStore("ReadAHead",     DVDSetup.ReadAHead  );
+    SetupStore("Gain",          DVDSetup.Gain  );
 }
 
 
