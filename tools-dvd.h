@@ -48,12 +48,12 @@ class cPStream {
         return ret;
     }
 
-    static void toPTS(uint8_t *data, uint32_t pts)
+    static void toPTS(uint8_t *data, uint32_t pts, bool ptsFlag)
     {
-        data[0] = 0x21 | ((pts >> 30) << 1);
-        data[1] = pts >> 22;
-        data[2] = 0x01 | ((pts >> 15) << 1);
-        data[3] = pts >> 7;
+        data[0] =        ((pts >> 29) & 0x0e) | (ptsFlag ? 0x21 : 0x01);
+        data[1] =         pts >> 22;
+        data[2] = 0x01 | (pts >> 14);
+        data[3] =         pts >> 7;
         data[4] = 0x01 | (pts << 1);
     }
 

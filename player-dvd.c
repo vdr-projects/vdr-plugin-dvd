@@ -162,8 +162,8 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     current_pci = 0;
     prev_e_ptm = 0;
     ptm_offs = 0;
-	DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
-	SPUassembler.spuOffsetLast = 0;
+    DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
+    SPUassembler.spuOffsetLast = 0;
 
     skipPlayVideo=0;
     fastWindFactor=1;
@@ -1116,7 +1116,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
     if (ptsFlag) {
         pktptsLast = pktpts ;
         pktpts = cPStream::fromPTS(sector + 9) + ptm_offs;
-        cPStream::toPTS(sector + 9, pktpts);
+        cPStream::toPTS(sector + 9, pktpts, true);
         fflush(stdout);
     }
 
@@ -1365,36 +1365,36 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                         SPUassembler.Put(data, datalen, pktpts);
 
                         //check for forced subs
-		     			if( !IsInMenuDomain() && forcedSubsOnly ) {
-		      	  			//get command sequence
-		      	  			int spuh = SPUassembler.getSPUCommand(data, datalen);
+                        if( !IsInMenuDomain() && forcedSubsOnly ) {
+                            //get command sequence
+                            int spuh = SPUassembler.getSPUCommand(data, datalen);
 
-			      			//code is 0x01 (play)
-			      			if( spuh == 1  ) {
-			        			spuInUse=false;
-						        if (SPUassembler.ready()) {
-						  			uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
-							  		SPUassembler.Get(buffer, SPUassembler.getSize());
-							   		DEBUG_SUBP_ID("processSPU: %12d\n", SPUassembler.getPts());
-							  		seenPTS(VideoPts);
-		      					}
-						      	//DEBUG_SPU("spu header: %d", spuh);
-						      	break;
-					    	}
-			      			//code is 0x00 (forced play)
-			      			/*if( spuh == 0  ) {
-						      	DEBUG_SPU("spu header: %d", spuh);
-					      	}
-						    //error?
-						    if( spuh == 5 ) {
-						      	DEBUG_SPU("spu decoding failure in player-dvd.c ? : %d", spuh);
- 							}*/
-			      			//data is spanning packets
-			      			if( spuh > 5 ) {
-						       	SPUassembler.spuOffsetLast = spuh;
-						      	//DEBUG_SPU("next offset: %d", SPUassembler.spuOffsetLast);
-			      			}
-			  			}
+                            //code is 0x01 (play)
+                            if( spuh == 1  ) {
+                                spuInUse=false;
+                                if (SPUassembler.ready()) {
+                                    uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
+                                    SPUassembler.Get(buffer, SPUassembler.getSize());
+                                    DEBUG_SUBP_ID("processSPU: %12d\n", SPUassembler.getPts());
+                                    seenPTS(VideoPts);
+                                }
+                                //DEBUG_SPU("spu header: %d", spuh);
+                                break;
+                            }
+                            //code is 0x00 (forced play)
+                            /*if( spuh == 0  ) {
+                                DEBUG_SPU("spu header: %d", spuh);
+                            }
+                            //error?
+                            if( spuh == 5 ) {
+                                DEBUG_SPU("spu decoding failure in player-dvd.c ? : %d", spuh);
+                            }*/
+                            //data is spanning packets
+                            if( spuh > 5 ) {
+                                SPUassembler.spuOffsetLast = spuh;
+                                //DEBUG_SPU("next offset: %d", SPUassembler.spuOffsetLast);
+                            }
+                        }
 
                         if (SPUassembler.ready()) {
                             uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
@@ -2051,13 +2051,13 @@ void cDvdPlayer::NextSubpStream()
 
     //switch normal subs/ forced subs only
     if( forcedSubsOnly || currentNavSubpStream==-1 ) {
-    	i = ( i + 1 ) % navSubpStreamSeen.Count();
-    	forcedSubsOnly = false;
-    	SPUassembler.spuOffsetLast = 0;
+        i = ( i + 1 ) % navSubpStreamSeen.Count();
+        forcedSubsOnly = false;
+        SPUassembler.spuOffsetLast = 0;
     }
     else {
-    	i = ( i ) % navSubpStreamSeen.Count();
-    	forcedSubsOnly = true;
+        i = ( i ) % navSubpStreamSeen.Count();
+        forcedSubsOnly = true;
     }
     //weak end
 
@@ -2102,18 +2102,18 @@ void cDvdPlayer::GetSubpLangCode( const char ** subplang_str ) const
             buff2[1]=p1[0];
             buff2[2]=0;
             //weak start
-			if( forcedSubsOnly ) {
-				buff2[0]='f';
-				buff2[1]='o';
-				buff2[2]='r';
-				buff2[3]='c';
-				buff2[4]='e';
-				buff2[5]='d';
-				buff2[6]='-';
-				buff2[7]=p1[1];
-				buff2[8]=p1[0];
-			}
-			//weak end
+            if( forcedSubsOnly ) {
+                buff2[0]='f';
+                buff2[1]='o';
+                buff2[2]='r';
+                buff2[3]='c';
+                buff2[4]='e';
+                buff2[5]='d';
+                buff2[6]='-';
+                buff2[7]=p1[1];
+                buff2[8]=p1[0];
+            }
+            //weak end
         }
     }
 

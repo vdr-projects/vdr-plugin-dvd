@@ -202,7 +202,7 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts)
     blk_ptr += 9;
 
     if (header)
-    cPStream::toPTS(blk_ptr, pktpts);
+        cPStream::toPTS(blk_ptr, pktpts, false);
     blk_ptr += header;
 
     blk_ptr[0] = aLPCM; // substream ID
