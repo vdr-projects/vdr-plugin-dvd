@@ -1054,6 +1054,11 @@ void cDvdPlayer::Action(void) {
                     currentNavSubpStream = ev->physical_letterbox & (0x80 | SubpStreamMask);
     			    DEBUG_SUBP_ID("dvd choosing letterbox SPU stream: curNavSpu=%d 0x%X\n",
                         currentNavSubpStream, currentNavSubpStream);
+                } else if (mode == cSpuDecoder::eSpuPanAndScan ) {
+                    // TV 4:3,  DVD 16:9
+                    currentNavSubpStream = ev->physical_pan_scan & (0x80 | SubpStreamMask);
+                    DEBUG_SUBP_ID("dvd choosing pan_scan SPU stream: curNavSpu=%d 0x%X\n",
+                        currentNavSubpStream, currentNavSubpStream);
 		        } else {
                     currentNavSubpStream = ev->physical_wide & (0x80 | SubpStreamMask);
 			        DEBUG_SUBP_ID("dvd choosing wide SPU stream: curNavSpu=%d 0x%X\n",
@@ -1304,7 +1309,7 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
    	0011xxxx == 16:9
    	0100xxxx == 2,21:1
  */
-cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
+void cDvdPlayer::DoScaleMode(int &vaspect)
 {
     int o_hsize=hsize, o_vsize=vsize, o_vaspect=vaspect;
 
@@ -1363,8 +1368,6 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
     (void)o_hsize;
     (void)o_vsize;
     (void)o_vaspect;
-
-    return newMode;
 }
 
 /*
@@ -1543,9 +1546,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
 			            vaspect  = (int) ( data[3] & 0xf0 ) >> 4 ;
 
-			            cSpuDecoder::eScaleMode scaleMode = doScaleMode();
-
-			            (void) scaleMode;
+                        DoScaleMode(vaspect);
 
 /**
  * we won't change width/height yet ..
