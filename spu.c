@@ -206,7 +206,14 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    unsigned char command;
    unsigned int  next_cs_offset;
    bool special = false;
-
+   
+   //byte overhead?
+   if( size <= 20 ) {
+      usePrevious = true;
+      spuOffsetLast = 0;
+      return -1;
+   }
+   
    // set data pointer to begin of the packet
    setByte( packet );
 
@@ -252,9 +259,10 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
 
      switch( command ) {
        case 0x00: // forced play
+         previousCommand = 0;
          //cout << "  Menu" << endl;
          if( special ) {
-               previousCommand = 0;
+               usePrevious = true;
                return -1;
          }
          return 0;
@@ -262,17 +270,19 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
 
        case 0x01: // display start
          //cout << "  display start" << endl;
+         previousCommand = 1;
          if( special ) {
-            previousCommand = 1;
+            usePrevious = true;
             return -1;
          }
          return 1;
        break;
 
        case 0x02: // display stop
+         previousCommand = 2;
          //cout << "  display stop" << endl;
          if( special ) {
-            previousCommand = 2;
+            usePrevious = true;
             return -1;
          }
          return 2;
@@ -282,3 +292,33 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    	return 4;
 }
 
+int cSPUassembler::getSPUCommandQuick( unsigned char* packet ) {
+   unsigned char command;
+   // set data pointer to begin of the packet
+   setByte( packet );
+   
+   while( (command = getNextBytes(1)) != 0xff ) {
+     //cout << "Display Control Command: " << (int) command;
+
+     switch( command ) {
+       case 0x00: // forced play
+         previousCommand = 0;
+         //cout << "  Menu" << endl;
+         return 0;
+       break;
+
+       case 0x01: // display start
+         //cout << "  display start" << endl;
+         previousCommand = 1;
+         return 1;
+       break;
+
+       case 0x02: // display stop
+         previousCommand = 2;
+         //cout << "  display stop" << endl;
+         return 2;
+       break;
+	 }//switch
+   } //while
+   return 4;
+}

@@ -167,6 +167,8 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
     SPUassembler.spuOffsetLast = 0;
     SPUassembler.previousCommand = -1;
+    SPUassembler.usePrevious = false;
+    spuScan1stByte = false;
 
     skipPlayVideo=0;
     fastWindFactor=1;
@@ -1384,6 +1386,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                         break;
                     }
 
+                    //forced subs: todo -> rewrite it. realy awful but hopefully works now
                     if ( SPUdecoder && (currentNavSubpStream != -1) && ( thisSpuId == currentNavSubpStream ) ) {
                         spuInUse=true;
 
@@ -1394,16 +1397,35 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                         //check for forced subs
                         if( !IsInMenuDomain() && forcedSubsOnly ) {
                             int spuh;
-                            if( SPUassembler.previousCommand == -1 ) {
+                            
+                            //offset matches datalen
+                            if( SPUassembler.spuOffsetLast == datalen ) {
+                                 SPUassembler.spuOffsetLast = 0;
+                                 spuScan1stByte = true;
+                                 break;
+                            }
+                            if( spuScan1stByte == true ) {
+                              spuh = SPUassembler.getSPUCommandQuick(data);
+                              spuScan1stByte = false;
+                            }
+                            else {
+                                                        
+                            if( !SPUassembler.usePrevious ) {
                               //get command sequence
                               spuh = SPUassembler.getSPUCommand(data, datalen);
                             }
                             //special case: command offset within 1st packet, but data spanning packets
                             else {
                               spuh = SPUassembler.previousCommand;
-                              SPUassembler.previousCommand = -1;
+                              SPUassembler.usePrevious = false;
+                              //SPUassembler.spuOffsetLast = 0;
                             }
-
+                            if( SPUassembler.usePrevious ) {
+                              spuh = SPUassembler.previousCommand;
+                              SPUassembler.usePrevious = false;
+                            }
+                           }
+                           
                             //code is 0x01 (play)
                             if( spuh == 1  ) {
                                 spuInUse=false;

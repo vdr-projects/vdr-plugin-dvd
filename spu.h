@@ -56,6 +56,7 @@ class cSPUassembler: public simpleFIFO
     int Put(const uint8_t *Data, int Count, uint32_t Pts);
 
     int getSPUCommand( unsigned char* packet, unsigned int size );
+    int getSPUCommandQuick( unsigned char* packet );
 
     unsigned int getNextBytes( unsigned int num );
     void setByte( unsigned char* byte );
@@ -69,6 +70,7 @@ class cSPUassembler: public simpleFIFO
     /* offset to the command sequence section */
     unsigned int spuOffsetLast;
     int previousCommand;
+    bool usePrevious;
 };
 
 #endif
