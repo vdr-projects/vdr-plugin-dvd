@@ -2555,7 +2555,7 @@ bool cDvdPlayer::setDiskStamp(const char ** stamp_str, dvdnav_t * nav ) const
             return false;
     }
     //reset dvd_nav
-    dvdnav_reset(nav);
+    //dvdnav_reset(nav);
 
     snprintf(buffer, sizeof(buffer), "%s-%i-%i-%i-%i-%i", titleString, titleNumber, titleNo, chapterNumber, chapterNo, totalblocks);
 
