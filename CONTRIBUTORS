@@ -27,5 +27,10 @@ Martin Hammerschmid
 Sascha Volkenandt
 	- for the HideMainMenu patch
 
+André Weidemann
+        - for the vaspect patch
+
+Angelo Lambiasi
+        - buffer overflow in A52Decoder
 
 ... and all the many testers and test case contributors ..
