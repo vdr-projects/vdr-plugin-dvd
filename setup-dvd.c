@@ -56,15 +56,14 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
 cMenuSetupDVD::cMenuSetupDVD(void)
 {
     data = DVDSetup;
-    SetSection(tr("DVD"));
+    SetSection(tr("Plugin.DVD$DVD"));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"),     &data.MenuLanguage,  I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"),    &data.AudioLanguage, I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage,   I18nNumLanguages, I18nLanguages()));
-    Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),         &data.PlayerRCE));
+    Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),          &data.PlayerRCE));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles));
-    Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),        &data.HideMainMenu));
-    Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                  &data.ReadAHead));
-
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),         &data.HideMainMenu));
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                   &data.ReadAHead));
 }
 
 void cMenuSetupDVD::Store(void)
