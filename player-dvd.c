@@ -1494,6 +1494,7 @@ bool cDvdPlayer::Save(const char * diskStamp, int arrayIndex)
 	int blocks[10];
 	FILE * f;
 	char s[100];
+	char path[200];
 	
 	if( dvdnav_current_title_info(nav, &titleNo, &chapterNo) != DVDNAV_STATUS_OK )
 		return false;
@@ -1502,7 +1503,8 @@ bool cDvdPlayer::Save(const char * diskStamp, int arrayIndex)
 		//minimum of 500.000 blocks should make sure we aint in a menu
 		if( len >= 500000 ) {    
 		    //read array from file
-    		f=fopen("/etc/vdr/.resumedat","r");
+    		snprintf( path, 200, "%s/.resumedat", cPlugin::ConfigDirectory("dvd") );	      	
+        f=fopen(path,"r");
     		if (f) {    			
     			while(fgets(s,100,f)!=NULL) {    	
     				lindex++;    	
@@ -1516,7 +1518,7 @@ bool cDvdPlayer::Save(const char * diskStamp, int arrayIndex)
     		}
     		    		
     		//write
-    		f=fopen("/etc/vdr/.resumedat","w");
+    		f=fopen(path,"w");
     		if(f) {
     			//new file
     			if( arrayIndex == -1 )
@@ -2575,19 +2577,22 @@ void cDvdPlayer::checkDiskStamps(const char * stamp_str, int &lastTitle, int &la
 	int blocks[10];
 	int lindex = -1;
 	FILE * f;
-    char s[100];
+  char s[100];
+  char path[200];
     
-    //read array from file
-    f=fopen("/etc/vdr/.resumedat","r");
-    if (!f)
-    	return;
-    while(fgets(s,100,f)!=NULL) {    	
-    	lindex++;    	
-        stamps[lindex] = s;
-        if( fgets(s,100,f)!=NULL )
-        	titles[lindex] = atoi(s);
-        if( fgets(s,100,f)!=NULL )
-        	blocks[lindex] = atoi(s);
+  //read array from file
+  snprintf( path, 200, "%s/.resumedat", cPlugin::ConfigDirectory("dvd") );
+	//read array from file	
+  f=fopen(path,"r");
+  if (!f)
+     return;
+  while(fgets(s,100,f)!=NULL) {    	
+     lindex++;    	
+     stamps[lindex] = s;
+     if( fgets(s,100,f)!=NULL )
+        titles[lindex] = atoi(s);
+     if( fgets(s,100,f)!=NULL )
+        blocks[lindex] = atoi(s);
     }    
     fclose(f);    
 		
