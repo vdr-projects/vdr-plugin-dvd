@@ -48,10 +48,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
     "Setup.DVD$Preferred audio language",               // English
@@ -68,10 +68,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
     "Setup.DVD$Preferred subtitle language",            // English
@@ -88,10 +88,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
     "Setup.DVD$Player region code",                     // English
@@ -108,10 +108,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
     "Setup.DVD$Display subtitles",                      // English
@@ -128,10 +128,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
      "Setup.DVD$Hide Mainmenu Entry",
@@ -148,10 +148,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "Скрыть команду в главном меню",                // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "Скрыть команду в главном меню",                // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
     "Error.DVD$Error opening DVD!",                     // English
@@ -168,10 +168,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     {
     "Error.DVD$Error fetching data from DVD!",          // English
@@ -188,10 +188,10 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Ellinika
         "",                                             // Svenska
         "",                                             // Romaneste
-        "",
-        "",
-        "",                                             // Russian
-        "",
+        "",                                             // Magyar
+        "",                                             // Catalр
+        "",                                             // Русский (Russian)
+        "",                                             // Hrvatski (Croatian)
     },
     { NULL }
 };
