@@ -60,7 +60,7 @@
 	#define USLEEP(a)	usleep((a))
 #endif
 
-#if defined( DEBUG ) || 1
+#if defined( DEBUG )
 
 #warning using verbose DEBUG mode
 
