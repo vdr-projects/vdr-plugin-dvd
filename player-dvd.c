@@ -165,7 +165,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     prev_e_ptm = 0;
     ptm_offs = 0;
     DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
-    spu_state = false;
+    spu_state = true;
     SPUassembler.spu_dataReceived = 0;
 	 SPUassembler.spu_commandOverhead = 0;
 	 SPUassembler.spu_packetOverhead = 0;
@@ -1406,23 +1406,14 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                               case 1:  //normal play
                                  spu_state = false;
                               break;                                 
-                            } //switch                            
-                            
-                            if (SPUassembler.ready()) {
-                              uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
-                              SPUassembler.Get(buffer, SPUassembler.getSize());
-                              if( spu_state )
-                                 SPUdecoder->processSPU(SPUassembler.getPts(), buffer);
-                              DEBUG_SUBP_ID("processSPU: %12d\n", SPUassembler.getPts());
-                              seenPTS(pktpts);
-                            }
-                            break;                            
+                            } //switch                                                                                    
                         }
 
                         if (SPUassembler.ready()) {
                             uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
                             SPUassembler.Get(buffer, SPUassembler.getSize());
-                            SPUdecoder->processSPU(SPUassembler.getPts(), buffer);
+                            if( spu_state )
+                              SPUdecoder->processSPU(SPUassembler.getPts(), buffer);
                             DEBUG_SUBP_ID("processSPU: %12d\n", SPUassembler.getPts());
                             seenPTS(pktpts);
                         }
