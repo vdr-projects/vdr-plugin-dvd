@@ -2118,7 +2118,7 @@ void cDvdPlayer::UpdateVTSInfo()
     if(nav) {
 	    dvd_aspect = dvdnav_get_video_aspect(nav);
 	    dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
-        isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav) || dvdnav_is_domain_vtsm(nav) || dvdnav_is_domain_vts(nav);
+        isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
 	    isInFeature    = dvdnav_is_domain_vts(nav);
     }
 }
