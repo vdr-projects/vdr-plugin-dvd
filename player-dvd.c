@@ -1423,11 +1423,12 @@ void cDvdPlayer::SendIframe(bool doSend) {
 
 bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 {
-    uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
+    int spuSize = SPUassembler.getSize();
+    uint8_t *buffer = new uint8_t[spuSize];
     SPUassembler.Get(buffer, SPUassembler.getSize());
     bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced();
-    DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, forcedDisplay:%d, spu_size:%d, menuDomain=%d, pts: %12d\n",
-	    forcedSubsOnly, forcedDisplay, spu_size, isInMenuDomain, SPUassembler.getPts());
+    DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, spu_size:%d, menuDomain=%d, pts: %12d\n",
+        forcedSubsOnly, spuSize, isInMenuDomain, SPUassembler.getPts());
 
 	SPUdecoder->processSPU(SPUassembler.getPts(), buffer, allowedShow);
 	if(isInMenuDomain) seenVPTS(pktpts); // else should be seen later ..
@@ -2377,7 +2378,7 @@ void cDvdPlayer::notifySeenSubpStream( int navSubpStream )
     {
 #ifdef SUBPDEBUG
 	    char buff2[12];
-	    int channel, channel_active;
+	    int channel, channel_active=0;
             uint16_t lang_code1;
             const char * p1 = (char *)&lang_code1;
 
@@ -2391,7 +2392,7 @@ void cDvdPlayer::notifySeenSubpStream( int navSubpStream )
 				buff2[1]=p1[0];
 				buff2[2]=0;
 		    }
-	    	    channel_active = dvdnav_get_active_spu_stream(nav);
+	    	channel_active = dvdnav_get_active_spu_stream(nav);
 	    }
             printf("cDvdPlayer::cDvdPlayer: seen new subp id: 0x%X (%d), <%s>; 0x%X (%d)\n", 
 			channel, channel, buff2, channel_active, channel_active); 
@@ -2634,7 +2635,7 @@ void cDvdPlayer::notifySeenAudioTrack( int navAudioTrack )
     {
 #ifdef SUBPDEBUG
 	    char buff2[12];
-	    int channel, channel_active;
+	    int channel, channel_active=0;
             uint16_t lang_code1;
             const char * p1 = (char *)&lang_code1;
 
