@@ -13,7 +13,6 @@
 
 #include <vdr/i18n.h>
 
-extern const char *Languages[];
 extern const char *ISO639code[];
 extern const char *SpuOptions[];
 extern const tI18nPhrase DvdPhrases[];
