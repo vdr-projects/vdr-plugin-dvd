@@ -401,7 +401,8 @@ void cDvdPlayer::DeviceReset(void)
 void cDvdPlayer::DeviceClear(void)
 {
     DEBUG_CONTROL("DeviceClear\n");
-    PlayPes(NULL, 0);
+    if (IsAttached())
+        PlayPes(NULL, 0);
     cPlayer::DeviceClear();
 }
 
