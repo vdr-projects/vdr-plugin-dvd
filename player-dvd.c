@@ -1082,9 +1082,9 @@ void cDvdPlayer::Action(void) {
 		        int id = dvdnav_get_active_audio_stream(nav);
                 DEBUG_AUDIO_ID("dvd->SetCurrentAudioTrack DOLBY %02X\n", ttDolby + id);
   		        if (Setup.UseDolbyDigital)
-   					cDevice::PrimaryDevice()->SetCurrentAudioTrack(eTrackType(ttDolby + id));
+   					DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
    				else
-   					cDevice::PrimaryDevice()->SetCurrentAudioTrack(eTrackType(ttAudio + id));
+   					DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
                 currentNavAudioTrack = id;
 
 		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%X, phys=%d, 0x%X\n",
@@ -2451,7 +2451,7 @@ void cDvdPlayer::clearSeenAudioTrack( )
 	navAudioTracksSeen.Clear();
 	DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: seen audio cleared\n");
     SetCurrentNavAudioTrackUsrLocked(false);
-    cDevice::PrimaryDevice()->ClrAvailableTracks();
+    DeviceClrAvailableTracks();
 }
 
 void cDvdPlayer::setAllAudioTracks(void)

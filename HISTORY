@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - use DeviceClrAvailableTracks/DeviceSetCurrentAudioTrack from vdr 
     - only set possible subtitles
     - fix subtitlehandling in replay display
     - fix aspectratio in pan and scan mode (need patch vdr-1.3.20_aspectratio.diff)
