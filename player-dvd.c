@@ -1308,34 +1308,33 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
     // nothing has to be done, if 
     //		TV	16:9
     // 		DVD 	 4:3
-    if (!Setup.VideoFormat && dvd_aspect != 0 ) {
+    if (!Setup.VideoFormat && dvd_aspect != 0) {
     	//
 	// if we are here, then 
 	//	TV==4:3 && DVD==16:9
 	//
-        if ( (vaspect != 2) || ( vaspect==2 && dvd_aspect==3 ) ) 
-	{
-	    //
-	    //and the actual material on the DVD is not 4:3
-	    //
-	    if (!(dvd_scaleperm & 1)) 
-	    {  // letterbox is allowed, keep 16:9 and wxh
-		newMode = cSpuDecoder::eSpuLetterBox;
-		vaspect = 0x03;
-	    } else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed ..
-		newMode = cSpuDecoder::eSpuPanAndScan;
-		vaspect = 0x02;   // 4:3
+        if ( (vaspect != 2) || ( vaspect==2 && dvd_aspect==3 ) ) {
+	        //
+	        //and the actual material on the DVD is not 4:3
+	        //
+            if ( !(dvd_scaleperm & 1) ) 
+	        {  // letterbox is allowed, keep 16:9 and wxh
+                newMode = cSpuDecoder::eSpuLetterBox;
+	        	vaspect = 0x03;
+	        } else if ( !(dvd_scaleperm & 2) ) {    // pan& scan allowed ..
+	        	newMode = cSpuDecoder::eSpuPanAndScan;
+	        	vaspect = 0x02;   // 4:3
                 // vdf = vdfCENTER_CUT_OUT;
-		// hsize  = o_hsize  / ( 4 * 3 ) * 16 ; // streched hsize
-		// hsize  = o_hsize  / 16 * 3 * 4; // shorten hsize
-		// vsize = o_vsize /  9 * 4 * 3; // stretched vsize
-		// vsize = o_vsize /  ( 3 * 4 ) * 9 ; // shorten vsize
-	    }
- 	} else if ( vaspect==2 && dvd_aspect==3 ) 
-	{   // use letterbox (honor dvd_aspect)
-	    newMode = cSpuDecoder::eSpuLetterBox;
-	    vaspect = 0x03;   // 16:9
-	}
+	        	// hsize  = o_hsize  / ( 4 * 3 ) * 16 ; // streched hsize
+	        	// hsize  = o_hsize  / 16 * 3 * 4; // shorten hsize
+	        	// vsize = o_vsize /  9 * 4 * 3; // stretched vsize
+	        	// vsize = o_vsize /  ( 3 * 4 ) * 9 ; // shorten vsize
+     	    } else if ( vaspect==2 && dvd_aspect==3 ) {
+                // use letterbox (honor dvd_aspect)
+    	        newMode = cSpuDecoder::eSpuLetterBox;
+    	        vaspect = 0x03;   // 16:9
+            }
+        }
     }
 
     if (SPUdecoder) SPUdecoder->setScaleMode(newMode);
