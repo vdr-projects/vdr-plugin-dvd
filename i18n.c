@@ -278,6 +278,32 @@ const tI18nPhrase DvdPhrases[] = {
 #endif
     },
     {
+     "Setup.DVD$Gain (analog)",
+     "Verstärkung (analog)",                                // Deutsch
+     "Gain (analog)",                                       // Slovenski
+     "Gain (analog)",                                       // Italiano
+     "Gain (analog)",                                       // Nederlands
+     "Gain (analog)",                                       // Português
+     "Gain (analog)",                                       // Français
+     "Gain (analog)",                                       // Norsk
+     "Gain (analog)",                                       // suomi
+     "Gain (analog)",                                       // Polski
+     "Gain (analog)",                                       // Español
+     "Gain (analog)",                                       // ÅëëçíéêÜ (Greek)
+     "Gain (analog)",                                       // Svenska
+     "Gain (analog)",                                       // Romaneste
+     "Gain (analog)",                                       // Magyar
+     "Gain (analog)",                                       // Català
+     "Gain (analog)",                                       // ÀãááÚØÙ (Russian)
+     "Gain (analog)",                                       // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+     "Gain (analog)",                                       // Eesti
+#endif
+#if VDRVERSNUM > 10315
+     "Gain (analog)",                                       // Dansk
+#endif
+    },
+    {
     "Error.DVD$Error opening DVD!",                         // English
         "Fehler beim öffnen der DVD!",                      // Deutsch
         "",                                                 // Slovenski
