@@ -278,7 +278,6 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
 cDvdPlayer::~cDvdPlayer()
 {
   DEBUGDVD("destructor cDvdPlayer::~cDvdPlayer()\n");
-  Empty();
   Detach();
   Save();
   delete iframeAssembler;
@@ -532,7 +531,7 @@ void cDvdPlayer::Action(void) {
     dsyslog("input thread started (pid=%d)", getpid());
 #endif
 
-  unsigned char  event_buf[2048];
+  unsigned char  event_buf[4096];
   memset(event_buf, 0, sizeof(event_buf));
 
   unsigned char *write_blk = NULL;
@@ -1190,7 +1189,7 @@ void cDvdPlayer::Action(void) {
   Empty();
   fflush(NULL);
 
-  active = running = false;
+  running = false;
 
   SPUdecoder=NULL;
 
@@ -1201,7 +1200,7 @@ void cDvdPlayer::Action(void) {
   dsyslog("input thread ended (pid=%d)", getpid());
 #endif
 
-  DEBUGDVD("%s:%d: input thread ended (pid=%d)", __FILE__, __LINE__, getpid());
+  DEBUGDVD("%s:%d: input thread ended (pid=%d)\n", __FILE__, __LINE__, getpid());
   fflush(NULL);
 }
 
@@ -1970,21 +1969,19 @@ bool cDvdPlayer::Save(void)
 
 void cDvdPlayer::Activate(bool On)
 {
-  DEBUGDVD("cDvdPlayer::Activate %d->%d\n", active, On);
+    DEBUGDVD("cDvdPlayer::Activate %d->%d\n", active, On);
 
-  if (On)
-  {
-      Start();
-  } else if (active) 
-  {
-     if(nav)
-	dvdnav_stop(nav);
-     else
+    if (On) {
+        Start();
+    } else if (active) {
+        if(nav)
+	        dvdnav_stop(nav);
+        else
+            running = false;
+        Cancel(3);
         running = false;
-     Cancel(3);
-     running = false;
-     active = false;
-  }
+        active = false;
+    }
 }
 
 void cDvdPlayer::Pause(void)
@@ -2007,16 +2004,11 @@ void cDvdPlayer::Pause(void)
 
 void cDvdPlayer::Stop(void)
 {
-  if(!DVDActiveAndRunning()) return;
+    if(!DVDActiveAndRunning()) return;
 
-  if(running && nav) {
-	dvdnav_stop(nav);
-	usleep( 500 * 1000 ) ;  // 500ms
-  }
-  if ( running ) {
-	running = false;
-	usleep( 500 * 1000 ) ;  // 500ms
-  }
+    if( running && nav ) {
+	    dvdnav_stop(nav);
+    }
 }
 
 void cDvdPlayer::Play(void)
