@@ -2614,7 +2614,7 @@ void cDvdPlayer::checkDiskStamps(const char * stamp_str, int &lastTitle, int &la
 bool cDvdPlayer::askForResume(int blocks)
 {	
 #if VDRVERSNUM<10307
-	OsdOpen(0, controller->osdPos-1);
+	controller->OsdOpen(0, controller->osdPos-1);
 #else	
 	controller->OsdOpen();
 #endif
