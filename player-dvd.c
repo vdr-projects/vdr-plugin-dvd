@@ -193,6 +193,56 @@ const char *cDvdPlayer::PTSTicksToHMSm(int64_t ticks, bool WithMS)
   return buffer;
 }
 
+// --- cIframeAssembler ------------------------------------------------------
+
+class cIframeAssembler {
+private:
+    int head;
+    int size;
+    unsigned char *buf;
+    cMutex mutex;
+    void Lock(void) { mutex.Lock(); }
+    void Unlock(void) { mutex.Unlock(); }
+public:
+    cIframeAssembler(int Size);
+    virtual ~cIframeAssembler(void);
+    int Available(void) {return head;}
+    void Clear(void);
+    unsigned char *Get(int &Lenth);
+    void Put(unsigned char *Data, int Length);
+};
+
+cIframeAssembler::cIframeAssembler(int Size) {
+    size = Size;
+    head = 0;
+    buf = MALLOC(unsigned char, Size);
+}
+
+cIframeAssembler::~cIframeAssembler(void) {
+    free(buf);
+}
+
+void cIframeAssembler::Clear(void) {
+    Lock();
+    head = 0;
+    Unlock();
+}
+
+unsigned char *cIframeAssembler::Get(int &Length) {
+    Length = head;
+    return buf;
+}
+
+void cIframeAssembler::Put(unsigned char *Data, int Length) {
+    Lock();
+    if (head+Length < size) {
+        memcpy(buf + head, Data, Length);
+        head += Length;
+    } else
+        esyslog("iframeassembler full %d", head+Length);
+    Unlock();
+}
+
 
 // --- cDvdPlayer ------------------------------------------------------------
 
@@ -239,7 +289,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     stillTimer = 0;
     currButtonN = -1;
     nav = 0;
-    iframeAssembler=new cRingBufferLinear(KILOBYTE(CIF_MAXSIZE));
+    iframeAssembler = new cIframeAssembler(KILOBYTE(CIF_MAXSIZE));
     IframeCnt = 0;
     event_buf = new uint8_t[4096];
     current_pci = 0;
@@ -1097,7 +1147,7 @@ void cDvdPlayer::Action(void) {
 			  ev->physical, ev->physical);
 	      }
 
-          firstClear=true;
+//          firstClear=true;
 	      break;
 	  }
 	  case DVDNAV_VTS_CHANGE:

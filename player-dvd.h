@@ -51,6 +51,7 @@ class IntegerListObject : public cListObject {
 };
 
 class cDvdPlayerControl ;
+class cIframeAssembler;
 
 class cDvdPlayer : public cPlayer, cThread {
  private:
@@ -71,7 +72,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int vsize;
     int vaspect;
 
-    cRingBufferLinear *iframeAssembler;
+    cIframeAssembler *iframeAssembler;
     int IframeCnt;
     uint8_t * event_buf;
 
