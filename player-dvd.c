@@ -1434,7 +1434,7 @@ void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
     /**
      * !(spuId & 0x80) controls subpictures from dvd-menu
      */
-    bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced() || !(spuId & 0x80);
+    bool allowedShow = currentNavSubpStreamUsrLocked || IsDvdNavigationForced() || (DVDSetup.ShowSubtitles && !(spuId & 0x80));
 
     DEBUG_SUBP_ID("playSPU: SPU proc, spu_size:%d, menuDomain=%d, pts: %12lld\n",
         spuSize, IsInMenuDomain(), SPUassembler.getPts());
