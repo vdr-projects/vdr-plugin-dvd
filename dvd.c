@@ -62,12 +62,22 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
     return true;
 }
 
+bool cPluginDvd::Initialize(void)
+{
+  // Initialize any background activities the plugin shall perform.
+  RegisterI18n(DvdPhrases);
+  return true;
+}
+
 bool cPluginDvd::Start(void)
 {
   // Start any background activities the plugin shall perform.
-  RegisterI18n(DvdPhrases);
-
   return true;
+}
+
+void cPluginDvd::Housekeeping(void)
+{
+  // Perform any cleanup or other regular tasks.
 }
 
 cOsdMenu *cPluginDvd::MainMenuAction(void)

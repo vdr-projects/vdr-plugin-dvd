@@ -41,13 +41,13 @@ public:
   virtual const char *Description(void) { return DESCRIPTION; }
   virtual const char *CommandLineHelp(void);
   virtual bool ProcessArgs(int argc, char *argv[]);
+  virtual bool Initialize(void);
   virtual bool Start(void);
+  virtual void Housekeeping(void);
   virtual const char *MainMenuEntry(void) { 
 		return DVDSetup.HideMainMenu ? NULL : MAINMENUENTRY; 
 	}
   virtual cOsdMenu *MainMenuAction(void);
   virtual cMenuSetupPage *SetupMenu(void);
   virtual bool SetupParse(const char *Name, const char *Value);
-  };
-
-
+};
