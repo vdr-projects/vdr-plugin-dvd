@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - fix highlight button when button == 0
     - change menu detection (test)
     - use DeviceClrAvailableTracks/DeviceSetCurrentAudioTrack from vdr 
     - only set possible subtitles

@@ -1265,6 +1265,7 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
     dvdnav_highlight_area_t hl;
 
     dvdnav_get_current_highlight(nav, &buttonN);
+
     ClearButtonHighlight();
 
     if (SPUdecoder && current_pci && TakeOsd()) {
@@ -1278,18 +1279,17 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
             DEBUG_NAV("\t\t-> %d/%d %d/%d (%dx%d)\n",
 		        hl.sx, hl.sy, hl.ex, hl.ey, hl.ex-hl.sx+1, hl.ey-hl.sy+1);
 
-            if (SPUdecoder)
-    	        SPUdecoder->setHighlight(hl.sx, hl.sy, hl.ex, hl.ey, hl.palette);
+  	        SPUdecoder->setHighlight(hl.sx, hl.sy, hl.ex, hl.ey, hl.palette);
+
             if(pktpts != 0xFFFFFFFF)
 		        seenVPTS(pktpts);
 	    } else {
 	        // this should never happen anyway
-	        /**
-	        DEBUG_NAV("DVD NAV SPU clear & select 1 %s:%d\n", __FILE__, __LINE__);
-	        dvdnav_button_select(nav, current_pci, 1);
-	        ClearButtonHighlight();
-	        */
-            buttonN = -1;
+            if (buttonN == 0) {
+    	        DEBUG_NAV("DVD NAV SPU select button 1 %s:%d\n", __FILE__, __LINE__);
+    	        dvdnav_button_select(nav, current_pci, 1);
+            } else
+                buttonN = -1;
 	    }
     } else {
 	    DEBUG_NAV("not current pci button: %d, SPUdecoder=%d, current_pci=0x%p\n",
