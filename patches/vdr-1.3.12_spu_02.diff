@@ -1,0 +1,68 @@
+diff -ur vdr-1.3.12_orig/dvbspu.c vdr-1.3.12/dvbspu.c
+--- vdr-1.3.12_orig/dvbspu.c	Sun Jul 18 17:27:50 2004
++++ vdr-1.3.12/dvbspu.c	Sun Jul 18 17:29:57 2004
+@@ -236,9 +236,9 @@
+     delete osd;
+ }
+ 
+-void cDvbSpuDecoder::processSPU(uint32_t pts, uint8_t * buf)
++void cDvbSpuDecoder::processSPU(uint32_t pts, uint8_t * buf, bool allowedShow)
+ {
+-    setTime(pts);
++    setTime(pts, allowedShow);
+ 
+     DEBUG("SPU pushData: pts: %d\n", pts);
+ 
+@@ -403,6 +403,11 @@
+ 
+ int cDvbSpuDecoder::setTime(uint32_t pts)
+ {
++    return setTime(pts, true);
++}
++
++int cDvbSpuDecoder::setTime(uint32_t pts, bool allowedShow)
++{
+     if (!spu)
+         return 0;
+ 
+@@ -503,7 +508,7 @@
+         } else if (!clean)
+             state = spSHOW;
+ 
+-        if (state == spSHOW || state == spMENU)
++        if ((state == spSHOW && allowedShow) || state == spMENU)
+             Draw();
+ 
+         if (state == spHIDE)
+diff -ur vdr-1.3.12_orig/dvbspu.h vdr-1.3.12/dvbspu.h
+--- vdr-1.3.12_orig/dvbspu.h	Sun Jul 18 17:27:50 2004
++++ vdr-1.3.12/dvbspu.h	Sun Jul 18 17:30:10 2004
+@@ -131,6 +131,7 @@
+     int ScaleYcoord(int value);
+     int ScaleYres(int value);
+     void DrawBmp(sDvbSpuRect & size, cBitmap * bmp);
++    int setTime(uint32_t pts, bool allowedShow);
+ 
+   public:
+     cDvbSpuDecoder();
+@@ -147,7 +148,7 @@
+     void Hide(void);
+     void Draw(void);
+     bool IsVisible(void) { return osd != NULL; }
+-    void processSPU(uint32_t pts, uint8_t * buf);
++    void processSPU(uint32_t pts, uint8_t * buf, bool allowedShow);
+ };
+ 
+ // --- cDvbSpuPalette -------------------------------------------
+diff -ur vdr-1.3.12_orig/spu.h vdr-1.3.12/spu.h
+--- vdr-1.3.12_orig/spu.h	Sun Jul 18 17:27:50 2004
++++ vdr-1.3.12/spu.h	Sun Jul 18 17:30:19 2004
+@@ -35,7 +35,7 @@
+     virtual void Hide(void) = 0;
+     virtual void Draw(void) = 0;
+     virtual bool IsVisible(void) = 0;
+-    virtual void processSPU(uint32_t pts, uint8_t * buf) = 0;
++    virtual void processSPU(uint32_t pts, uint8_t * buf, bool allowedShow) = 0;
+ };
+ 
+ #endif                          // __SPU_VDR_H
