@@ -174,7 +174,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int currButtonN;
     void ClearButtonHighlight(void);
     void UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt);
-    cSpuDecoder::eScaleMode doScaleMode();
+    void DoScaleMode(int &vaspect);
     cSpuDecoder::eScaleMode getSPUScaleMode();
     void SendIframe(bool doSend);
 
@@ -396,7 +396,7 @@ public:
 
 };
 
-#define CIF_MAXSIZE  256
+#define CIF_MAXSIZE  512
 
 // --- cDvdPlayer ---------------------------------------------------
 
