@@ -402,8 +402,10 @@ void cDvdPlayer::Action(void) {
 
         //resume initialisation
     const char * diskStamp;
+    bool doResume;
     int lastTitlePlayed=-1, lastBlocksPlayed=0, lastArrayIndex=-1;
-    if( setDiskStamp( &diskStamp, nav ) && DVDSetup.ResumeDisk ) {
+    doResume = setDiskStamp( &diskStamp, nav );
+    if( doResume && DVDSetup.ResumeDisk ) {    
         checkDiskStamps( diskStamp, lastTitlePlayed, lastBlocksPlayed, lastArrayIndex);
         }
         else {
@@ -919,7 +921,7 @@ void cDvdPlayer::Action(void) {
             dvdnav_free_cache_block(nav, cache_ptr);
     }
         //resume get pos when exit
-        if( DVDSetup.ResumeDisk && !IsInMenuDomain())
+        if( DVDSetup.ResumeDisk && !IsInMenuDomain() && doResume)
             Save(diskStamp, lastArrayIndex);
         //resume end
 
