@@ -1,6 +1,11 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2004-06-15: Version 0.3.5-b04  
+    - many merges/fixes ..
+    - pcm support started ..
+    - ..
+
 2004-06-10: Version 0.3.5-b02  
     - SPU AUTO PROBLEM:
     	 *

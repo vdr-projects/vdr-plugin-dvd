@@ -78,6 +78,7 @@ class cDvdPlayer : public cPlayer, cThread {
  private:
     enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
     enum ePlayDirs { pdForward, pdBackward };
+    enum ePacketType { pktNone=0, pktVideo=1, pktAudio=2, pktIFrame=4, pktSpu=8 };
 
     cDvdPlayerControl *controller;
 
@@ -137,6 +138,7 @@ class cDvdPlayer : public cPlayer, cThread {
 
     int   currentNavAudioTrack;
     int   currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
+    int   lastNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
     bool  currentNavAudioTrackUsrLocked;
 
     cList<IntegerListObject> navAudioTracksSeen;
@@ -158,6 +160,7 @@ class cDvdPlayer : public cPlayer, cThread {
     char * aspect_str;
 
     //player stuff
+    void StillSkip(void);
     void TrickSpeed(int Increment);
     void Empty(bool emptyDeviceToo=true);
     void StripAudioPackets(uchar *b, int Length, uchar Except = 0x00);
@@ -165,22 +168,25 @@ class cDvdPlayer : public cPlayer, cThread {
     bool Save(void);
     static bool BitStreamOutActive;
     static bool HasBitStreamOut;
+    static bool SoftDeviceOutActive; // currently used to switch for xine
+    static bool HasSoftDeviceOut;    // currently used to switch for xine
 
     //dvd stuff
     int currButtonN;
     void ClearButtonHighlight(void);
-    void UpdateButtonHighlight(void);
+    void UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt);
     cSpuDecoder::eScaleMode doScaleMode();
     cSpuDecoder::eScaleMode getSPUScaleMode();
     void SendIframe(bool doSend);
 
-    void playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
+    int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
     bool playSPU(int spuId, unsigned char *data, int datalen);
 
  protected:
     virtual void Activate(bool On);
     virtual void Action(void);
     void DeviceClear(void);
+    void DevicePlay(void);
     void seenSpuPts(uint64_t pts);
 
     uint64_t time_ticks(void);
@@ -380,6 +386,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
     int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
+    bool SetCurrentNavAudioTrackType(int atype, bool clearDevice);
     void GetAudioLangCode( const char ** audiolang_str ) const ;
 
     virtual void SetAudioTrack(int Index) { (void) SetAudioID( Index ); }
@@ -485,52 +492,6 @@ inline void cDvdPlayer::selectRightButton(void)
     if (current_pci) {
       dvdnav_right_button_select(nav, current_pci);
     }
-}
-
-inline void cDvdPlayer::activateButton(void)
-{
-    DEBUGDVD("activateButton\n");
-    if (current_pci)
-      dvdnav_button_activate(nav, current_pci);
-}
-
-inline int cDvdPlayer::callRootMenu(void)
-{
-    DEBUGDVD("cDvdPlayer::callRootMenu()\n");
-
-    LOCK_THREAD;
-
-    SetCurrentNavAudioTrackUsrLocked(false);
-    return dvdnav_menu_call(nav, DVD_MENU_Root);
-}
-
-inline int cDvdPlayer::callTitleMenu(void)
-{
-    DEBUGDVD("cDvdPlayer::callTitleMenu()\n");
-
-    LOCK_THREAD;
-
-    SetCurrentNavAudioTrackUsrLocked(false);
-    return dvdnav_menu_call(nav, DVD_MENU_Title);
-}
-
-inline int cDvdPlayer::callSubpMenu(void)
-{
-    DEBUGDVD("cDvdPlayer::callSubpMenu()\n");
-
-    LOCK_THREAD;
-
-    return dvdnav_menu_call(nav, DVD_MENU_Subpicture);
-}
-
-inline int cDvdPlayer::callAudioMenu(void)
-{
-    DEBUGDVD("cDvdPlayer::callAudioMenu()\n");
-
-    LOCK_THREAD;
-
-    SetCurrentNavAudioTrackUsrLocked(false);
-    return dvdnav_menu_call(nav, DVD_MENU_Audio);
 }
 
 #endif //__PLAYER_DVD_H

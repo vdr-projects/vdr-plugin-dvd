@@ -518,7 +518,9 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char * msg, int & val)
                 case TimeSearchInput:
                     break;
                 case TrackSearchInput:
-                    if(player) player->GotoTitle(val);
+                    if(player) {
+		    	player->GotoTitle(val);
+		    }
                     break;
                 default:
                     break;

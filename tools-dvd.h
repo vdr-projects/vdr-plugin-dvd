@@ -37,7 +37,7 @@ class cPStream {
     static int PESHeaderLength(const uint8_t *data) { return (data[8]); }
 
     static uint64_t fromPTS(const uint8_t *p)
-        {
+    {
                 uint64_t lpts = 0;
                 lpts  = (((uint64_t)p[0]) & 0x0e) << 29;
                 lpts |= ( (uint64_t)p[1])         << 22;
@@ -46,16 +46,16 @@ class cPStream {
                 lpts |= (((uint64_t)p[4]) & 0xfe) >>  1;
 
                 return lpts;
-        }
+    }
 
     static void toPTS(uint8_t *p, uint64_t lpts, bool ptsFlag)
-        {
-        p[0] =        (uint8_t)((lpts >> 29) & 0x0e) | ptsFlag ? 0x21 : 0x01;
-            p[1] =        (uint8_t) (lpts >> 22);
-        p[2] = 0x01 | (uint8_t)(lpts >> 14);
-            p[3] =        (uint8_t) (lpts >> 7);
-            p[4] = 0x01 | (uint8_t) (lpts << 1);
-        }
+    {
+        	p[0] =        (uint8_t)((lpts >> 29) & 0x0e) | ptsFlag ? 0x21 : 0x01;
+            	p[1] =        (uint8_t) (lpts >> 22);
+        	p[2] = 0x01 | (uint8_t)(lpts >> 14);
+            	p[3] =        (uint8_t) (lpts >> 7);
+            	p[4] = 0x01 | (uint8_t) (lpts << 1);
+    }
 
 
 /*

@@ -45,6 +45,11 @@
 #else
 #define DEBUG_AUDIO_PLAY(format, args...)
 #endif
+#ifdef AUDIOPLAYDEBUG2
+#define DEBUG_AUDIO_PLAY2(format, args...) printf (format, ## args)
+#else
+#define DEBUG_AUDIO_PLAY2(format, args...)
+#endif
 #ifdef NAVDEBUG
 #define DEBUG_NAV(format, args...) printf (format, ## args)
 #else
@@ -71,11 +76,21 @@
 #else
 #define DEBUG_IFRAME(format, args...)
 #endif
+#ifdef IFRAMEDEBUG2
+#define DEBUG_IFRAME2(format, args...) printf (format, ## args)
+#else
+#define DEBUG_IFRAME2(format, args...)
+#endif
 
 #ifdef PTSDEBUG
 #define DEBUG_PTS(format, args...) printf (format, ## args)
 #else
 #define DEBUG_PTS(format, args...)
+#endif
+#ifdef PTSDEBUG2
+#define DEBUG_PTS2(format, args...) printf (format, ## args)
+#else
+#define DEBUG_PTS2(format, args...)
 #endif
 
 #if VDRVERSNUM <= 10306
