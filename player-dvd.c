@@ -1105,12 +1105,11 @@ void cDvdPlayer::Action(void) {
 	      break;
 	  case DVDNAV_CELL_CHANGE: {
 	      DEBUG_NAV("%s:%d:NAV CELL CHANGE\n", __FILE__, __LINE__);
-	      dvdnav_cell_change_event_t * cell_info = (dvdnav_cell_change_event_t *)cache_ptr;
 
 	      /**
 	       * update information 
 	       */
-	      lastCellEventInfo = *cell_info;
+          memcpy(&lastCellEventInfo, cache_ptr, sizeof(dvdnav_cell_change_event_t));
 	      UpdateBlockInfo(); // TEST
               UpdateVTSInfo(); // TEST
 	      BlocksToPGCTicks( 1, pgcTicksPerBlock, pgcTotalTicks);
@@ -2133,22 +2132,22 @@ void cDvdPlayer::Backward(void)
        }
 }
 
-int cDvdPlayer::GetProgramNumber() const 
+inline int cDvdPlayer::GetProgramNumber() const 
 {
 	return lastCellEventInfo.pgN;
 }
 
-int cDvdPlayer::GetCellNumber() const 
+inline int cDvdPlayer::GetCellNumber() const 
 {
 	return lastCellEventInfo.cellN;
 }
 
-int64_t cDvdPlayer::GetPGLengthInTicks() 
+inline int64_t cDvdPlayer::GetPGLengthInTicks() 
 {
 	return lastCellEventInfo.pg_length;
 }
 
-int64_t cDvdPlayer::GetPGCLengthInTicks() 
+inline int64_t cDvdPlayer::GetPGCLengthInTicks() 
 {
 	return lastCellEventInfo.pgc_length;
 }
@@ -2181,7 +2180,7 @@ bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
     int64_t CurrentTicks, TotalTicks;
 
     BlocksToPGCTicks( pgcCurrentBlockNum, CurrentTicks, TotalTicks );
-
+    
     CurrentFrame = (int) (( CurrentTicks / 90000L ) * FRAMESPERSEC) ; 
     TotalFrame   = (int) (( TotalTicks   / 90000L ) * FRAMESPERSEC) ; 
 
