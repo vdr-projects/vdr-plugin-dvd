@@ -22,6 +22,8 @@ private:
   bool visible, modeOnly, shown, displayFrames, forceDvdNavigation;
   void *osdTaker;
   int lastCurrent, lastTotal;
+  bool lastPlay, lastForward;
+  int lastSpeed;
   cSkinDisplayReplay* displayReplay;
 
   enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
@@ -48,7 +50,6 @@ private:
   void ShowTimed(int Seconds = 0);
   void updateShow(bool force=false);
 
-  void DisplayAtBottom(const char *s = NULL);
   void ShowMode(void);
   bool ShowProgress(bool Initial);
 
