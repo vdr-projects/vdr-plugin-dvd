@@ -2676,12 +2676,12 @@ int  cDvdPlayer::GetCurrentNavAudioTrackType(void) const
 
 uint16_t cDvdPlayer::GetNavAudioTrackLangCode(int channel) const
 {
-	uint16_t lang_code1=0xFFFF;
-	if(nav!=NULL) {
-	        int logchan=dvdnav_get_audio_logical_stream( nav, channel );
-	        lang_code1=dvdnav_audio_stream_to_lang( nav, logchan>=0?logchan:channel );
-	}
-	return lang_code1;
+    uint16_t lang_code1=0xFFFF;
+    if( nav!=NULL ) {
+        int logchan=dvdnav_get_audio_logical_stream(nav, channel);
+        lang_code1=dvdnav_audio_stream_to_lang(nav, logchan>=0 ? logchan : channel);
+    }
+    return lang_code1;
 }
 
 uint16_t cDvdPlayer::GetCurrentNavAudioTrackLangCode(void) const
@@ -2702,9 +2702,10 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 
     if(!DVDActiveAndRunning()) return;
 
+
     LOCK_THREAD;
 
-    int id = TrackId->id & (Type == ttAudio ? AudioTrackMask : AC3AudioTrackMask);
+    int id = TrackId->id & (IS_AUDIO_TRACK(Type) ? AudioTrackMask : AC3AudioTrackMask);
 
     while ( i >= 0) {
         if (id == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
@@ -2712,16 +2713,22 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         i--;
     }
 
-    if( i<0 ) {
+    if(i < 0 && navAudioTracksSeen.Count() > -1)
         id = ((IntegerListObject *)navAudioTracksSeen.Get(0))->getValue();
-    }
-    SetCurrentNavAudioTrackUsrLocked(true);
-    currentNavAudioTrack = id;
-    currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
+    else
+        currentNavAudioTrack = -1;
 
-    sprintf(buffer,"%c%c", p1[1], p1[0]);
-    dvdnav_audio_language_select(nav, buffer);
-    Empty();
+    SetCurrentNavAudioTrackUsrLocked(true);
+
+    //!!! soundglitches on titlejump
+    if (currentNavAudioTrack != id) {
+        currentNavAudioTrack = id;
+        currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
+
+        sprintf(buffer,"%c%c", p1[1], p1[0]);
+        dvdnav_audio_language_select(nav, buffer);
+        Empty();
+    }
 }
 
 char * cDvdPlayer::GetTitleString() const
