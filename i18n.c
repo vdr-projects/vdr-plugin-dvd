@@ -42,72 +42,72 @@ const char *ISO639code[] = {
 
 const tI18nPhrase DvdPhrases[] = {
     {
-    "Setup.DVD$Preferred menu language",                 // English
+    "Setup.DVD$Preferred menu language",                // English
     "Bevorzugte Spache für Menüs",                      // Deutsch
         "", // Slovenski
-        "menu - linguaggio preferito",                      // Italiano
-        "Taalkeuze voor menu",                              // Nederlands
-        "", // Português
-        "Langage préféré pour les menus",                   // Français
-        "", // Norsk
-        "Haluttu valikon kieli",                // Suomi
-        "", // Polski
-        "Idioma preferido para los menús",                  // Español
-        "", // Ellinika
-        "", // Svenska
-        "", // Romaneste
+        "menu - linguaggio preferito",                  // Italiano
+        "Taalkeuze voor menu",                          // Nederlands
+        "",                                             // Português
+        "Langage préféré pour les menus",               // Français
+        "",                                             // Norsk
+        "Haluttu valikon kieli",                        // Suomi
+        "",                                             // Polski
+        "Idioma preferido para los menús",              // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
         "",
         "",
 #if VDRVERSNUM>=10300
-        "", // Russian
+        "",                                             // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
 #endif
     },
     {
-    "Setup.DVD$Preferred audio language",                // English
-        "Bevorzugte Sprache für Dialog",                    // Deutsch
-        "", // Slovenski
-        "audio - linguaggio preferito",                     // Italiano
-        "Taalkeuze voor geluid",                            // Nederlands
-        "", // Português
-        "Langage préféré pour le son",                      // Français
-        "", // Norsk
-        "Haluttu äänityksen kieli",             // Suomi
-        "", // Polski
-        "Idioma preferido para el sonido",                  // Español
-        "", // Ellinika
-        "", // Svenska
-        "", // Romaneste
+    "Setup.DVD$Preferred audio language",               // English
+        "Bevorzugte Sprache für Dialog",                // Deutsch
+        "",                                             // Slovenski
+        "audio - linguaggio preferito",                 // Italiano
+        "Taalkeuze voor geluid",                        // Nederlands
+        "",                                             // Português
+        "Langage préféré pour le son",                  // Français
+        "",                                             // Norsk
+        "Haluttu äänityksen kieli",                     // Suomi
+        "",                                             // Polski
+        "Idioma preferido para el sonido",              // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
         "",
         "",
 #if VDRVERSNUM>=10300
-        "", // Russian
+        "",                                             // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
 #endif
     },
     {
-    "Setup.DVD$Preferred subtitle language",             // English
-        "Bevorzugte Spache für Untertitel",                 // Deutsch
-        "", // Slovenski
-        "sottotitoli - linguaggio preferito",               // Italiano
-        "Taalkeuze voor ondertitels",                       // Nederlands
-        "", // Português
-        "Langage préféré pour les sous-titres",             // Français
-        "", // Norsk
-        "Haluttu tekstityksen kieli",               // Suomi
-        "", // Polski
-        "Idioma preferido para los subtítulos",             // Español
-        "", // Ellinika
-        "", // Svenska
-        "", // Romaneste
+    "Setup.DVD$Preferred subtitle language",            // English
+        "Bevorzugte Spache für Untertitel",             // Deutsch
+        "",                                             // Slovenski
+        "sottotitoli - linguaggio preferito",           // Italiano
+        "Taalkeuze voor ondertitels",                   // Nederlands
+        "",                                             // Português
+        "Langage préféré pour les sous-titres",         // Français
+        "",                                             // Norsk
+        "Haluttu tekstityksen kieli",                   // Suomi
+        "",                                             // Polski
+        "Idioma preferido para los subtítulos",         // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
         "",
         "",
 #if VDRVERSNUM>=10300
-        "", // Russian
+        "",                                             // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
@@ -115,23 +115,23 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
     "Setup.DVD$Player region code",                     // English
-        "Regions Kode für Player",                          // Deutsch
-        "", // Slovenski
-        "region code del DVD player",                       // Italiano
-        "Regiocode van Speler",                             // Nederlands
-        "", // Português
-        "Code région du lecteur",                           // Français
-        "", // Norsk
-        "Soittimen aluekoodi",                      // Suomi
-        "", // Polski
-        "Código de zona del lector",                        // Español
-        "", // Ellinika
-        "", // Svenska
-        "", // Romaneste
+        "Regions Kode für Player",                      // Deutsch
+        "",                                             // Slovenski
+        "region code del DVD player",                   // Italiano
+        "Regiocode van Speler",                         // Nederlands
+        "",                                             // Português
+        "Code région du lecteur",                       // Français
+        "",                                             // Norsk
+        "Soittimen aluekoodi",                          // Suomi
+        "",                                             // Polski
+        "Código de zona del lector",                    // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
         "",
         "",
 #if VDRVERSNUM>=10300
-        "", // Russian
+        "",                                             // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
@@ -139,23 +139,23 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
     "Setup.DVD$Display subtitles",                      // English
-        "Untertitel anzeigen",                              // Deutsch
-        "", // Slovenski
-        "Visualizza sottotitoli",                           // Italiano
-        "Toon ondertitels",                                 // Nederlands
-        "", // Português
-        "Affiche les sous-titres",                          // Français
-        "", // Norsk
-        "Näytä tekstitys",                  // Suomi
-        "", // Polski
-        "Mostrar subtítulos",                               // Español
-        "", // Ellinika
-        "", // Svenska
-        "", // Romaneste
+        "Untertitel anzeigen",                          // Deutsch
+        "",                                             // Slovenski
+        "Visualizza sottotitoli",                       // Italiano
+        "Toon ondertitels",                             // Nederlands
+        "",                                             // Português
+        "Affiche les sous-titres",                      // Français
+        "",                                             // Norsk
+        "Näytä tekstitys",                              // Suomi
+        "",                                             // Polski
+        "Mostrar subtítulos",                           // Español
+        "",                                             // Ellinika
+        "",                                             // Svenska
+        "",                                             // Romaneste
         "",
         "",
 #if VDRVERSNUM>=10300
-        "", // Russian
+        "",                                             // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
@@ -189,12 +189,12 @@ const tI18nPhrase DvdPhrases[] = {
      "Setup.DVD$Hide Mainmenu Entry",
         "Hauptmenüeintrag verstecken"                   // Deutsch
         "",                                             // Slovenski
-        "",                                             // Italiano
+        "Nascondi voce menù",                           // Italiano
         "",                                             // Nederlands
         "",                                             // Português
         "",                                             // Français
         "",                                             // Norsk
-        "",                                             // Suomi
+        "Piilota valinta päävalikosta",                 // Suomi
         "",                                             // Polski
         "",                                             // Español
         "",                                             // Ellinika
@@ -203,7 +203,7 @@ const tI18nPhrase DvdPhrases[] = {
         "",
         "",
 #if VDRVERSNUM>=10300
-        "",                                             // Russian
+        "ÁÚàëâì ÚÞÜÐÝÔã Ò ÓÛÐÒÝÞÜ ÜÕÝî",                // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
@@ -251,7 +251,7 @@ const tI18nPhrase DvdPhrases[] = {
         "",
         "",
 #if VDRVERSNUM>=10300
-      "",                                             // Russian
+      "",                                               // Russian
 #endif
 #if VDRVERSNUM>=10307
         "",
@@ -259,4 +259,3 @@ const tI18nPhrase DvdPhrases[] = {
     },
     { NULL }
 };
-
