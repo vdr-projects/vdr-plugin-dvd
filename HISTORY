@@ -1,6 +1,9 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2004-0x-xx: Version 0.3.x-x .. sven at jausoft.com
+    - fixed picture/sound errors in AC3 Decoder 
+
 2004-05-25: Version 0.3.4-rc11 .. sven at jausoft.com 
     - fixed some display errors during navigation
     - ringbuffer implemented
