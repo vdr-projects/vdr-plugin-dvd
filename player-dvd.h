@@ -102,9 +102,10 @@ class cDvdPlayer : public cPlayer, cThread {
     bool changeNavSubpStreamOnceInSameCell;
 
     cList<IntegerListObject> navSubpStreamSeen;
-    void notifySeenSubpStream( int navSubpStream );
     void clearSeenSubpStream(void);
     void setAllSubpStreams(void);
+    int SearchSubpStream(int SubpStreamId) const;
+    void notifySeenSubpStream( int navSubpStream );
     uint16_t GetNavSubpStreamLangCode(int channel) const;
     int  SetSubpStream(int id);
     bool GetCurrentNavSubpStreamUsrLocked(void) const ;
@@ -136,9 +137,10 @@ class cDvdPlayer : public cPlayer, cThread {
     bool  currentNavAudioTrackUsrLocked;
 
     cList<IntegerListObject> navAudioTracksSeen;
-    int notifySeenAudioTrack(int navAudioTrack);
     void clearSeenAudioTrack(void);
     void setAllAudioTracks(void);
+    int notifySeenAudioTrack(int navAudioTrack);
+    int SearchAudioStream(int AudioStreamId) const;
     uint16_t GetNavAudioTrackLangCode(int channel) const;
     bool SetCurrentNavAudioTrackType(int atype);
 

@@ -2295,19 +2295,21 @@ void cDvdPlayer::setAllSubpStreams(void)
     }
 }
 
+int cDvdPlayer::SearchSubpStream(int SubpStreamId) const {
+    int i = navSubpStreamSeen.Count() - 1;
+    while ( i >= 0) {
+        if (SubpStreamId == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue())
+            break; // found
+        i--;
+    }
+    return i;
+}
+
 void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
 {
-    int i = navSubpStreamSeen.Count()-1;
+    int i = SearchSubpStream(navSubpStream);
 
-    while ( i >= 0)
-    {
-	    if ( navSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
-	    	break; // found
-	    i--;
-    }
-
-    if ( i < 0 )
-    {
+    if (i < 0) {
 #ifdef SUBPDEBUG
 	    char buff2[12];
 	    int channel, channel_active=0;
@@ -2329,19 +2331,20 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
             printf("cDvdPlayer::cDvdPlayer: seen new subp id: 0x%X (%d), <%s>; 0x%X (%d)\n",
 			channel, channel, buff2, channel_active, channel_active);
 #endif
-
 	    navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
     }
 }
 
 bool cDvdPlayer::GetCurrentNavSubpStreamUsrLocked(void) const
-{ return currentNavSubpStreamUsrLocked; }
+{
+    return currentNavSubpStreamUsrLocked;
+}
 
 void cDvdPlayer::SetCurrentNavSubpStreamUsrLocked(bool lock)
 {
-  currentNavSubpStreamUsrLocked=lock;
-  DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: currentNavSubpStreamUsrLocked=%s\n",
-  	currentNavSubpStreamUsrLocked?"true":"false");
+    currentNavSubpStreamUsrLocked = lock;
+    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: currentNavSubpStreamUsrLocked=%s\n",
+  	    currentNavSubpStreamUsrLocked ? "true" : "false");
 }
 
 int  cDvdPlayer::GetCurrentNavSubpStream(void) const
@@ -2351,15 +2354,7 @@ int  cDvdPlayer::GetCurrentNavSubpStream(void) const
 
 int  cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
 {
-    int i=navSubpStreamSeen.Count()-1;
-
-    while ( i >= 0)
-    {
-	if ( (currentNavSubpStream & SubpStreamMask) == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
-		break; // found
-	i--;
-    }
-    return i;
+    return SearchSubpStream(currentNavSubpStream & SubpStreamMask);
 }
 
 uint16_t cDvdPlayer::GetNavSubpStreamLangCode(int channel) const
@@ -2374,7 +2369,7 @@ uint16_t cDvdPlayer::GetNavSubpStreamLangCode(int channel) const
 
 uint16_t cDvdPlayer::GetCurrentNavSubpStreamLangCode(void) const
 {
-        return currentNavSubpStreamLangCode;
+    return currentNavSubpStreamLangCode;
 }
 
 int cDvdPlayer::GetNavSubpStreamNumber (void) const
@@ -2387,18 +2382,12 @@ int cDvdPlayer::SetSubpStream(int id)
     static char buffer[10];
     uint16_t lang_code1;
     const char * p1 = (char *)&lang_code1;
-    int i=navSubpStreamSeen.Count()-1;
 
     LOCK_THREAD;
-    while ( i >= 0)
-    {
-	if ( id == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
-		break; // found
-	i--;
-    }
+    int i = SearchSubpStream(id);
 
-    if( i<0 ) {
-	id = ((IntegerListObject *)navSubpStreamSeen.Get(0))->getValue();
+    if(i < 0) {
+	    id = ((IntegerListObject *)navSubpStreamSeen.Get(0))->getValue();
     }
 
     currentNavSubpStream = id;
@@ -2429,15 +2418,9 @@ int cDvdPlayer::NextSubpStream()
     if (navSubpStreamSeen.Count() == 0)
        return 0;
 
-    int i = navSubpStreamSeen.Count() - 1;
-
     LOCK_THREAD;
-    while ( i >= 0)
-    {
-	    if (currentNavSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue())
-	    	break; // found
-	    i--;
-    }
+
+    int i = SearchSubpStream(currentNavSubpStream);
 
     i = ( i + 1 ) % navSubpStreamSeen.Count();
 
@@ -2498,8 +2481,8 @@ void cDvdPlayer::clearSeenAudioTrack( )
 {
 	navAudioTracksSeen.Clear();
 	DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: seen audio cleared\n");
-        SetCurrentNavAudioTrackUsrLocked(false);
-        cDevice::PrimaryDevice()->ClrAvailableTracks();
+    SetCurrentNavAudioTrackUsrLocked(false);
+    cDevice::PrimaryDevice()->ClrAvailableTracks();
 }
 
 void cDvdPlayer::setAllAudioTracks(void)
@@ -2515,15 +2498,19 @@ void cDvdPlayer::setAllAudioTracks(void)
     }
 }
 
+int cDvdPlayer::SearchAudioStream(int AudioStreamId) const {
+    int i = navAudioTracksSeen.Count() - 1;
+    while ( i >= 0) {
+        if (AudioStreamId == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
+            break; // found
+        i--;
+    }
+    return i;
+}
 
 int cDvdPlayer::notifySeenAudioTrack(int navAudioTrack)
 {
-    int i = navAudioTracksSeen.Count() - 1;
-    while ( i >= 0) {
-	    if (navAudioTrack == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
-	    	break; // found
-	    i--;
-    }
+    int i = SearchAudioStream(navAudioTrack);
 
     if (i < 0) {
 #ifdef AUDIOIDDEBUG
@@ -2555,29 +2542,25 @@ int cDvdPlayer::notifySeenAudioTrack(int navAudioTrack)
 }
 
 bool cDvdPlayer::GetCurrentNavAudioTrackUsrLocked(void) const
-{ return currentNavAudioTrackUsrLocked; }
+{
+    return currentNavAudioTrackUsrLocked;
+}
 
 void cDvdPlayer::SetCurrentNavAudioTrackUsrLocked(bool lock)
 {
-  currentNavAudioTrackUsrLocked=lock;
-  DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: currentNavAudioTrackUsrLocked=%s\n",
-  	currentNavAudioTrackUsrLocked?"true":"false");
+    currentNavAudioTrackUsrLocked = lock;
+    DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: currentNavAudioTrackUsrLocked=%s\n",
+        currentNavAudioTrackUsrLocked ? "true" : "false");
 }
 
 int  cDvdPlayer::GetCurrentNavAudioTrack(void) const
-{ return currentNavAudioTrack; }
+{
+    return currentNavAudioTrack;
+}
 
 int  cDvdPlayer::GetCurrentNavAudioTrackIdx(void) const
 {
-    int i=navAudioTracksSeen.Count()-1;
-
-    while ( i >= 0)
-    {
-	    if ( currentNavAudioTrack == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue() )
-		break; // found
-	    i--;
-    }
-    return i>-1 ? i : i;
+    return SearchAudioStream(currentNavAudioTrack);
 }
 
 bool cDvdPlayer::SetCurrentNavAudioTrackType(int atype)
@@ -2609,7 +2592,7 @@ uint16_t cDvdPlayer::GetNavAudioTrackLangCode(int channel) const
 
 uint16_t cDvdPlayer::GetCurrentNavAudioTrackLangCode(void) const
 {
-        return currentNavAudioTrackLangCode;
+    return currentNavAudioTrackLangCode;
 }
 
 int cDvdPlayer::GetNavAudioTrackNumber (void) const
@@ -2622,28 +2605,17 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 
     static char buffer[10];
     const char * p1 = (char *)&currentNavAudioTrackLangCode;
-    int i = navAudioTracksSeen.Count() - 1;
 
     if(!DVDActiveAndRunning()) return;
 
 
     LOCK_THREAD;
 
-    int id = 0;
-    if ( IS_AUDIO_TRACK(Type) )
-    {
-    	id = ( Type - ttAudio );
-    } else {
-    	id = ( Type - ttDolby );
-    }
+    int id = IS_AUDIO_TRACK(Type) ? (Type - ttAudio) : (Type - ttDolby);
 
     DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: dd=%d, index=%d, id=0x%2X\n", IS_DOLBY_TRACK(Type), Type, id);
 
-    while ( i >= 0) {
-        if (id == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
-            break; // found
-        i--;
-    }
+    int i = SearchAudioStream(id);
 
     if(i < 0 && navAudioTracksSeen.Count() > 0) {
         id = ((IntegerListObject *)navAudioTracksSeen.Get(0))->getValue();
@@ -2677,7 +2649,7 @@ char * cDvdPlayer::GetTitleString() const
 void cDvdPlayer::SetTitleString()
 {
 	static const char * title_holder = NULL;
-        dvdnav_status_t res;
+    dvdnav_status_t res;
 
 	if(title_str) { free(title_str); title_str=0; }
 
