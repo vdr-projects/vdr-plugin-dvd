@@ -205,6 +205,7 @@ void cSPUassembler::setByte( unsigned char* byte ) {
 int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    unsigned char command;
    unsigned int  next_cs_offset;
+   bool special = false;
 
    // set data pointer to begin of the packet
    setByte( packet );
@@ -213,8 +214,8 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    if( spuOffsetLast > 0 ) {
   		spu_size = size;
 
-		//check for spanning packet
-		if ( spu_size < spuOffsetLast ) return ( spuOffsetLast - spu_size + 1 );
+      //check for spanning packet
+      if ( spu_size < spuOffsetLast ) return ( spuOffsetLast - spu_size );
 
     	// set data pointer to begin of the control sequence
     	setByte( packet + spuOffsetLast );
@@ -231,8 +232,11 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
 	   	// get offset to the Control Sequence
    		next_cs_offset = getNextBytes(2);
 
-   	   	//cout << "SPU Size: " << spu_size << endl;
-   		if ( next_cs_offset == 0 ) return 5;
+   	  //cout << "SPU Size: " << spu_size << endl;
+   		if ( next_cs_offset == 0 ) return -2;
+   		//special case: command offset within 1st packet, but data spanning packets
+   		if ( next_cs_offset+2 < size && spu_size > size )
+   		   special = true;
    		if ( next_cs_offset > size ) return (next_cs_offset - size);
 
    		// set data pointer to begin of the control sequence
@@ -250,16 +254,28 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
      switch( command ) {
        case 0x00: // forced play
          //cout << "  Menu" << endl;
+         if( special ) {
+               previousCommand = 0;
+               return -1;
+         }
          return 0;
        break;
 
        case 0x01: // display start
          //cout << "  display start" << endl;
+         if( special ) {
+            previousCommand = 1;
+            return -1;
+         }
          return 1;
        break;
 
        case 0x02: // display stop
          //cout << "  display stop" << endl;
+         if( special ) {
+            previousCommand = 2;
+            return -1;
+         }
          return 2;
        break;
 	 }//switch

@@ -166,6 +166,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     ptm_offs = 0;
     DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
     SPUassembler.spuOffsetLast = 0;
+    SPUassembler.previousCommand = -1;
 
     skipPlayVideo=0;
     fastWindFactor=1;
@@ -1392,8 +1393,16 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
 
                         //check for forced subs
                         if( !IsInMenuDomain() && forcedSubsOnly ) {
-                            //get command sequence
-                            int spuh = SPUassembler.getSPUCommand(data, datalen);
+                            int spuh;
+                            if( SPUassembler.previousCommand == -1 ) {
+                              //get command sequence
+                              spuh = SPUassembler.getSPUCommand(data, datalen);
+                            }
+                            //special case: command offset within 1st packet, but data spanning packets
+                            else {
+                              spuh = SPUassembler.previousCommand;
+                              SPUassembler.previousCommand = -1;
+                            }
 
                             //code is 0x01 (play)
                             if( spuh == 1  ) {
@@ -1416,7 +1425,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                                 DEBUG_SPU("spu decoding failure in player-dvd.c ? : %d", spuh);
                             }*/
                             //data is spanning packets
-                            if( spuh > 5 ) {
+                            if( spuh > 2 ) {
                                 SPUassembler.spuOffsetLast = spuh;
                                 //DEBUG_SPU("next offset: %d", SPUassembler.spuOffsetLast);
                             }
