@@ -1,6 +1,8 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - fix video title menu and video title set navigation
+    - fix audiotrackcount and audiolanguage in progress display
     - add mpeg2 audio language
 
 2005-01-24 Version 0.3.6-b02
