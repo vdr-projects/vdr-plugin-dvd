@@ -22,6 +22,7 @@ class cDVDSetup {
     int ShowSubtitles;
     int HideMainMenu;
     int ReadAHead;
+    int ResumeDisk;
 
     // AC3 stuff
     int AC3dynrng;

@@ -75,6 +75,7 @@ cDvdPlayerControl::cDvdPlayerControl(void)
     inputActive = NoneInput;
     inputHide=true;
     forceDvdNavigation=false;
+    resumeValue = 0;
 
     player->setController(this);
 
@@ -612,6 +613,17 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 {
     if (!Active())
         return osEnd;
+    //for resume
+    if( resumeValue == 0 ) {
+    	if( Key == kOk ) {
+    		resumeValue = 1;    		
+    		return osContinue;
+    	}
+    	if( Key != kNone ) {    		
+    		resumeValue = 2;   		
+    		return osContinue;
+    	}
+    }    
     if (visible ) {
         if (timeoutShow && time(NULL) > timeoutShow) {
             Hide();

@@ -160,8 +160,11 @@ class cDvdPlayer : public cPlayer, cThread {
     void TrickSpeed(int Increment);
     void Empty(bool emptyDeviceToo=true);
     void StripAudioPackets(uchar *b, int Length, uchar Except = 0x00);
-    int Resume(void);
-    bool Save(void);
+    int Resume(int lastBlocksPlayed);
+    bool Save(const char * diskStamp, int arrayIndex);
+    bool setDiskStamp(const char ** stamp_str, dvdnav_t * nav) const;
+    void checkDiskStamps(const char * stamp_str, int &lastTitle, int &lastBlocks, int &lastArrayIndex);
+    bool askForResume(int blocks);
     static bool BitStreamOutActive;
     static bool HasBitStreamOut;
 

@@ -20,7 +20,7 @@ class cDvdPlayerControl : public cControl {
 private:
   static bool dvd_active;
   bool visible, modeOnly, shown, displayFrames, forceDvdNavigation;
-  int lastCurrent, lastTotal;
+  int lastCurrent, lastTotal, resumeValue;
 #if VDRVERSNUM<10307
   int osdPos;
   bool osdPosOffsetSet;
@@ -71,6 +71,8 @@ public:
   virtual void Show(void);
   virtual void Hide(void);
   bool Visible(void) { return visible; }
+  int getResumeValue(void) { return resumeValue; }
+  void setResumeValue(int rv) { resumeValue = rv; }
   static bool DVDActive() { return dvd_active; };
   const char * GetDisplayHeaderLine();
 

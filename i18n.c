@@ -190,6 +190,30 @@ const tI18nPhrase DvdPhrases[] = {
 #endif
     },
     {
+    "Setup.DVD$Set resume marks",                      // English
+        "Zeit für Resume merken"					,                              // Deutsch
+        "", // Slovenski
+        "",                           // Italiano
+        "",                                 // Nederlands
+        "", // Português
+        "",                          // Français
+        "", // Norsk
+        "",                  // Suomi
+        "", // Polski
+        "",                               // Español
+        "", // Ellinika
+        "", // Svenska
+        "", // Romaneste
+        "",
+        "",
+#if VDRVERSNUM>=10300
+        "", // Russian
+#endif
+#if VDRVERSNUM>=10307
+        "",
+#endif
+    },
+    {
     "Setup.DVD$Hide Mainmenu Entry",
     },
     { NULL }
