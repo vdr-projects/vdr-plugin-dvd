@@ -1124,7 +1124,7 @@ void cDvdPlayer::Action(void) {
 	      /**
 	       * update information
 	       */
-          memcpy(&lastCellEventInfo, cache_ptr, sizeof(dvdnav_cell_change_event_t));
+              memcpy(&lastCellEventInfo, cache_ptr, sizeof(dvdnav_cell_change_event_t));
 	      UpdateBlockInfo(); // TEST
               UpdateVTSInfo(); // TEST
 	      BlocksToPGCTicks( 1, pgcTicksPerBlock, pgcTotalTicks);
@@ -1181,12 +1181,15 @@ void cDvdPlayer::Action(void) {
 	      }
 	      break;
 	  case DVDNAV_HOP_CHANNEL:
-	        DEBUG_NAV("%s:%d:NAV HOP CHANNEL -> Empty\n", __FILE__, __LINE__);
-            //Empty reset backward play!!!
-            if (playDir != pdBackward)
+	      DEBUG_NAV("%s:%d:NAV HOP CHANNEL -> Empty\n", __FILE__, __LINE__);
+              //Empty reset backward play!!!
+              if ( !trickMode )
+	      {
+              //if (playDir != pdBackward)
 	            Empty(true);
-	        UpdateBlockInfo(); // TEST
-            UpdateVTSInfo(); // TEST
+	      }
+	      UpdateBlockInfo(); // TEST
+              UpdateVTSInfo(); // TEST
 	      break;
 	  default:
 	      DEBUG_NAV("%s:%d:NAV ???\n", __FILE__, __LINE__);
