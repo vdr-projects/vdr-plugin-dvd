@@ -126,7 +126,7 @@ class cDvdPlayer : public cPlayer, cThread {
     uint64_t stcPTSLastAudio;
     uint64_t pktptsAudio;
     uint64_t pktptsLastAudio;
-    
+
     uint64_t pictureNumber;
     bool     pictureFlip;
 
@@ -415,7 +415,7 @@ class cDvdPlayer : public cPlayer, cThread {
 
 // --- cDvdPlayer ---------------------------------------------------
 
-inline bool cDvdPlayer::IsInMenuDomain() const 
+inline bool cDvdPlayer::IsInMenuDomain() const
 { return isInMenuDomain; }
 
 inline bool cDvdPlayer::IsInStillFrame() const
@@ -430,15 +430,21 @@ inline bool cDvdPlayer::IsInMenuDomainOrStillFrame() const
 
 inline int cDvdPlayer::cbPlayVideo(uchar *Data, int Length)
 {
-    rframe = new cFrame(Data, Length, ftVideo);
-    if( rframe && ringBuffer && ringBuffer->Put(rframe) ) rframe = NULL;
+    if (ringBuffer) {
+        cFrame *cbFrame = new cFrame(Data, Length, ftVideo);
+        if(cbFrame && !ringBuffer->Put(cbFrame))
+            DELETENULL(cbFrame);
+    }
     return Length;
 }
 
 inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
 {
-    rframe = new cFrame(Data, Length, ftDolby);
-    if( rframe && ringBuffer && ringBuffer->Put(rframe) ) rframe = NULL;
+    if (ringBuffer) {
+        cFrame *cbFrame = new cFrame(Data, Length, ftDolby);
+        if(cbFrame && !ringBuffer->Put(cbFrame))
+            DELETENULL(cbFrame);
+    }
     return Length;
 }
 
