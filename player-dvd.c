@@ -138,7 +138,7 @@ bool cDvdPlayer::BitStreamOutActive = false;
 bool cDvdPlayer::HasBitStreamOut = false;
 
 const int cDvdPlayer::MaxAudioTracks  =  8;
-const int cDvdPlayer::MaxSubpStreams  = 16;
+const int cDvdPlayer::MaxSubpStreams  = 32;
 
 #if VDRVERSNUM<=10206
 cDvdPlayer::cDvdPlayer(void): a52dec(*this) {
@@ -1367,7 +1367,10 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                     }
                 }
                 break;
-                case 0x20: {
+                case 0x20:
+                case 0x28:
+                case 0x30:
+                case 0x38: {
                     int thisSpuId = (int)(*data & (MaxSubpStreams-1));
                     ptype = 'S';
 
