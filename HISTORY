@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - change menu detection (test)
     - use DeviceClrAvailableTracks/DeviceSetCurrentAudioTrack from vdr 
     - only set possible subtitles
     - fix subtitlehandling in replay display

@@ -403,7 +403,8 @@ public:
 
 inline bool cDvdPlayer::IsInMenuDomain() const
 {
-    return isInMenuDomain;
+//    return isInMenuDomain;
+    return (current_pci && current_pci->hli.hl_gi.hli_ss);
 }
 
 inline bool cDvdPlayer::IsInStillFrame() const
