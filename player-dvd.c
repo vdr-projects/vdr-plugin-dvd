@@ -278,15 +278,15 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
 
 cDvdPlayer::~cDvdPlayer()
 {
-  DEBUGDVD("destructor cDvdPlayer::~cDvdPlayer()\n");
-  Detach();
-  Save();
-  delete event_buf; event_buf=NULL;
-  delete iframeAssembler; iframeAssembler=NULL;
-  delete ringBuffer; ringBuffer=NULL;
-  if(titleinfo_str) { free(titleinfo_str); titleinfo_str=0; }
-  if(title_str) { free(title_str); title_str=0; }
-  if(aspect_str) { free(aspect_str); aspect_str=0; }
+    DEBUGDVD("destructor cDvdPlayer::~cDvdPlayer()\n");
+    Detach();
+    Save();
+    delete []event_buf;
+    delete iframeAssembler;
+    delete ringBuffer;
+    if(titleinfo_str) { free(titleinfo_str); titleinfo_str=0; }
+    if(title_str) { free(title_str); title_str=0; }
+    if(aspect_str) { free(aspect_str); aspect_str=0; }
 }
 
 void cDvdPlayer::setController (cDvdPlayerControl *ctrl )
@@ -1439,186 +1439,170 @@ bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 
 int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio)
 {
-  int playedPacket = pktNone;
-  uint64_t scr;
-  uint32_t mux;
-  unsigned char *sector = cache_buf;
+    int playedPacket = pktNone;
+    uint64_t scr;
+    uint32_t mux;
+    unsigned char *sector = cache_buf;
   
-  static uint64_t lapts, lvpts;
-  static int adiff;
-  char ptype = '-';
+    static uint64_t lapts, lvpts;
+    static int adiff;
+    char ptype = '-';
 
-  //make sure we got a PS packet header
-  if (!cPStream::packetStart(sector, DVD_VIDEO_LB_LEN) &&
-      cPStream::packetType(sector) != 0xBA) {
-      esyslog("ERROR: got unexpected packet: %x %x %x %x",
-	      sector[0], sector[1], sector[2], sector[3]);
-      return playedPacket;
-     }
+    //make sure we got a PS packet header
+    if (!cPStream::packetStart(sector, DVD_VIDEO_LB_LEN) && cPStream::packetType(sector) != 0xBA) {
+        esyslog("ERROR: got unexpected packet: %x %x %x %x", sector[0], sector[1], sector[2], sector[3]);
+        return playedPacket;
+    }
 
-  scr = cPStream::fromSCR(sector+4) * 300 + cPStream::fromSCRext(sector+9);
-  mux = cPStream::fromMUXrate(sector+11);
+    scr = cPStream::fromSCR(sector+4) * 300 + cPStream::fromSCRext(sector+9);
+    mux = cPStream::fromMUXrate(sector+11);
 
-  int offset = 14 + cPStream::stuffingLength(sector);
-  sector += offset;
-  int r = DVD_VIDEO_LB_LEN - offset;
-  int datalen = r;
+    int offset = 14 + cPStream::stuffingLength(sector);
+    sector += offset;
+    int r = DVD_VIDEO_LB_LEN - offset;
+    int datalen = r;
 
-  sector[6] &= 0x8f;
-//  uchar ptsFlag=sector[7] >> 6;
-  bool ptsFlag = ((sector[7] & 0xC0)==0x80);
-  if (ptsFlag) {
-      pktptsLast = pktpts ;
-      pktpts = cPStream::fromPTS(sector + 9) + ptm_offs;
-      fflush(stdout);
-  }
+    sector[6] &= 0x8f;
+//    uchar ptsFlag=sector[7] >> 6;
+    bool ptsFlag = ((sector[7] & 0xC0)==0x80);
+    if (ptsFlag) {
+        pktptsLast = pktpts ;
+        pktpts = cPStream::fromPTS(sector + 9) + ptm_offs;
+        fflush(stdout);
+    }
 
-  uchar *data = sector;
+    uchar *data = sector;
     
-  stcPTSLast = stcPTS ;
-  int64_t rawSTC;
+    stcPTSLast = stcPTS ;
+    int64_t rawSTC = -1;
 
-  if ( !SoftDeviceOutActive )
-  {
-	  if ( (rawSTC=cDevice::PrimaryDevice()->GetSTC())>=0 )
-		stcPTS=(uint64_t)rawSTC;
-  } else {
-	  rawSTC=-1;
-  }
+    if ( !SoftDeviceOutActive ) {
+	    if ( (rawSTC=cDevice::PrimaryDevice()->GetSTC())>=0 )
+		    stcPTS=(uint64_t)rawSTC;
+    }
 
-  pictureFlip=false;
+    pictureFlip=false;
 
-  switch (cPStream::packetType(sector)) {
-    case VIDEO_STREAM_S ... VIDEO_STREAM_E:
-         {
-           datalen = cPStream::packetLength(sector);
-           //skip optional Header bytes
-           datalen -= cPStream::PESHeaderLength(sector);
-           data += cPStream::PESHeaderLength(sector);
-           //skip mandatory header bytes
-           data += 3;
+    switch (cPStream::packetType(sector)) {
+        case VIDEO_STREAM_S ... VIDEO_STREAM_E: {
+            datalen = cPStream::packetLength(sector);
+            //skip optional Header bytes
+            datalen -= cPStream::PESHeaderLength(sector);
+            data += cPStream::PESHeaderLength(sector);
+            //skip mandatory header bytes
+            data += 3;
 
-	   uint8_t currentFrameType = 0;
-	   bool do_copy =  (lastFrameType == I_FRAME) && 
-                          !(data[0] == 0 && data[1] == 0 && data[2] == 1);
-	   bool havePictureHeader = false;
-	   bool haveSequenceHeader = false;
-	   bool haveSliceBeforePicture = false;
-	   while (datalen > 6) 
-	   {
-	       if (data[0] == 0 && data[1] == 0 && data[2] == 1) 
-	       {
-	           int  ptype2 = cPStream::packetType(data);
-		   if (ptype2 == SC_PICTURE)
-		   {
-	               havePictureHeader = true;
-                       iframeAssembler->Clear();
-		       VideoPts += 3600;
-		       lastFrameType = (uchar)(data[5] >> 3) & 0x07;
-		       if (!currentFrameType)
-		           currentFrameType = lastFrameType;
-		       //
-		       // in trickMode, only play assembled .. I-Frames ..
-		       skipPlayVideo= lastFrameType > I_FRAME && trickMode;
+	        uint8_t currentFrameType = 0;
+	        bool do_copy =  (lastFrameType == I_FRAME) &&  !(data[0] == 0 && data[1] == 0 && data[2] == 1);
+	        bool havePictureHeader = false;
+	        bool haveSequenceHeader = false;
+	        bool haveSliceBeforePicture = false;
+	        while (datalen > 6) {
+	            if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
+	                int  ptype2 = cPStream::packetType(data);
+		            if (ptype2 == SC_PICTURE) {
+	                    havePictureHeader = true;
+                        iframeAssembler->Clear();
+		                VideoPts += 3600;
+		                lastFrameType = (uchar)(data[5] >> 3) & 0x07;
+		                if (!currentFrameType)
+		                    currentFrameType = lastFrameType;
+		                //
+		                // in trickMode, only play assembled .. I-Frames ..
+		                skipPlayVideo= lastFrameType > I_FRAME && trickMode;
 
-		       data += 5;
-		       datalen -=5;
-		   } else if (ptype2 == SEQUENCE_HEADER && datalen >= 8) 
-		   {
-	   		   haveSequenceHeader = true;
-			   data += 4;           //skip the header
-			   // check the aspect ratio and correct it
-			   //
-			   // data stream seen as 4-bit nibbles:
-			   //   0  1  2  3
-			   //   ww|wh|hh|ax
-		           //
-			   // w width
-			   // h height
-			   // a aspect
-			   // x any
+		                data += 5;
+		                datalen -= 5;
+		            } else if (ptype2 == SEQUENCE_HEADER && datalen >= 8) {
+	   		            haveSequenceHeader = true;
+			            data += 4;           //skip the header
+			            // check the aspect ratio and correct it
+			            //
+			            // data stream seen as 4-bit nibbles:
+			            //   0  1  2  3
+			            //   ww|wh|hh|ax
+		                //
+			            // w width
+			            // h height
+			            // a aspect
+			            // x any
 	
 
-			   hsize    = (int) ( data[0] & 0xff ) << 4 ; // bits 04..11
-			   hsize   |= (int) ( data[1] & 0xf0 ) >> 4 ; // bits 00..03
+			            hsize    = (int) ( data[0] & 0xff ) << 4 ; // bits 04..11
+			            hsize   |= (int) ( data[1] & 0xf0 ) >> 4 ; // bits 00..03
 
-			   vsize    = (int) ( data[1] & 0x0f ) << 8 ; // bits 08..11
-			   vsize   |= (int) ( data[2] & 0xff )      ; // bits 00..07
+			            vsize    = (int) ( data[1] & 0x0f ) << 8 ; // bits 08..11
+			            vsize   |= (int) ( data[2] & 0xff )      ; // bits 00..07
 
-			   vaspect  = (int) ( data[3] & 0xf0 ) >> 4 ;
+			            vaspect  = (int) ( data[3] & 0xf0 ) >> 4 ;
 
-			   cSpuDecoder::eScaleMode scaleMode = doScaleMode();
+			            cSpuDecoder::eScaleMode scaleMode = doScaleMode();
 
-			   (void) scaleMode;
+			            (void) scaleMode;
 
 /**
  * we won't change width/height yet ..
-			   data[0]  = (uchar) ( ( hsize & 0xff0 ) >> 4 );
+			            data[0]  = (uchar) ( ( hsize & 0xff0 ) >> 4 );
 
-			   data[1]  = 0x00; // clear w/h nibble
-			   data[1] |= (uchar) ( ( hsize & 0x00f ) << 4 );
+			            data[1]  = 0x00; // clear w/h nibble
+			            data[1] |= (uchar) ( ( hsize & 0x00f ) << 4 );
 
-			   data[1] |= (uchar) ( ( vsize & 0xf00 ) >> 8 );
-			   data[2]  = (uchar) ( ( vsize & 0x0ff )      );
+			            data[1] |= (uchar) ( ( vsize & 0xf00 ) >> 8 );
+			            data[2]  = (uchar) ( ( vsize & 0x0ff )      );
  */
 
-			   data[3] &= 0x0f;
-			   data[3] |= (uchar) ( ( vaspect & 0x0f ) << 4);
+			            data[3] &= 0x0f;
+			            data[3] |= (uchar) ( ( vaspect & 0x0f ) << 4);
 
-			   data += 3;
-		           datalen -=3;
-		   } else if (ptype2 == PADDING_STREAM)
-		   {
-        		   DEBUGDVD("PADDING_STREAM @ %d\n", data - sector);
-			   #if 0
-				   DEBUGDVD("PADDING_STREAM (strip) r: %d -> %d\n",
-					r, data - sector);
-				   r = data - sector;
-			   #endif
-			   break;
-		   } else if( 0x01 <= ptype2 && ptype2 <= 0xaf) 
-		   {
-	                  if( !havePictureHeader && iframeAssembler->Available()==0 )
-				  haveSliceBeforePicture = true;
+			            data += 3;
+		                datalen -=3;
+		            } else if (ptype2 == PADDING_STREAM) {
+        		        DEBUGDVD("PADDING_STREAM @ %d\n", data - sector);
+			        #if 0
+				        DEBUGDVD("PADDING_STREAM (strip) r: %d -> %d\n", r, data - sector);
+				        r = data - sector;
+			        #endif
+			            break;
+		            } else if( 0x01 <= ptype2 && ptype2 <= 0xaf) {
+	                    if( !havePictureHeader && iframeAssembler->Available()==0 )
+	                        haveSliceBeforePicture = true;
 
-			  int mb_y= ptype2 * 16;
-			  if ( mb_y == vsize) 
-			  {
-    				pictureNumber++;
-    				pictureFlip=true;
-        		        DEBUGDVD("pic flip - num: %llu\n", pictureNumber);
-			  } /** else {
-        		        DEBUGDVD("pic vsize %d, mb_y*16: %d ; pn: %llu\n", 
-					vsize, mb_y, pictureNumber);
+                        int mb_y= ptype2 * 16;
+                        if ( mb_y == vsize) {
+                            pictureNumber++;
+                            pictureFlip=true;
+                            DEBUGDVD("pic flip - num: %llu\n", pictureNumber);
+			            } /** else {
+                            DEBUGDVD("pic vsize %d, mb_y*16: %d ; pn: %llu\n", 
+                            vsize, mb_y, pictureNumber);
 
-			  } */
-		   }
-	       }
-	       data++;
-	       datalen--;
-	   }
+			            } */
+		            }
+	            }    
+                data++;
+                datalen--;
+	        }
 
-	   if ( stillFrame && (currentFrameType <= I_FRAME || do_copy)) 
-	   {
-	        if ( haveSliceBeforePicture ) {
+            if ( stillFrame && (currentFrameType <= I_FRAME || do_copy)) {
+	            if ( haveSliceBeforePicture ) {
                     DEBUG_IFRAME2("I-Frame: clr  (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%u,p:%llu) !\n",
-			currentFrameType, lastFrameType, 
-			(int)do_copy, (int)havePictureHeader, (int)haveSequenceHeader, 
-			(int)haveSliceBeforePicture,
-			cntVidBlocksPlayed, pictureNumber);
-	            currentFrameType = 0;
-	            lastFrameType = 0xff;
-		    do_copy=false;
-		} else {
+		    	        currentFrameType, lastFrameType, 
+		    	        (int)do_copy, (int)havePictureHeader, (int)haveSequenceHeader, 
+		    	        (int)haveSliceBeforePicture,
+		    	        cntVidBlocksPlayed, pictureNumber);
+	                currentFrameType = 0;
+	                lastFrameType = 0xff;
+		            do_copy=false;
+		        } else {
                     DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", r, iframeAssembler->Available());
-                    iframeAssembler->Put(sector, r);
+                        iframeAssembler->Put(sector, r);
                     DEBUG_IFRAME2("%d (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%d,p:%llu)\n", 
-			iframeAssembler->Available(),
-			currentFrameType, lastFrameType, 
-			do_copy, havePictureHeader, haveSequenceHeader, haveSliceBeforePicture,
-			cntVidBlocksPlayed, pictureNumber);
-		}
-	   }
+		                iframeAssembler->Available(),
+		    	        currentFrameType, lastFrameType, 
+		    	        do_copy, havePictureHeader, haveSequenceHeader, haveSliceBeforePicture,
+		    	        cntVidBlocksPlayed, pictureNumber);
+		        }
+	        }
 
 	        if (ptsFlag) {
 	            VideoPts = lvpts = pktpts;
@@ -1631,294 +1615,268 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             if ( !isInMenuDomain ) seenVPTS(VideoPts);
 	        ptype = 'V';
             break;
-         }
-    case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
-         lastFrameType = AUDIO_STREAM_S;
-         int audioId = cPStream::packetType(sector) & AudioTrackMask;
-         notifySeenAudioTrack(audioId);
+        }
+        case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
+            lastFrameType = AUDIO_STREAM_S;
+            int audioId = cPStream::packetType(sector) & AudioTrackMask;
+            notifySeenAudioTrack(audioId);
          
-         // no sound in trick mode
-         if (noAudio)
-            return playedPacket;
+            // no sound in trick mode
+            if (noAudio)
+                return playedPacket;
             
-        if (currentNavAudioTrack != audioId) {
+            if (currentNavAudioTrack != audioId) {
 /*
-            DEBUG_AUDIO_ID("packet unasked audio stream: got=%d 0x%X (0x%X), curNavAu=%d 0x%X\n", 
-                cPStream::packetType(sector), cPStream::packetType(sector),
-                cPStream::packetType(sector) & AudioTrackMask,
-                currentNavAudioTrack, currentNavAudioTrack);
+                DEBUG_AUDIO_ID("packet unasked audio stream: got=%d 0x%X (0x%X), curNavAu=%d 0x%X\n", 
+                    cPStream::packetType(sector), cPStream::packetType(sector),
+                    cPStream::packetType(sector) & AudioTrackMask,
+                    currentNavAudioTrack, currentNavAudioTrack);
  */
-            return playedPacket;
-	    }
+                return playedPacket;
+	        }
 
-         playedPacket |= pktAudio;
-         SetCurrentNavAudioTrackType(aMPEG);
+            playedPacket |= pktAudio;
+            SetCurrentNavAudioTrackType(aMPEG);
 
-	 if (ptsFlag) {
-	     adiff = pktpts - lapts;
-	     lapts = pktpts;
-	     cPStream::toPTS(sector + 9, pktpts, true);
-	 }
+	        if (ptsFlag) {
+	            adiff = pktpts - lapts;
+	            lapts = pktpts;
+	            cPStream::toPTS(sector + 9, pktpts, true);
+	        }
 
-	 if(rawSTC>=0) {
-		 pktptsLastAudio = pktptsAudio ;
-		 stcPTSLastAudio = stcPTSAudio ;
-		 pktptsAudio = pktpts;
-		 stcPTSAudio = stcPTS;
-	 }
+	        if(rawSTC>=0) {
+		        pktptsLastAudio = pktptsAudio ;
+		        stcPTSLastAudio = stcPTSAudio ;
+		        pktptsAudio = pktpts;
+		        stcPTSAudio = stcPTS;
+	        }
 
- 	 if ( !playMULTICHANNEL )
-         {
-		DEBUG_AUDIO_PLAY2("dvd PlayAudio mp2 menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
-                        isInMenuDomain,
-			(unsigned int)(stcPTS/90U), 
-			(unsigned int)(ptsFlag?pktpts/90U:0), 
-			(unsigned int)(VideoPts/90U), r);
-	  	PlayAudio(sector, r);
-         }
+ 	        if ( !playMULTICHANNEL ) {
+		        DEBUG_AUDIO_PLAY2("dvd PlayAudio mp2 menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
+                    isInMenuDomain,
+			        (unsigned int)(stcPTS/90U), 
+			        (unsigned int)(ptsFlag?pktpts/90U:0), 
+			        (unsigned int)(VideoPts/90U), r);
+	  	        PlayAudio(sector, r);
+            }
 
-	 rframe = new cFrame(sector, r, ftAudio);
+	        rframe = new cFrame(sector, r, ftAudio);
 
-	 if (ptsFlag) 
-	     seenAPTS(pktpts);
+	        if (ptsFlag) 
+	            seenAPTS(pktpts);
 
-	 ptype = 'M';
+	        ptype = 'M';
 
-         break;
-         }
-    case PRIVATE_STREAM1:
-         {
-           datalen = cPStream::packetLength(sector);
-           //skip optional Header bytes
-           datalen -= cPStream::PESHeaderLength(sector);
-           data += cPStream::PESHeaderLength(sector);
-           //skip mandatory header bytes
-           data += 3;
-           //fallthrough is intended
-         }
-    case PRIVATE_STREAM2: {
-         lastFrameType = PRIVATE_STREAM2;
-	 //FIXME: Stream1 + Stream2 is ok, but is Stream2 alone also?
+            break;
+        }
+        case PRIVATE_STREAM1: {
+            datalen = cPStream::packetLength(sector);
+            //skip optional Header bytes
+            datalen -= cPStream::PESHeaderLength(sector);
+            data += cPStream::PESHeaderLength(sector);
+            //skip mandatory header bytes
+            data += 3;
+            //fallthrough is intended
+        }
+        case PRIVATE_STREAM2: {
+            lastFrameType = PRIVATE_STREAM2;
+	        //FIXME: Stream1 + Stream2 is ok, but is Stream2 alone also?
 
-	 // no sound, no spu in trick mode
-	 if (noAudio)
-             return playedPacket;
+	        // no sound, no spu in trick mode
+	        if (noAudio)
+                return playedPacket;
 
-	 // skip PS header bytes
-	 data += 6;
-	 // data now points to the beginning of the payload
-	 int audioType = ((int)*data) & 0xF8;
+	        // skip PS header bytes
+	        data += 6;
+	        // data now points to the beginning of the payload
+	        int audioType = ((int)*data) & 0xF8;
 
-	 if( audioType == aAC3 ||
-	     audioType == aDTS ||
-	     audioType == aLPCM
-           )
-	 {
-          int audioId = (*data & AC3AudioTrackMask);
-		  ptype = 'A';
-          notifySeenAudioTrack(audioId);
+	        if(audioType == aAC3 || audioType == aDTS || audioType == aLPCM) {
+                int audioId = (*data & AC3AudioTrackMask);
+		        ptype = 'A';
+                notifySeenAudioTrack(audioId);
           
-		  if (ptsFlag) {
-		      adiff = pktpts - lapts;
-		      lapts = pktpts;
-		  }
+		        if (ptsFlag) {
+		            adiff = pktpts - lapts;
+		            lapts = pktpts;
+		        }
           
-          if ( currentNavAudioTrack == audioId ) 
-		  {
-                      playedPacket |= pktAudio;
-                      SetCurrentNavAudioTrackType(audioType);
+                if ( currentNavAudioTrack == audioId ) {
+                    playedPacket |= pktAudio;
+                    SetCurrentNavAudioTrackType(audioType);
 
-		      if (ptsFlag) {
-			      cPStream::toPTS(sector + 9, pktpts, true);
-		      }
+		            if (ptsFlag) {
+			            cPStream::toPTS(sector + 9, pktpts, true);
+		            }
 
-		      if(rawSTC>=0) {
-			      pktptsLastAudio = pktptsAudio ;
-			      stcPTSLastAudio = stcPTSAudio ;
-			      pktptsAudio = pktpts;
-			      stcPTSAudio = stcPTS;
-		      }
+		            if(rawSTC>=0) {
+			            pktptsLastAudio = pktptsAudio ;
+			            stcPTSLastAudio = stcPTSAudio ;
+			            pktptsAudio = pktpts;
+			            stcPTSAudio = stcPTS;
+		            }
 
 #ifdef AUDIOPLAYDEBUG2
-		      /**
-		       * the funny thing here is, that:
-		       *	- it plays well within vdr-xine
-		       *	- it plays broken with vdr/dvb itself (PlayVideo)
-		       *	- it plays broken with bitstreamout (PlayAudio)
-		       */
-		      if ( audioType == aLPCM )
-		      {
-		      	     int numFrame   = (int)(data[1]);
+		            /**
+		             * the funny thing here is, that:
+		             *	- it plays well within vdr-xine
+		             *	- it plays broken with vdr/dvb itself (PlayVideo)
+		             *	- it plays broken with bitstreamout (PlayAudio)
+		             */
+		            if ( audioType == aLPCM ) {
+		      	        int numFrame   = (int)(data[1]);
 
-			     int offset     = (uint16_t)(data[2]) << 8 | (uint16_t)(data[3]) ;
-			     bool emph      = ((uint8_t)(data[4]) & 0x80 ) >> 7;
-			     bool mute      = ((uint8_t)(data[4]) & 0x40 ) >> 6;
-			     bool res1      = ((uint8_t)(data[4]) & 0x20 ) >> 5;
-			     int  numFrameA = ((uint8_t)(data[4]) & 0x1F )     ;
+			            int offset     = (uint16_t)(data[2]) << 8 | (uint16_t)(data[3]) ;
+			            bool emph      = ((uint8_t)(data[4]) & 0x80 ) >> 7;
+			            bool mute      = ((uint8_t)(data[4]) & 0x40 ) >> 6;
+			            bool res1      = ((uint8_t)(data[4]) & 0x20 ) >> 5;
+			            int  numFrameA = ((uint8_t)(data[4]) & 0x1F )     ;
 
-			     int  qwl       = ((uint8_t)(data[5]) & 0xC0 ) >> 6;
-			     int  bits      = 0;
-			     switch ( audioin_fmt.bits ) {
-				case 0: bits=16; break;
-				case 1: bits=20; break;
-				case 2: bits=24; break;
-				case 3: bits=32; break;
-				default: bits=16; break;
-			     }
-			     int  sfr       = ((uint8_t)(data[5]) & 0x30 ) >> 4;
-			     switch (sfr) {
-			     	case 0: sfr=48000; break;
-			     	case 1: sfr=96000; break;
-			     	case 2: sfr=44100; break;
-			     	case 3: sfr=32000; break;
-			     }
-			     bool res2      = ((uint8_t)(data[5]) & 0x08 ) >> 3;
-			     int  channels  = ((uint8_t)(data[5]) & 0x07 ) +1  ;
+			            int  qwl       = ((uint8_t)(data[5]) & 0xC0 ) >> 6;
+			            int  bits      = 0;
+			            switch ( audioin_fmt.bits ) {
+				            case 0: bits=16; break;
+				            case 1: bits=20; break;
+				            case 2: bits=24; break;
+				            case 3: bits=32; break;
+				            default: bits=16; break;
+			            }
+			            int  sfr       = ((uint8_t)(data[5]) & 0x30 ) >> 4;
+			            switch (sfr) {
+			     	        case 0: sfr=48000; break;
+			     	        case 1: sfr=96000; break;
+			     	        case 2: sfr=44100; break;
+			     	        case 3: sfr=32000; break;
+			            }
+			            bool res2      = ((uint8_t)(data[5]) & 0x08 ) >> 3;
+			            int  channels  = ((uint8_t)(data[5]) & 0x07 ) +1  ;
 
-			     int  dyn_range = ((uint8_t)(data[6]) & 0xff )     ;
+			            int  dyn_range = ((uint8_t)(data[6]) & 0xff )     ;
 
-			     DEBUG_AUDIO_PLAY2("dvd pcm: nf:%d, of:%d, e:%d, mu:%d, r1:%d, nfa:%d, bits=%d(qwl:%d), sfr:%d, r2:%d, ch:%d, dr:%d\n",
-			     	numFrame, offset, emph, mute, res1, numFrameA, bits, qwl, sfr, res2,
-				channels, dyn_range);
-		      }
+			            DEBUG_AUDIO_PLAY2("dvd pcm: nf:%d, of:%d, e:%d, mu:%d, r1:%d, nfa:%d, bits=%d(qwl:%d), sfr:%d, r2:%d, ch:%d, dr:%d\n",
+			     	        numFrame, offset, emph, mute, res1, numFrameA, bits, qwl, sfr, res2,
+				            channels, dyn_range);
+		            }
 #endif
 
 
- 		      if ( !playMULTICHANNEL )
-		      {
-		        if ( audioType == aAC3 
-			     && !SoftDeviceOutActive
-			     && !BitStreamOutActive 
-			   )
-			{
-				// for vdr external ac3 player _ONLY_ this time
-				//
-			        DEBUG_AUDIO_PLAY2("dvd PlayAudio ac3(ext) menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
-                                  isInMenuDomain,
-				  (unsigned int)(stcPTS/90U), 
-				  (unsigned int)(ptsFlag?pktpts/90U:0), 
-				  (unsigned int)(VideoPts/90U), r);
-
-				//remove AC3 Header
-				int ac3offset = sector[8] + 9;
-				int ac3length = cPStream::packetLength(sector) - 4;
-				cPStream::SetPacketLength(sector, ac3length);
-				//backward to save data
-				memmove(sector+4, sector, ac3offset);
-				PlayAudio(sector+4, r-4);
-			} else {
-			        DEBUG_AUDIO_PLAY2("dvd PlayAudio %d/0x%X menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
-                                  isInMenuDomain,
-				  audioType, audioType,
-				  (unsigned int)(stcPTS/90U), 
-				  (unsigned int)(ptsFlag?pktpts/90U:0), 
-				  (unsigned int)(VideoPts/90U), r);
-
-				PlayAudio(sector, r);
-			}
-		      }
-		      if ( playMULTICHANNEL 
-		           ||
-		           ( audioType == aLPCM
-			     && !SoftDeviceOutActive // else 2 pcm's -> 1 device
-			   )
-			 )
-		      {
-                              rframe = new cFrame(sector, r, ftAudio);
-			      DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
+ 		            if (!playMULTICHANNEL) {
+		                if (audioType == aAC3 && !SoftDeviceOutActive && !BitStreamOutActive ) {
+				            // for vdr external ac3 player _ONLY_ this time
+				            //
+			                DEBUG_AUDIO_PLAY2("dvd PlayAudio ac3(ext) menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
                                 isInMenuDomain,
-				(unsigned int)(stcPTS/90U), 
-				(unsigned int)(ptsFlag?pktpts/90U:0), 
-				(unsigned int)(VideoPts/90U), r);
-		              if (ptsFlag) 
-			         seenAPTS(pktpts);
-		      } else if ( audioType == aAC3 && !BitStreamOutActive ) {
-			      data += 4;
-			      // header: 3 (mandatory) + 6 (PS) + 4 (AC3)
-			      datalen -= 13;
-			      DEBUG_AUDIO_PLAY2("dvd a52dec menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
+				                (unsigned int)(stcPTS/90U), 
+				                (unsigned int)(ptsFlag?pktpts/90U:0), 
+				                (unsigned int)(VideoPts/90U), r);
+
+				            //remove AC3 Header
+				            int ac3offset = sector[8] + 9;
+				            int ac3length = cPStream::packetLength(sector) - 4;
+				            cPStream::SetPacketLength(sector, ac3length);
+				            //backward to save data
+				            memmove(sector+4, sector, ac3offset);
+				            PlayAudio(sector+4, r-4);
+			            } else {
+			                DEBUG_AUDIO_PLAY2("dvd PlayAudio %d/0x%X menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
                                 isInMenuDomain,
-				(unsigned int)(stcPTS/90U), 
-				(unsigned int)(ptsFlag?pktpts/90U:0), 
-				(unsigned int)(VideoPts/90U), datalen);
-		              if (ptsFlag && a52dec.getSyncMode()==A52decoder::ptsCopy)
-			        seenAPTS(pktpts);
-			      a52dec.decode(data, datalen, pktpts);
-		      } else if (audioType == aDTS && !BitStreamOutActive ) {
-			      // todo DTS ;-)
-			      DEBUG_AUDIO_PLAY2("dvd aDTS n.a. menu=%d\n", isInMenuDomain);
-		              if (ptsFlag) 
-			         seenAPTS(pktpts);
-		      }
-		  }
-	 } 
-	 else if ( ((int)*data & 0xE0) == 0x20 )
-	 {
-	          int thisSpuId = (int)(*data) & SubpStreamMask;
-		  ptype = 'S';
+				                audioType, audioType,
+				                (unsigned int)(stcPTS/90U), 
+				                (unsigned int)(ptsFlag?pktpts/90U:0), 
+				                (unsigned int)(VideoPts/90U), r);
 
-		  if ( OsdInUse() ) 
-		  {
-		      /**
-		       * somebody uses the osd ..
-		      DEBUG_SUBP_ID("SPU in vts ignored -> OsdInUse() !\n");
-		       */
-                      break;
-		  }
+				            PlayAudio(sector, r);
+			            }
+		            }
+                    if (playMULTICHANNEL || (audioType == aLPCM && !SoftDeviceOutActive // else 2 pcm's -> 1 device
+			        )) {
+                        rframe = new cFrame(sector, r, ftAudio);
+			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
+                            isInMenuDomain,
+				            (unsigned int)(stcPTS/90U), 
+				            (unsigned int)(ptsFlag?pktpts/90U:0), 
+				            (unsigned int)(VideoPts/90U), r);
+		                if (ptsFlag) 
+			                seenAPTS(pktpts);
+		            } else if ( audioType == aAC3 && !BitStreamOutActive ) {
+			            data += 4;
+			            // header: 3 (mandatory) + 6 (PS) + 4 (AC3)
+			            datalen -= 13;
+			            DEBUG_AUDIO_PLAY2("dvd a52dec menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n", 
+                            isInMenuDomain,
+				            (unsigned int)(stcPTS/90U), 
+				            (unsigned int)(ptsFlag?pktpts/90U:0), 
+				            (unsigned int)(VideoPts/90U), datalen);
+		                if (ptsFlag && a52dec.getSyncMode()==A52decoder::ptsCopy)
+			                seenAPTS(pktpts);
+			            a52dec.decode(data, datalen, pktpts);
+		            } else if (audioType == aDTS && !BitStreamOutActive ) {
+			            // todo DTS ;-)
+			            DEBUG_AUDIO_PLAY2("dvd aDTS n.a. menu=%d\n", isInMenuDomain);
+		                if (ptsFlag) 
+			                seenAPTS(pktpts);
+		            }
+		        }
+	        } 
+	        else if ( ((int)*data & 0xE0) == 0x20 ) {
+	            int thisSpuId = (int)(*data) & SubpStreamMask;
+		        ptype = 'S';
 
-		  data++;
-		  datalen -= 10; // 3 (mandatory header) + 6 (PS header)
+		        if (OsdInUse()) {
+		            /**
+		             * somebody uses the osd ..
+		             DEBUG_SUBP_ID("SPU in vts ignored -> OsdInUse() !\n");
+		             */
+                    break;
+		        }
 
-                  if ( currentNavSubpStream != -1 &&  thisSpuId == currentNavSubpStream ) 
-		  {
+		        data++;
+		        datalen -= 10; // 3 (mandatory header) + 6 (PS header)
+
+                if ( currentNavSubpStream != -1 &&  thisSpuId == currentNavSubpStream ) {
                 
-		    SPUassembler.Put(data, datalen, pktpts);
-
-	            if ( SPUdecoder && SPUassembler.ready() ) 
-		    {
-    		        if( ! playSPU(thisSpuId, data, datalen) ) 
-			{
-
-                        /**
-                         *
-                        DEBUG_SUBP_ID("packet not shown spu stream: got=%d, cur=%d, SPUdecoder=%d, menu=%d, feature=%d, forcedSubsOnly=%d\n",
-                            thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
-                            isInMenuDomain, isInFeature, forcedSubsOnly);
-                         */
+		            SPUassembler.Put(data, datalen, pktpts);
+                    if ( SPUdecoder && SPUassembler.ready() ) {
+    		            if( !playSPU(thisSpuId, data, datalen) ) {
+                            /**
+                             *
+                            DEBUG_SUBP_ID("packet not shown spu stream: got=%d, cur=%d, SPUdecoder=%d, menu=%d, feature=%d, forcedSubsOnly=%d\n",
+                                thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
+                                isInMenuDomain, isInFeature, forcedSubsOnly);
+                             */
                         }
-	            }
-            }
-	 } else {
-                    DEBUGDVD("PRIVATE_STREAM2 unhandled (a)id: %d 0x%X\n",
-                        (int)(*data), (int)(*data));
-	 }
+	                }
+                }
+	        } else {
+                DEBUGDVD("PRIVATE_STREAM2 unhandled (a)id: %d 0x%X\n",
+                    (int)(*data), (int)(*data));
+	        }
+            break;
         } /* PRIVATE_STREAM2 */
-        break;
-    case PADDING_STREAM:
-        DEBUGDVD("PADDING_STREAM ...\n");
-        lastFrameType = PADDING_STREAM;
-        break;
-    case SYSTEM_HEADER:
-    case PROG_STREAM_MAP:
-    default:
-         {
-           lastFrameType = 0xff;
-           esyslog("ERROR: don't know what to do - packetType: %x",
-		   cPStream::packetType(sector));
-           DEBUGDVD("ERROR: don't know what to do - packetType: %x",
-		   cPStream::packetType(sector));
-           return playedPacket;
-         }
+        case PADDING_STREAM:
+            DEBUGDVD("PADDING_STREAM ...\n");
+            lastFrameType = PADDING_STREAM;
+            break;
+        case SYSTEM_HEADER:
+        case PROG_STREAM_MAP:
+        default: {
+            lastFrameType = 0xff;
+            esyslog("ERROR: don't know what to do - packetType: %x",
+		    cPStream::packetType(sector));
+            DEBUGDVD("ERROR: don't know what to do - packetType: %x",
+		    cPStream::packetType(sector));
+            return playedPacket;
+        }
     }
     if( rframe && ringBuffer->Put(rframe) ) rframe=0;
 
 #ifdef PTSDEBUG
-  if (playMode != pmPlay)
-      DEBUGPTS("SCR: %8Lx,%8Ld, %8d, %c %1d, %8d (%8d) - %8d (%8d)\n",
-	       scr / 300, scr % 300, mux, ptype,
-      	       ptsFlag, VideoPts, lvpts, lapts, adiff);
+    if (playMode != pmPlay)
+        DEBUGPTS("SCR: %8Lx,%8Ld, %8d, %c %1d, %8d (%8d) - %8d (%8d)\n",
+            scr / 300, scr % 300, mux, ptype,
+            ptsFlag, VideoPts, lvpts, lapts, adiff);
 #endif
-     return playedPacket;
+    return playedPacket;
 }
 
 int cDvdPlayer::Resume(void)
