@@ -100,15 +100,21 @@ class cDvdPlayer : public cPlayer, cThread {
     cFrame *rframe, *pframe;
 
     dvdnav_cell_change_event_t lastCellEventInfo ;
-    int pgcTotalBlockNum;
+    uint32_t pgcCurrentBlockNum, pgcTotalBlockNum;
     int64_t pgcTotalTicks;
     int64_t pgcTicksPerBlock;
+    bool cDvdPlayer::UpdateBlockIndex(void);
+
+    bool isInMenuDomain;
+    void UpdateIsInMenuDomain();
 
     int skipPlayVideo;
     int fastWindFactor;
-    uint32_t cntBlocksPlayed;
+    uint32_t cntVidBlocksPlayed;
+    uint32_t cntAudBlocksPlayed;
 
     int currentNavSubpStream;
+    uint16_t currentNavSubpStreamLangCode;
     bool currentNavSubpStreamUsrLocked;
     bool changeNavSubpStreamOnceInSameCell;
     bool forcedSubsOnly;
@@ -117,6 +123,10 @@ class cDvdPlayer : public cPlayer, cThread {
     void notifySeenSubpStream( int navSubpStream );
     void clearSeenSubpStream(void);
     void setAllSubpStreams(void);
+    uint16_t GetNavSubpStreamLangCode(int channel) const;
+    int  SetSubpStream(int id);
+    bool GetCurrentNavSubpStreamUsrLocked(void) const ;
+    void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
 
     uint32_t stillTimer;
     dvdnav_t *nav;
@@ -137,6 +147,7 @@ class cDvdPlayer : public cPlayer, cThread {
     uint64_t pktptsLastAudio;
 
     int   currentNavAudioTrack;
+    uint16_t currentNavAudioTrackLangCode;
     int   currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
     int   lastNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
     bool  currentNavAudioTrackUsrLocked;
@@ -145,6 +156,8 @@ class cDvdPlayer : public cPlayer, cThread {
     void notifySeenAudioTrack( int navAudioTrack );
     void clearSeenAudioTrack(void);
     void setAllAudioTracks(void);
+    uint16_t GetNavAudioTrackLangCode(int channel) const;
+    bool SetCurrentNavAudioTrackType(int atype);
 
     static int Speeds[];
     bool running;
@@ -185,6 +198,7 @@ class cDvdPlayer : public cPlayer, cThread {
  protected:
     virtual void Activate(bool On);
     virtual void Action(void);
+    void DeviceReset(void);
     void DeviceClear(void);
     void DevicePlay(void);
     void seenSpuPts(uint64_t pts);
@@ -249,33 +263,24 @@ class cDvdPlayer : public cPlayer, cThread {
     int64_t GetPGCLengthInTicks() ;
 
     /**
-     * returns the CurrentTicks and TotalTicks according to the given
-     * CurrentBlockNum, TotalBlockNum and actual PGC !
+     * returns the Ticks and TotalTicks according to the given
+     * BlockNum, TotalBlockNum of the actual PGC !
      *
-     * if TotalBlockNum equals -1, the Total BlockNumber of the actual PGC is fetched !
+     * the TotalBlockNum of the actual PGC is fetched !
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void BlocksToPGCTicks( int CurrentBlockNum, int TotalBlockNum,
-                   int64_t & CurrentTicks, int64_t & TotalTicks ) ;
+    void BlocksToPGCTicks( uint32_t BlockNum, int64_t & Ticks, int64_t & TotalTicks ) ;
 
     /**
      * returns the CurrentBlockNum and TotalBlockNum according to the given
-     * CurrentTicks, TotalTicks and actual PGC !
+     * Ticks, TotalTicks of the actual PGC !
      *
-     * if TotalTicks equals -1, the Total Ticks of the actual PGC is fetched !
+     * the TotalTicks of the actual PGC is fetched !
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void PGCTicksToBlocks( int64_t CurrentTicks, int64_t TotalTicks,
-               int &CurrentBlockNum, int &TotalBlockNum) ;
-
-    /**
-     * returns the CurrentBlockNum and TotalBlockNum of the actual PGC !
-     *
-     * optional snap to the next IFrame (not functional now)
-     */
-    bool GetBlockIndex(int &CurrentBlockNum, int &TotalBlockNum, bool SnapToIFrame=false) ;
+    void PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum) ;
 
     /**
      * returns the CurrentFrame and TotalFrame of the actual PGC !
@@ -355,14 +360,10 @@ class cDvdPlayer : public cPlayer, cThread {
      */
     void PreviousPG();
 
-    bool GetCurrentNavSubpStreamUsrLocked(void) const ;
-    void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
     int  GetCurrentNavSubpStream(void) const ;
     int  GetCurrentNavSubpStreamIdx(void) const ;
-    uint16_t GetNavSubpStreamLangCode(int channel) const;
     uint16_t GetCurrentNavSubpStreamLangCode(void) const;
     int  GetNavSubpStreamNumber (void) const ;
-    int  SetSubpStream(int id);
     void NextSubpStream();
     void GetSubpLangCode( const char ** subplang_str ) const ;
 
@@ -380,13 +381,11 @@ class cDvdPlayer : public cPlayer, cThread {
 
     bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
-    uint16_t GetNavAudioTrackLangCode(int channel) const;
     uint16_t GetCurrentNavAudioTrackLangCode(void) const;
     int  GetNavAudioTrackNumber (void) const ;
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
     int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
-    bool SetCurrentNavAudioTrackType(int atype, bool clearDevice);
     void GetAudioLangCode( const char ** audiolang_str ) const ;
 
     virtual void SetAudioTrack(int Index) { (void) SetAudioID( Index ); }
@@ -404,9 +403,9 @@ class cDvdPlayer : public cPlayer, cThread {
     int callSubpMenu(void);
     int callAudioMenu(void);
 
-    bool IsInMenuDomain();
-    bool IsInStillFrame();
-    bool IsInMenuDomainOrStillFrame();
+    bool IsInMenuDomain() const;
+    bool IsInStillFrame() const ;
+    bool IsInMenuDomainOrStillFrame() const ;
 
     // -- callbacks --
     void seenAPTS(uint64_t pts);
@@ -432,16 +431,15 @@ class cDvdPlayer : public cPlayer, cThread {
 
 // --- cDvdPlayer ---------------------------------------------------
 
-inline bool cDvdPlayer::IsInMenuDomain() {
-    return running & nav != NULL &&
-    (dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav));
-}
-inline bool cDvdPlayer::IsInStillFrame()
+inline bool cDvdPlayer::IsInMenuDomain() const 
+{ return isInMenuDomain; }
+
+inline bool cDvdPlayer::IsInStillFrame() const
 {
     return stillFrame!=0;
 }
 
-inline bool cDvdPlayer::IsInMenuDomainOrStillFrame()
+inline bool cDvdPlayer::IsInMenuDomainOrStillFrame() const
 {
     return IsInStillFrame()||IsInMenuDomain();
 }

@@ -32,13 +32,19 @@ const char *cPluginDvd::CommandLineHelp(void)
 bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 {
     // Implement command line argument processing here if applicable.
+#ifndef __QNXNTO__
     static struct option long_options[] = {
 	{ "dvd",      required_argument, NULL, 'C' },
 	{ NULL }
     };
+#endif
     
     int c;
+#ifndef __QNXNTO__
     while ((c = getopt_long(argc, argv, "C:", long_options, NULL)) != -1) {
+#else
+    while ((c = getopt(argc, argv, "C:")) != -1) {
+#endif
         switch (c) {
 	    case 'C':
 		fprintf(stderr, "arg: %s\n", optarg);

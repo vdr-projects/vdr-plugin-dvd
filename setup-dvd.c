@@ -11,6 +11,9 @@
 
 #include "setup-dvd.h"
 #include "i18n.h"
+#ifdef __QNXNTO__
+#include <strings.h>
+#endif
 
 cDVDSetup DVDSetup;
 

@@ -10,14 +10,36 @@
 
 #include <stdio.h>
 #include <memory.h>
+
+#ifndef __QNXNTO__
+
 #include <byteswap.h>
+
+#elif defined(__QNXNTO__)
+
+#include <gulliver.h>
+#include <stdint.h>
+#include <strings.h>
+
+#ifdef WORDS_BIGENDIAN
+#define bswap_16(x) ENDIAN_LE16(x)
+#define bswap_32(x) ENDIAN_LE32(x)
+#define bswap_64(x) ENDIAN_LE64(x)
+#else
+#define bswap_16(x) ENDIAN_BE16(x)
+#define bswap_32(x) ENDIAN_BE32(x)
+#define bswap_64(x) ENDIAN_BE64(x)
+#endif
+
+#endif
+
 #include "dvddev.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"
 #include "player-dvd.h"
 #include "ca52.h"
 
-//#define A52DEBUG
+// #define A52DEBUG
 
 #ifdef A52DEBUG
 #warning A52DEBUG is defined
@@ -221,15 +243,35 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts)
     
     if (header)
         cPStream::toPTS(blk_ptr, pktpts, false);
+
     blk_ptr += header;
 
+/**
+ *
+struct LPCMHeader { int id:8;              // id
+                    int frame_count:8;     // number of frames
+                    int access_ptr:16;     // first acces unit pointer, i.e. start of audio frame
+                    bool emphasis:1;       // audio emphasis on-off
+                    bool mute:1;           // audio mute on-off
+                    bool reserved:1;       // reserved
+                    int frame_number:5;    // audio frame number
+                    int quant_wlen:2;      // quantization word length
+                    int sample_freq:2;     // audio sampling frequency (48khz=0, 96khz=1, 44,1khz=2, 32khz=3)
+                    bool reserved2:1;      // reserved
+                    int chan_count:3;      // number of audio channels - 1 (e.g. stereo = 1)
+                    int dyn_range_ctrl:8;  // dynamic range control (0x80 if off)
+                    };
+ *
+ */
     blk_ptr[0] = aLPCM; // substream ID
-    blk_ptr[1] = 0x00;  // other stuff (see DVB specs), ignored by driver
-    blk_ptr[2] = 0x00;
-    blk_ptr[3] = 0x00;
-    blk_ptr[4] = 0x00;
-    blk_ptr[5] = 0x00;
-    blk_ptr[6] = 0x00;
+    // other stuff (see DVB specs), may be ignored by driver
+    // but try to set it up correctly ..
+    blk_ptr[1] = 0xff;  // number of frames
+    blk_ptr[2] = 0x00;  // start of audio frame
+    blk_ptr[3] = 0x00;  // start of audio frame
+    blk_ptr[4] = 0x00;  // emph, mute, res, frame_num
+    blk_ptr[5] = 0x01;  // quantwlen, samplefreq, channels (48kHz, stereo)
+    blk_ptr[6] = 0x80;  // dynam. range ctrl (off)
     blk_ptr += 7;
 
     blk_size += 16 + header;

@@ -17,7 +17,16 @@
 #include <sys/ioctl.h>
 #include "dvddev.h"
 
+#ifndef __QNXNTO__
 #include <linux/cdrom.h>
+#endif
+
+#ifdef DEBUG
+#define DVDDEBUG
+#undef DEBUG
+#else
+#define NDEBUG
+#endif
 
 #ifdef DVDDEBUG
 #define DEBUG(format, args...) fprintf (stderr, format, ## args)
@@ -71,13 +80,19 @@ bool cDVD::DriveExists(void)
 
 bool cDVD::DiscOk(void)
 {
+#ifndef __QNXNTO__
   return Command(CDROM_DRIVE_STATUS) == CDS_DISC_OK;
+#else
+  return 1; // fake ok for QNX
+#endif
 }
 
 void cDVD::Eject(void)
 {
   //  vm_destroy();
+#ifndef __QNXNTO__
   Command(CDROMEJECT);
+#endif
 }
 
 #if 0

@@ -10,7 +10,11 @@
 
 #include <vdr/plugin.h>
 #include <vdr/i18n.h>
+#ifndef __QNXNTO__
 #include <getopt.h>
+#else
+#include <unistd.h>
+#endif
 #include "dvddev.h"
 #include "tools-dvd.h"
 #include "player-dvd.h"

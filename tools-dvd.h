@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#ifdef __QNXNTO__
+#include <strings.h>
+#endif
 
 #define aAC3   0x80
 #define aDTS   0x88

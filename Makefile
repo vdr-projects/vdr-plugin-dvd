@@ -16,7 +16,8 @@ VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ pri
 ### The C++ compiler and options:
 
 CXX      ?= g++
-CXXFLAGS ?= -O2 -Wall -Woverloaded-virtual
+CXXFLAGS ?= -O3 -Wall -Woverloaded-virtual
+LDFLAGS  ?= $(CXXFLAGS)
 
 ### The directory environment:
 
@@ -58,9 +59,10 @@ endif
 
 ifdef DBG
 CXXFLAGS += -g -ggdb -O0
+LDFLAGS  += -g -ggdb -O0
 else
-CXXFLAGS += -O2
-LDFLAGS  += -Wl,--retain-symbols-file,retain-sym
+CXXFLAGS += -O3
+LDFLAGS  += -O3 -Wl,--retain-symbols-file,retain-sym
 endif
 
 ### The object files (add further files here):
@@ -87,7 +89,7 @@ $(DEPFILE): Makefile
 all: libvdr-$(PLUGIN).so
 
 libvdr-$(PLUGIN).so: $(OBJS) retain-sym
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
+	$(CXX) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
 	@cp $@ $(LIBDIR)/$@.$(VDRVERSION)
 
 dist: clean
