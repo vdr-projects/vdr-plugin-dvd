@@ -1679,20 +1679,22 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
          }
     case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
          lastFrameType = AUDIO_STREAM_S;
+         int audioId = cPStream::packetType(sector) & AudioTrackMask;
+         notifySeenAudioTrack(audioId);
+         
          // no sound in trick mode
          if (noAudio)
             return playedPacket;
             
-	 if (currentNavAudioTrack != (cPStream::packetType(sector) & AudioTrackMask))
-	 {
+        if (currentNavAudioTrack != audioId) {
 /*
-	    DEBUG_AUDIO_ID("packet unasked audio stream: got=%d 0x%X (0x%X), curNavAu=%d 0x%X\n", 
-		  cPStream::packetType(sector), cPStream::packetType(sector),
-		  cPStream::packetType(sector) & AudioTrackMask,
-		  currentNavAudioTrack, currentNavAudioTrack);
+            DEBUG_AUDIO_ID("packet unasked audio stream: got=%d 0x%X (0x%X), curNavAu=%d 0x%X\n", 
+                cPStream::packetType(sector), cPStream::packetType(sector),
+                cPStream::packetType(sector) & AudioTrackMask,
+                currentNavAudioTrack, currentNavAudioTrack);
  */
             return playedPacket;
-	 }
+	    }
 
          playedPacket |= pktAudio;
          SetCurrentNavAudioTrackType(aMPEG);
@@ -1757,14 +1759,16 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	     audioType == aLPCM
            )
 	 {
+          int audioId = (*data & AC3AudioTrackMask);
 		  ptype = 'A';
-
+          notifySeenAudioTrack(audioId);
+          
 		  if (ptsFlag) {
 		      adiff = pktpts - lapts;
 		      lapts = pktpts;
 		  }
           
-		  if ( currentNavAudioTrack == (*data & AC3AudioTrackMask) ) 
+          if ( currentNavAudioTrack == audioId ) 
 		  {
                       playedPacket |= pktAudio;
                       SetCurrentNavAudioTrackType(audioType);
@@ -2591,7 +2595,7 @@ void cDvdPlayer::NextSubpStream()
     }
 
     if( i<0 ) {
-          Skins.Message(mtError, tr("Current subp stream not seen!"));
+          Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
 	      esyslog("ERROR: internal error current subp stream 0x%X not seen !\n",
 			currentNavSubpStream);
 	      return;
@@ -2860,7 +2864,7 @@ void cDvdPlayer::NextAudioID()
     }
 
     if( i<0 ) {
-          Skins.Message(mtError, tr("Current audio track not seen!"));
+          Skins.Message(mtError, tr("Error.DVD$Current audio track not seen!"));
 	      esyslog("ERROR: internal error current audio track 0x%X not seen !\n",
 			currentNavAudioTrack);
 	      return;
