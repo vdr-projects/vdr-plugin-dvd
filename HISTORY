@@ -4,12 +4,13 @@ VDR Plugin 'dvd' Revision History
 2004-06-??: Version 0.3.6 ..
     - ADD YOUR LINES HERE ;-)
     - 
-2004-06-??: Version 0.3.5-b07
+2004-07-??: Version 0.3.5-b07
     - add virtual plugin methods
     - move RegisterI18n(...) from Start() to Initialize()
     - fixed hightlight in menu
     - correct subtitle position (test)
     - fix audiostream selection
+    - move 'forced subs' to VDR SpuDecoder (vdr-1.3.11 need patch vdr-1.3.11_spu02.diff)
 
 2004-06-24: Version 0.3.5-b06
     - fixed segfault at plugin exit
