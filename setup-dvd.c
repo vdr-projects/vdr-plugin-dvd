@@ -63,7 +63,7 @@ cMenuSetupDVD::cMenuSetupDVD(void)
     Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),         &data.PlayerRCE));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles, 3, spuOptionsText));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),        &data.HideMainMenu));
-    Add(new cMenuEditIntItem( tr("Setup.DVD$ReadAHead"),                  &data.ReadAHead));
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                  &data.ReadAHead));
 
 }
 

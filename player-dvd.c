@@ -259,6 +259,10 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     pgcTotalTicks=1;
     pgcTicksPerBlock=1;
     isInMenuDomain = false;
+    isInFeature    = false;
+
+    dvd_aspect=0;
+    dvd_scaleperm=0;
 
     SPUdecoder = NULL;
     a52dec.setSyncMode(A52decoder::ptsGenerate);
@@ -600,9 +604,6 @@ void cDvdPlayer::Action(void) {
   eFrameType frameType=ftUnknown;
   while( running && nav ) 
   {
-      UpdateIsInMenuDomain();
-      UpdateBlockIndex();
-
       if ( !pframe ) {
             pframe=ringBuffer->Get();
             if ( pframe ) {
@@ -994,6 +995,7 @@ void cDvdPlayer::Action(void) {
 				cntVidBlocksPlayed, cntAudBlocksPlayed);
 	  		DevicePlay();
 	      }
+	      UpdateBlockInfo(); // TEST
               playedPacket = playPacket(cache_ptr, trickMode, noAudio);
 	      break;
 	  case DVDNAV_NOP:
@@ -1069,7 +1071,7 @@ void cDvdPlayer::Action(void) {
 		      DEBUG_SUBP_ID("DVDNAV_SPU_STREAM_CHANGE: ignore (locked=%d/%d|not enabled=%d), menu=%d, feature=%d \n", 
 		          currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell, 
 			  DVDSetup.ShowSubtitles,
-		          isInMenuDomain, dvdnav_is_domain_vts(nav));
+		          isInMenuDomain, isInFeature);
 	      }
 	      break;
 	  }
@@ -1092,6 +1094,8 @@ void cDvdPlayer::Action(void) {
 	  case DVDNAV_VTS_CHANGE:
 	      DEBUG_NAV("%s:%d:NAV VTS CHANGE -> Empty, setAll-spu&audio \n", __FILE__, __LINE__);
 	      Empty(true);
+	      UpdateBlockInfo(); // TEST
+              UpdateVTSInfo(); // TEST
 	      setAllSubpStreams();
               setAllAudioTracks();
 	      SetTitleInfoString();
@@ -1106,6 +1110,8 @@ void cDvdPlayer::Action(void) {
 	       * update information 
 	       */
 	      lastCellEventInfo = *cell_info;
+	      UpdateBlockInfo(); // TEST
+              UpdateVTSInfo(); // TEST
 	      BlocksToPGCTicks( 1, pgcTicksPerBlock, pgcTotalTicks);
 #ifdef CTRLDEBUG
 	      printCellInfo(lastCellEventInfo, pgcTicksPerBlock, pgcTotalTicks);
@@ -1162,6 +1168,8 @@ void cDvdPlayer::Action(void) {
 	  case DVDNAV_HOP_CHANNEL:
 	      DEBUG_NAV("%s:%d:NAV HOP CHANNEL -> Empty\n", __FILE__, __LINE__);
 	      Empty(true);
+	      UpdateBlockInfo(); // TEST
+              UpdateVTSInfo(); // TEST
 	      break;
 	  default:
 	      DEBUG_NAV("%s:%d:NAV ???\n", __FILE__, __LINE__);
@@ -1303,11 +1311,7 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
     int o_hsize=hsize, o_vsize=vsize, o_vaspect=vaspect;
 
     cSpuDecoder::eScaleMode newMode     = cSpuDecoder::eSpuNormal;
-    // eVideoDisplayFormat vdf             = vaspect==2?vdfPAN_SCAN:vdfLETTER_BOX;
-
-    int dvd_aspect = dvdnav_get_video_aspect(nav);
-
-    int perm = dvdnav_get_video_scale_permission(nav);
+    // eVideoDisplayFormat vdf          = vaspect==2?vdfPAN_SCAN:vdfLETTER_BOX;
 
     // nothing has to be done, if 
     //		TV	16:9
@@ -1322,11 +1326,11 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
 	    //
 	    //and the actual material on the DVD is not 4:3
 	    //
-	    if (!(perm & 1)) 
+	    if (!(dvd_scaleperm & 1)) 
 	    {  // letterbox is allowed, keep 16:9 and wxh
 		newMode = cSpuDecoder::eSpuLetterBox;
 		vaspect = 0x03;
-	    } else if (!(perm & 2)) {    // pan& scan allowed ..
+	    } else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed ..
 		newMode = cSpuDecoder::eSpuPanAndScan;
 		vaspect = 0x02;   // 4:3
                 // vdf = vdfCENTER_CUT_OUT;
@@ -1374,12 +1378,6 @@ cSpuDecoder::eScaleMode cDvdPlayer::getSPUScaleMode()
 {
     cSpuDecoder::eScaleMode newMode     = cSpuDecoder::eSpuNormal;
 
-    int dvd_aspect = dvdnav_get_video_aspect(nav);
-
-    // int perm = dvdnav_get_video_scale_permission(nav);
-
-    // IsInMenuDomain() || IsDvdNavigationForced() 
-
     // nothing has to be done, if we display 16:9
     // or if the DVD is 4:3
     if (!Setup.VideoFormat && dvd_aspect != 0) {
@@ -1389,9 +1387,9 @@ cSpuDecoder::eScaleMode cDvdPlayer::getSPUScaleMode()
         newMode = cSpuDecoder::eSpuLetterBox;
 
 /**
-	    if (!(perm & 1)) {  // letterbox is allowed
+	    if (!(dvd_scaleperm & 1)) {  // letterbox is allowed
 		newMode = cSpuDecoder::eSpuLetterBox;
-	    } else if (!(perm & 2)) {    // pan& scan allowed
+	    } else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed
 		newMode = cSpuDecoder::eSpuPanAndScan;
 	    }
  */
@@ -1922,7 +1920,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                          *
                         DEBUG_SUBP_ID("packet not shown spu stream: got=%d, cur=%d, SPUdecoder=%d, menu=%d, feature=%d, forcedSubsOnly=%d\n",
                             thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
-                            isInMenuDomain, dvdnav_is_domain_vts(nav), forcedSubsOnly);
+                            isInMenuDomain, isInFeature, forcedSubsOnly);
                          */
                         }
 	            }
@@ -2189,24 +2187,34 @@ bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
     return true;
 }
 
-bool cDvdPlayer::UpdateBlockIndex()
+bool cDvdPlayer::UpdateBlockInfo()
 {
     dvdnav_status_t res;
 
-    dvdnav_set_PGC_positioning_flag ( nav, 1);
-    res = dvdnav_get_position ( nav, &pgcCurrentBlockNum, &pgcTotalBlockNum);
-    if(res!=DVDNAV_STATUS_OK) 
-    {
-        DEBUG_CONTROL("dvd get pos in title failed ..\n");
-    	return false;
+    if(nav) {
+	    dvdnav_set_PGC_positioning_flag ( nav, 1);
+	    res = dvdnav_get_position ( nav, &pgcCurrentBlockNum, &pgcTotalBlockNum);
+	    if(res!=DVDNAV_STATUS_OK) 
+	    {
+		DEBUG_CONTROL("dvd get pos in title failed (no pos) ..\n");
+		return false;
+	    }
+    } else {
+	DEBUG_CONTROL("dvd get pos in title failed (no nav) ..\n");
+	return false;
     }
 
     return true;
 }
 
-void cDvdPlayer::UpdateIsInMenuDomain()
+void cDvdPlayer::UpdateVTSInfo()
 {
-    isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
+    if(nav) {
+	    dvd_aspect = dvdnav_get_video_aspect(nav);
+	    dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
+    	    isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
+	    isInFeature    = dvdnav_is_domain_vts(nav);
+    }
 }
 
 int cDvdPlayer::SkipFrames(int Frames)

@@ -103,10 +103,13 @@ class cDvdPlayer : public cPlayer, cThread {
     uint32_t pgcCurrentBlockNum, pgcTotalBlockNum;
     int64_t pgcTotalTicks;
     int64_t pgcTicksPerBlock;
-    bool cDvdPlayer::UpdateBlockIndex(void);
+    bool UpdateBlockInfo(void);
 
     bool isInMenuDomain;
-    void UpdateIsInMenuDomain();
+    bool isInFeature;
+    int dvd_aspect;
+    int dvd_scaleperm;
+    void UpdateVTSInfo(void);
 
     int skipPlayVideo;
     int fastWindFactor;
@@ -171,6 +174,9 @@ class cDvdPlayer : public cPlayer, cThread {
     char * title_str;
     char * titleinfo_str;
     char * aspect_str;
+    void SetTitleString( void ) ;
+    void SetTitleInfoString( void );
+    void SetAspectString( void );
 
     //player stuff
     void StillSkip(void);
@@ -240,10 +246,6 @@ class cDvdPlayer : public cPlayer, cThread {
     char * GetTitleString( void ) const ;
     char * GetTitleInfoString( void ) const ;
     char * GetAspectString( void ) const ;
-
-    void SetTitleString( void ) ;
-    void SetTitleInfoString( void );
-    void SetAspectString( void );
 
     int GetProgramNumber() const ;
     int GetCellNumber() const ;
