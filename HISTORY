@@ -22,7 +22,7 @@ VDR Plugin 'dvd' Revision History
     - fixed hightlight in menu
     - correct subtitle position (test)
     - fix audiostream selection
-    - move 'forced subs' to VDR SpuDecoder (vdr-1.3.16 and higher need patch vdr-1.3.16-spu02.diff)
+    - move 'forced subs' to VDR SpuDecoder
     - fix stop playing if message displayed
 
 2004-06-24: Version 0.3.5-b06
