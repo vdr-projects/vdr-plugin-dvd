@@ -11,6 +11,7 @@ VDR Plugin 'dvd' Revision History
     - fixed AC3/DTS audiostream selection
     - remove 'forced subs' from setup
     - fixed video glitches at startup
+    - remove code < vdr-1.3.7 it does not work
 
 2004-06-17: Version 0.3.5-b05...  
     - div by zero ..
