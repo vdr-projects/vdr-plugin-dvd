@@ -38,6 +38,7 @@
 #endif
 
 #include "dvddev.h"
+#include "mpegtypes.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"
 #include "player-dvd.h"
@@ -228,10 +229,6 @@ inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 // data=PCM samples, 16 bit, LSB first, 48kHz, stereo
 void A52decoder::init_ipack(int p_size, uint32_t pktpts)
 {
-
-#define PRIVATE_STREAM1  0xBD
-#define aLPCM  0xA0
-
     int header = 0;
     
     if (pktpts != 0)
@@ -245,8 +242,8 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts)
     blk_ptr[3] = PRIVATE_STREAM1;
     blk_ptr[4] = (length >> 8) & 0xff;
     blk_ptr[5] = length & 0xff;
-    blk_ptr[6] = 0x80;
-    blk_ptr[7] = pktpts != 0 ? 0x80 : 0;
+    blk_ptr[6] = 0x84;              //'data alignment indicator' Bit is needed for AC3 Testfirmware
+    blk_ptr[7] = pktpts ? 0x80 : 0;
     blk_ptr[8] = header;
     blk_ptr += 9;
     
