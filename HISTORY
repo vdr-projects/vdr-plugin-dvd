@@ -5,6 +5,7 @@ VDR Plugin 'dvd' Revision History
     - ADD YOUR LINES HERE ;-)
     - 
 2004-07-??: Version 0.3.5-b07
+    - fixed error in the replay display
     - add finnish translation (thanks to Rolf Ahrenberg)
     - add 'data alignment indicator' Bit for AC3 loop through Firmware
     - add virtual plugin methods
