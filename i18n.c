@@ -32,19 +32,15 @@ const char *ISO639code[] = {
     "ro",
     "hu",
     "ca",
-#if VDRVERSNUM>=10300
     "ru",
-#endif
-#if VDRVERSNUM>=10307
     "",
-#endif
 };
 
 const tI18nPhrase DvdPhrases[] = {
     {
     "Setup.DVD$Preferred menu language",                // English
     "Bevorzugte Spache für Menüs",                      // Deutsch
-        "", // Slovenski
+        "",                                             // Slovenski
         "menu - linguaggio preferito",                  // Italiano
         "Taalkeuze voor menu",                          // Nederlands
         "",                                             // Português
@@ -58,12 +54,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
     },
     {
     "Setup.DVD$Preferred audio language",               // English
@@ -82,12 +74,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
     },
     {
     "Setup.DVD$Preferred subtitle language",            // English
@@ -106,12 +94,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
     },
     {
     "Setup.DVD$Player region code",                     // English
@@ -130,12 +114,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
     },
     {
     "Setup.DVD$Display subtitles",                      // English
@@ -154,36 +134,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
-    },
-    {
-    "Setup.DVD$forced only",                            // English
-        "nur geforderte"                                // Deutsch
-        "",                                             // Slovenski
-        "",                                             // Italiano
-        "",                                             // Nederlands
-        "",                                             // Português
-        "",                                             // Français
-        "",                                             // Norsk
-        "",                                             // Suomi
-        "",                                             // Polski
-        "",                                             // Español
-        "",                                             // Ellinika
-        "",                                             // Svenska
-        "",                                             // Romaneste
-        "",
-        "",
-#if VDRVERSNUM>=10300
-        "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
-        "",
-#endif
     },
     {
      "Setup.DVD$Hide Mainmenu Entry",
@@ -202,12 +154,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "ÁÚàëâì ÚÞÜÐÝÔã Ò ÓÛÐÒÝÞÜ ÜÕÝî",                // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
     },
     {
     "Error.DVD$Error opening DVD!",                     // English
@@ -226,12 +174,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
         "",                                             // Russian
-#endif
-#if VDRVERSNUM>=10307
         "",
-#endif
     },
     {
     "Error.DVD$Error fetching data from DVD!",          // English
@@ -250,12 +194,8 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                             // Romaneste
         "",
         "",
-#if VDRVERSNUM>=10300
-      "",                                               // Russian
-#endif
-#if VDRVERSNUM>=10307
+        "",                                             // Russian
         "",
-#endif
     },
     { NULL }
 };

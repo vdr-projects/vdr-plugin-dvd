@@ -17,7 +17,6 @@
 #endif
 
 #include <sys/time.h>
-
 #include <vdr/i18n.h>
 #include <vdr/thread.h>
 #include <vdr/device.h>
@@ -215,11 +214,7 @@ const int cDvdPlayer::SubpStreamMask  = 0x1F;
 const char * cDvdPlayer::dummy_title     = "DVD Title";
 const char * cDvdPlayer::dummy_n_a       = "n.a.";
 
-#if VDRVERSNUM<=10206
-cDvdPlayer::cDvdPlayer(void): a52dec(*this) {
-#else
 cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
-#endif
     DEBUGDVD("cDvdPlayer::cDvdPlayer(void)\n");
     ringBuffer=new cRingBufferFrame(VIDEOBUFSIZE);
     rframe=NULL;
@@ -528,10 +523,6 @@ uint64_t cDvdPlayer::delay_ticks(uint64_t ticks)
 
 void cDvdPlayer::Action(void) {
 
-#if VDRVERSNUM<=10206
-    dsyslog("input thread started (pid=%d)", getpid());
-#endif
-
   memset(event_buf, 0, sizeof(uint8_t)*4096);
 
   unsigned char *write_blk = NULL;
@@ -559,7 +550,7 @@ void cDvdPlayer::Action(void) {
 
   if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) != DVDNAV_STATUS_OK) {
       dsyslog("input thread ended (pid=%d)", getpid());
-      MSG_ERROR(tr("Error.DVD$Error opening DVD!"));
+      Skins.Message(mtError, tr("Error.DVD$Error opening DVD!"));
       printf("dvd player: cannot open dvdnav device %s -> input thread ended (pid=%d) !\n", 
       	const_cast<char *>(cDVD::getDVD()->DeviceName()), getpid());
       active = running = false;
@@ -979,7 +970,7 @@ void cDvdPlayer::Action(void) {
       // from here on, continue is not allowed,
       // as it would bypass dvdnav_free_cache_block
       if (dvdnav_get_next_cache_block(nav, &cache_ptr, &event, &len) != DVDNAV_STATUS_OK) {
-          MSG_ERROR(tr("Error.DVD$Error fetching data from DVD!"));
+          Skins.Message(mtError, tr("Error.DVD$Error fetching data from DVD!"));
 	  running = false;
 	  break;
       }
@@ -1198,10 +1189,6 @@ void cDvdPlayer::Action(void) {
 
   dvdnav_close(nav);
   nav=NULL;
-
-#if VDRVERSNUM<=10206
-  dsyslog("input thread ended (pid=%d)", getpid());
-#endif
 
   DEBUGDVD("%s:%d: input thread ended (pid=%d)\n", __FILE__, __LINE__, getpid());
   fflush(NULL);
@@ -2589,7 +2576,7 @@ void cDvdPlayer::NextSubpStream()
     }
 
     if( i<0 ) {
-	      MSG_ERROR(tr("Current subp stream not seen!"));
+          Skins.Message(mtError, tr("Current subp stream not seen!"));
 	      esyslog("ERROR: internal error current subp stream 0x%X not seen !\n",
 			currentNavSubpStream);
 	      return;
@@ -2858,7 +2845,7 @@ void cDvdPlayer::NextAudioID()
     }
 
     if( i<0 ) {
-	      MSG_ERROR(tr("Current audio track not seen!"));
+          Skins.Message(mtError, tr("Current audio track not seen!"));
 	      esyslog("ERROR: internal error current audio track 0x%X not seen !\n",
 			currentNavAudioTrack);
 	      return;
