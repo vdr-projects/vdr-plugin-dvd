@@ -804,6 +804,7 @@ void cDvdPlayer::Action(void) {
 	    	DeviceStillPicture(iframe, iframeSize);
                 DEBUG_IFRAME("SEND !\n");
 	    }
+        iframeAssembler->Clear();
 	    IframeCnt = -1; // mark that we played an IFrame 
             if (blk_size <= 0 && !skipPlayVideo)
 	      sleept = 1*90U;  // 1ms*90t/ms
