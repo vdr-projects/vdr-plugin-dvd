@@ -12,6 +12,7 @@
 #define __TOOLS_DVD_H
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <inttypes.h>
 
 #define aAC3   0x80
@@ -35,26 +36,25 @@ class cPStream {
     static int packetLength   (const uint8_t *data) { return (data[4] << 8) + data[5] + 6; }
     static int PESHeaderLength(const uint8_t *data) { return (data[8]); }
 
-    static uint32_t fromPTS(const uint8_t *data)
+    static uint64_t fromPTS(const uint8_t *p)
     {
-        uint32_t ret;
+                uint64_t lpts = 0;
+                lpts  = (((uint64_t)p[0]) & 0x0e) << 29;
+                lpts |= ( (uint64_t)p[1])         << 22;
+                lpts |= (((uint64_t)p[2]) & 0xfe) << 14;
+                lpts |= ( (uint64_t)p[3])         <<  7;
+                lpts |= (((uint64_t)p[4]) & 0xfe) >>  1;
 
-        ret  = (data[0] & 0x0e) << 29;
-        ret |=  data[1] << 22;
-        ret |= (data[2] & 0xfe) << 14;
-        ret |=  data[3] << 7;
-        ret |=  data[4] >> 1;
-
-        return ret;
+                return lpts;
     }
 
-    static void toPTS(uint8_t *data, uint32_t pts, bool ptsFlag)
+    static void toPTS(uint8_t *p, uint64_t lpts, bool ptsFlag)
     {
-        data[0] =        ((pts >> 29) & 0x0e) | (ptsFlag ? 0x21 : 0x01);
-        data[1] =         pts >> 22;
-        data[2] = 0x01 | (pts >> 14);
-        data[3] =         pts >> 7;
-        data[4] = 0x01 | (pts << 1);
+        p[0] =        (uint8_t)((lpts >> 29) & 0x0e) | ptsFlag ? 0x21 : 0x01;
+        p[1] =        (uint8_t)(lpts >> 22);
+        p[2] = 0x01 | (uint8_t)(lpts >> 14);
+        p[3] =        (uint8_t)(lpts >> 7);
+        p[4] = 0x01 | (uint8_t)(lpts << 1);
     }
 
 /*

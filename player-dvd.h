@@ -131,15 +131,15 @@ class cDvdPlayer : public cPlayer, cThread {
 
     uint8_t stillFrame;
     uint8_t lastFrameType;
-    uint32_t VideoPts;
-    uint32_t stcPTS;
-    uint32_t stcPTSLast;
-    uint32_t pktpts;
-    uint32_t pktptsLast;
-    uint32_t stcPTSAudio;
-    uint32_t stcPTSLastAudio;
-    uint32_t pktptsAudio;
-    uint32_t pktptsLastAudio;
+    uint64_t VideoPts;
+    uint64_t stcPTS;
+    uint64_t stcPTSLast;
+    uint64_t pktpts;
+    uint64_t pktptsLast;
+    uint64_t stcPTSAudio;
+    uint64_t stcPTSLastAudio;
+    uint64_t pktptsAudio;
+    uint64_t pktptsLastAudio;
 
     int   currentNavAudioTrack;
     int   currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
@@ -183,8 +183,8 @@ class cDvdPlayer : public cPlayer, cThread {
     virtual void Action(void);
     void DeviceClear(void);
 
-    uint32_t time_ticks(void);
-    uint32_t delay_ticks(uint32_t ticks);
+    uint64_t time_ticks(void);
+    uint64_t delay_ticks(uint64_t ticks);
 
  public:
 
@@ -383,7 +383,7 @@ class cDvdPlayer : public cPlayer, cThread {
     bool IsInMenuDomainOrStillFrame();
 
     // -- callbacks --
-    void seenPTS(uint32_t pts);
+    void seenPTS(uint64_t pts);
 
     int cbPlayVideo(uchar *Data, int Length);
     int cbPlayAudio(uchar *Data, int Length);
