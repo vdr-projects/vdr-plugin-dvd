@@ -23,7 +23,7 @@
 #include "i18n.h"
 
 static const char *VERSION        = "0.3.5-b06";
-static const char *DESCRIPTION    = "turn VDR into an (almost) full featured DVD player";
+static const char *DESCRIPTION    = "Plugin.DVD$turn VDR into an (almost) full featured DVD player";
 static const char *MAINMENUENTRY  = "DVD";
 
 // --- cPluginDvd ------------------------------------------------------------
@@ -38,7 +38,7 @@ public:
   cPluginDvd(void);
   virtual ~cPluginDvd();
   virtual const char *Version(void) { return VERSION; }
-  virtual const char *Description(void) { return DESCRIPTION; }
+  virtual const char *Description(void) { return tr(DESCRIPTION); }
   virtual const char *CommandLineHelp(void);
   virtual bool ProcessArgs(int argc, char *argv[]);
   virtual bool Initialize(void);
