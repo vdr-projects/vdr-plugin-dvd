@@ -1426,60 +1426,15 @@ void cDvdPlayer::SendIframe(bool doSend) {
 
 bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 {
-	int spu_size = 0;
-	int spuh = CMD_SPU_EOF;
-	bool forcedDisplay = false;
+    uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
+    SPUassembler.Get(buffer, SPUassembler.getSize());
+    bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced();
+    DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, forcedDisplay:%d, spu_size:%d, menuDomain=%d, pts: %12d\n",
+	    forcedSubsOnly, forcedDisplay, spu_size, isInMenuDomain, SPUassembler.getPts());
 
-	spu_size = SPUassembler.spucmd.initSPUCommand();
-	if ( spu_size <= 0 ) {
-		DEBUG_SUBP_DEC("playSPU: init failed, size too less %d\n", spu_size);
-		return false;
-	}
-
-	while ( (spuh=SPUassembler.spucmd.getNextSPUCommand()) != CMD_SPU_EOF )
-	{
-		DEBUG_SUBP_DEC("getSPUCommand: spu header: %d\n", spuh);
-	
-		switch(spuh) {
-
-		    case CMD_SPU_FORCE_DISPLAY:
-			DEBUG_SUBP_DEC("SPU forced\n");
-			forcedDisplay = true;
-			break;
-		}
-	}
-
-        DEBUG_SUBP_DEC("playSPU: dec stream: id=%d, cur=%d, menu=%d, forcedSubsOnly=%d, forcedDisplay=%d\n",
-	    spuId, currentNavSubpStream, isInMenuDomain, 
-	    forcedSubsOnly, forcedDisplay);
-
-/*
-        DEBUG_SUBP_ID("playSPU: got stream: id=%d, cur=%d, menu=%d, forcedSubsOnly=%d, forcedDisplay=%d\n",
-	    spuId, currentNavSubpStream, isInMenuDomain, 
-	    forcedSubsOnly, forcedDisplay);
-*/
-
-	uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
-	SPUassembler.Get(buffer, SPUassembler.getSize());
-
-        if ( DVDSetup.ShowSubtitles || isInMenuDomain || ( forcedDisplay && !isInMenuDomain ) || currentNavSubpStreamUsrLocked || IsDvdNavigationForced()
-	     /**
-	      * the problem is: both, the letterbox and the wide spu stream,
-	      * does contain the force field, so i guess its just the menu flag .. 
-	      *
-	      * but who knows for sure, .. so forceDisplay may be usefull outta the menu space ?
-	      */
-	   )
-	{
-	    DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, forcedDisplay:%d, spu_size:%d, menuDomain=%d, pts: %12d\n",
-		forcedSubsOnly, forcedDisplay, spu_size, isInMenuDomain, SPUassembler.getPts());
-
-	    SPUdecoder->processSPU(SPUassembler.getPts(), buffer);
-	    if(isInMenuDomain) seenVPTS(pktpts); // else should be seen later ..
-	    return true;
-	}
-        delete buffer;
-	return false;
+	SPUdecoder->processSPU(SPUassembler.getPts(), buffer, allowedShow);
+	if(isInMenuDomain) seenVPTS(pktpts); // else should be seen later ..
+    return true;
 }
 
 int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio)
