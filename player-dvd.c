@@ -2074,23 +2074,19 @@ void cDvdPlayer::BlocksToPGCTicks( uint32_t BlockNum, int64_t & Ticks, int64_t &
 }
 
 
-void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks,
-			 	   uint32_t &BlockNum, uint32_t &TotalBlockNum) 
+void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum) 
 {
-  int64_t TotalTicks = GetPGCLengthInTicks();
+    int64_t TotalTicks = GetPGCLengthInTicks();
 
-  TotalBlockNum = pgcTotalBlockNum;
-  if(TotalTicks>0)
-	  BlockNum = Ticks * TotalBlockNum / TotalTicks ;
-  else
-	  BlockNum = 0;
+    TotalBlockNum = pgcTotalBlockNum;
+    BlockNum = TotalTicks>0 ? (Ticks * TotalBlockNum / TotalTicks) : 0:
 }
 
 
 bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame) 
 {
     int64_t CurrentTicks, TotalTicks;
-
+    LOCK_THREAD; // save UpdateBlockInfo()
     BlocksToPGCTicks( pgcCurrentBlockNum, CurrentTicks, TotalTicks );
     
     CurrentFrame = (int) (( CurrentTicks / 90000L ) * FRAMESPERSEC) ; 
