@@ -1132,7 +1132,6 @@ void cDvdPlayer::Action(void) {
 
   SPUdecoder=NULL;
 
-  dvdnav_reset(nav);
   dvdnav_close(nav);
   nav=NULL;
 
