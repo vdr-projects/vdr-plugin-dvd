@@ -1636,10 +1636,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	    int audioVal = cPStream::packetType(sector);
 	    int audioId  = audioVal & AudioTrackMask;
             int audioTrackIndex = notifySeenAudioTrack(AUDIO_STREAM_S+audioId);
-            int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
-            audioLanguageCode = audioLanguageCode >> 8 | (audioLanguageCode & 0xff) << 8;
-
-            DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
+            DeviceSetAvailableTrack(ttAudio, audioId, audioVal);
 	    (void) audioTrackIndex;
 
             // no sound in trick mode
@@ -2766,9 +2763,11 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         currentNavAudioTrack = id;
         currentNavAudioTrackLangCode = GetNavAudioTrackLangCode(currentNavAudioTrack);
 
-        sprintf(buffer,"%c%c", p1[1], p1[0]);
-        dvdnav_audio_language_select(nav, buffer);
-        Empty();
+        if (currentNavAudioTrackLangCode != 0xFFFF) {
+            sprintf(buffer,"%c%c", p1[1], p1[0]);
+            dvdnav_audio_language_select(nav, buffer);
+        }
+//        Empty();
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: SWITCHED !\n");
     }
 }
