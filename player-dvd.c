@@ -405,7 +405,7 @@ void cDvdPlayer::Action(void) {
    bool doResume;
    int lastTitlePlayed=-1, lastBlocksPlayed=0, lastArrayIndex=-1;
    doResume = setDiskStamp( &diskStamp, nav );
-   if( doResume && DVDSetup.ResumeDisk ) {    
+   if( doResume && DVDSetup.ResumeDisk ) {
       checkDiskStamps( diskStamp, lastTitlePlayed, lastBlocksPlayed, lastArrayIndex);
    }
    else {
@@ -2567,42 +2567,46 @@ bool cDvdPlayer::setDiskStamp(const char ** stamp_str, dvdnav_t * nav ) const
 
 void cDvdPlayer::checkDiskStamps(const char * stamp_str, int &lastTitle, int &lastBlocks, int &lastArrayIndex)
 {
-    char stamps[10][100];
-    int titles[10];
-    int blocks[10];
-    int lindex = -1;
-    FILE * f;
-  char s[100];
-  char path[200];
+  char * stamps[10];
+  int titles[10];
+  int blocks[10];
+  int lindex = -1;
+  FILE * f;
+  char s[255];
+  char path[255];
+
+  memset(stamps, 0 ,sizeof(stamps));
 
   //read array from file
-  snprintf( path, 200, "%s/.resumedat", cPlugin::ConfigDirectory("dvd") );
+  snprintf( path, sizeof(path), "%s/.resumedat", cPlugin::ConfigDirectory("dvd") );
     //read array from file
   f=fopen(path,"r");
   if (!f)
      return;
-  while(fgets(s,100,f)!=NULL) {
+  while(fgets(s, sizeof(s), f)!=NULL) {
      lindex++;
-     stamps[lindex] = s;
-     if( fgets(s,100,f)!=NULL )
+     asprintf(&stamps[lindex], "%s", s);
+     if( fgets(s, sizeof(s), f)!=NULL )
         titles[lindex] = atoi(s);
-     if( fgets(s,100,f)!=NULL )
+     if( fgets(s, sizeof(s), f)!=NULL )
         blocks[lindex] = atoi(s);
     }
     fclose(f);
 
+    lastArrayIndex = 11;
     //check if stamp matches
     for( int i = 0; i <= lindex; i++) {
         //append newline char
-        snprintf(s, 100, "%s\n", stamp_str);
-        if( strcmp(stamps[i], s) == 0 ) {
+        snprintf(s, sizeof(s), "%s\n", stamp_str);
+        if( stamps[i] && strcmp(stamps[i], s) == 0 ) {
             lastTitle =  titles[i];
             lastBlocks = blocks[i];
             lastArrayIndex = i;
-            return;
+            break;;
         }
     }
-    lastArrayIndex = 11;
+    for (unsigned int i = 0; i < 10; i++)
+        if ( stamps[i] ) free(stamps[i]);
 }
 
 bool cDvdPlayer::askForResume(int blocks)
