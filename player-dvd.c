@@ -722,13 +722,13 @@ void cDvdPlayer::Action(void) {
 	  		        if (!firstClear) DeviceReset();
 		        }
 
-        /** !! Skip Stillpicture **/
-        res = (IframeCnt > 0 && frameType == ftVideo) ? blk_size : PlayPes(write_blk, blk_size);
+                /** !! Skip Stillpicture **/
+                res = (IframeCnt > 0 && frameType == ftVideo) ? blk_size : PlayPes(write_blk, blk_size);
 
-		if (trickMode) {
-		    DEBUG_CONTROL("PLAYED  : todo=%d, written=%d\n", blk_size, res);
-		}
-	    }
+		        if (trickMode) {
+		            DEBUG_CONTROL("PLAYED  : todo=%d, written=%d\n", blk_size, res);
+		        }
+	        }
 #ifdef CTRLDEBUG
             else if (trickMode)
 		        printf("SKIPPED : todo=%d\n", blk_size);
@@ -1508,9 +1508,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	                int  ptype2 = cPStream::packetType(data);
 		            if (ptype2 == SC_PICTURE) {
 	                    havePictureHeader = true;
-                        /** get last IFRAME */
-                        if (haveSequenceHeader)
-                            iframeAssembler->Clear();
 		                VideoPts += 3600;
 		                lastFrameType = (uchar)(data[5] >> 3) & 0x07;
 		                if (!currentFrameType)
@@ -1522,6 +1519,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		                data += 5;
 		                datalen -= 5;
 		            } else if (ptype2 == SEQUENCE_HEADER && datalen >= 8) {
+                        /** get the last IFRAME */
+                        iframeAssembler->Clear();
 	   		            haveSequenceHeader = true;
 			            data += 4;           //skip the header
 			            // check the aspect ratio and correct it
