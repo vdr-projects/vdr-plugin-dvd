@@ -2286,13 +2286,21 @@ void cDvdPlayer::setAllSubpStreams(void)
     for(int i = 0; nav!=NULL && i < MaxSubpStreams; i++) {
         uint16_t subpStreamLanguageCode = GetNavSubpStreamLangCode(i);
         if(subpStreamLanguageCode != 0xffff)
-	        notifySeenSubpStream(i);
+            notifySeenSubpStream(i);
     }
 }
 
+/** !!! Save Bit7 for 'forced subs' !!!
+ *
+ */
 int cDvdPlayer::SearchSubpStream(int SubpStreamId) const {
+    if (SubpStreamId != -1)
+        SubpStreamId &= SubpStreamMask;
     int i = navSubpStreamSeen.Count() - 1;
     while ( i >= 0) {
+        int streamId = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
+        if (streamId != -1)
+            streamId &= SubpStreamMask;
         if (SubpStreamId == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue())
             break; // found
         i--;
@@ -2312,17 +2320,14 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
 	    buff2[0]=0;
 	    if(nav != NULL) {
             subpStreamLanguageCode = GetNavSubpStreamLangCode(channel);
-		    if(lang_code1!=0xffff) {
-				buff2[0] = p1[1];
-				buff2[1] = p1[0];
-				buff2[2] = 0;
-		    }
 	    	channel_active = dvdnav_get_active_spu_stream(nav);
 	    }
         printf("cDvdPlayer::cDvdPlayer: seen new subp id: 0x%X (%d), <%s>; 0x%X (%d)\n",
             channel, channel, (char *)&subpStreamLanguageCode, channel_active, channel_active);
 #endif
-	    navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
+        // only set possible subpstreams
+        if ((nav && dvdnav_get_spu_logical_stream(nav, navSubpStream) >= 0) || navSubpStream == -1)
+	        navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
     }
 }
 
@@ -2345,7 +2350,7 @@ int cDvdPlayer::GetCurrentNavSubpStream(void) const
 
 int cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
 {
-    return SearchSubpStream(currentNavSubpStream != -1 ? (currentNavSubpStream & SubpStreamMask) : currentNavSubpStream);
+    return SearchSubpStream(currentNavSubpStream);
 }
 
 uint16_t cDvdPlayer::GetNavSubpStreamLangCode(int channel) const
@@ -2353,7 +2358,7 @@ uint16_t cDvdPlayer::GetNavSubpStreamLangCode(int channel) const
 	uint16_t subpStreamLanguageCode = 0xFFFF;
 	if(nav != NULL) {
 		int logchan = dvdnav_get_spu_logical_stream(nav, channel);
-        subpStreamLanguageCode = dvdnav_spu_stream_to_lang(nav, logchan >= 0 ? logchan : channel);
+        subpStreamLanguageCode = dvdnav_spu_stream_to_lang(nav, (logchan >= 0 ? logchan : channel) & SubpStreamMask);
         subpStreamLanguageCode = subpStreamLanguageCode >> 8 | (subpStreamLanguageCode & 0xff) << 8;
 	}
     return subpStreamLanguageCode;
@@ -2400,7 +2405,7 @@ int cDvdPlayer::NextSubpStream()
 
     LOCK_THREAD;
 
-    int i = SearchSubpStream(currentNavSubpStream != -1 ? (currentNavSubpStream & SubpStreamMask) : currentNavSubpStream);
+    int i = SearchSubpStream(currentNavSubpStream);
 
     i = ( i + 1 ) % navSubpStreamSeen.Count();
 
@@ -2408,6 +2413,7 @@ int cDvdPlayer::NextSubpStream()
 		currentNavSubpStream, i);
 
     currentNavSubpStream = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
+
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
 
     if(currentNavSubpStreamLangCode != 0xFFFF && nav)
