@@ -93,19 +93,11 @@
 #define DEBUG_PTS2(format, args...)
 #endif
 
-#if VDRVERSNUM <= 10306
-#define MSG_ERROR(x)	Interface->Error(x)
-#define MSG_INFO(x)	Interface->Info(x)
-#else
-#define MSG_ERROR(x)	Skins.Message(mtError,x)
-#define MSG_INFO(x)	Skins.Message(mtInfo,x)
-#endif
-				
 // display error message with parameters on OSD
 #define EOSD(fmt,parms...)     {  char msg[132]; \
                                   snprintf(msg, sizeof msg, fmt, parms); \
-                                  MSG_ERROR(msg); \
-                                  MSG_ERROR(msg); /* repeat once */ }
+                                  Skins.Message(mtError,msg); \
+                                  Skins.Message(mtError,msg); /* repeat once */ }
 
 
 #endif // __COMMON_DVD_H

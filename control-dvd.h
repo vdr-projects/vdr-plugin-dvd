@@ -22,13 +22,7 @@ private:
   bool visible, modeOnly, shown, displayFrames, forceDvdNavigation;
   void *osdTaker;
   int lastCurrent, lastTotal;
-#if VDRVERSNUM<10307
-  int osdPos;
-  bool osdPosOffsetSet;
-  int  osdPosOffset;
-#else
   cSkinDisplayReplay* displayReplay;
-#endif
 
   enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
 
@@ -49,11 +43,7 @@ private:
   void InputIntProcess(eKeys Key, const char * msg, int & val);
 
   void TrackSearch(void);
-#if VDRVERSNUM<10307
-  void OsdOpen(int width, int height);
-#else
   void OsdOpen(void);
-#endif
   void OsdClose();
   void ShowTimed(int Seconds = 0);
   void updateShow(bool force=false);
