@@ -35,7 +35,7 @@ class A52frame {
 };
 
 class A52assembler {
- private: 
+ private:
     A52frame *curfrm;
     uint16_t syncword;
 
@@ -74,17 +74,17 @@ class A52decoder {
   uchar *blk_buf;
   uchar *blk_ptr;
   int blk_size;
-  
+
   void setup(void);
   void float_to_int (float * _f, int16_t * s16, int flags);
-  void init_ipack(int p_size, uint32_t pktpts);
-  int convertSample (int flags, a52_state_t * _state, uint32_t pktpts);
+  void init_ipack(int p_size, uint32_t pktpts, uint8_t SubStreamId);
+  int convertSample (int flags, a52_state_t * _state, uint32_t pktpts, uint8_t SubStreamId);
  public:
   A52decoder(cDvdPlayer &ThePlayer);
   ~A52decoder();
   void setSyncMode(eSyncMode mode) { syncMode = mode; };
   eSyncMode getSyncMode(void) { return syncMode; }
-  void decode(uint8_t * start, int size, uint32_t pktpts);
+  void decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubStreamId);
   void clear();
 };
 

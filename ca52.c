@@ -227,7 +227,7 @@ inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 }
 
 // data=PCM samples, 16 bit, LSB first, 48kHz, stereo
-void A52decoder::init_ipack(int p_size, uint32_t pktpts)
+void A52decoder::init_ipack(int p_size, uint32_t pktpts, uint8_t SubStreamId)
 {
     int header = pktpts ? 5 :0;
 
@@ -267,7 +267,7 @@ struct LPCMHeader { int id:8;              // id
                     };
  *
  */
-    blk_ptr[0] = aLPCM; // substream ID
+    blk_ptr[0] = aLPCM + SubStreamId; // substream ID
     // other stuff (see DVB specs), may be ignored by driver
     // but try to set it up correctly ..
     blk_ptr[1] = 0x07;  // number of frames
@@ -283,9 +283,7 @@ struct LPCMHeader { int id:8;              // id
 }
 
 
-int A52decoder::convertSample (int flags, a52_state_t * _state,
-				uint32_t pktpts)
-{
+int A52decoder::convertSample(int flags, a52_state_t * _state,	uint32_t pktpts, uint8_t SubStreamId) {
     int chans = -1;
     sample_t * _samples = a52_samples(_state);
 
@@ -318,7 +316,7 @@ int A52decoder::convertSample (int flags, a52_state_t * _state,
 	return 1;
     }
 
-    init_ipack((int) 256 * sizeof (int16_t) * chans, pktpts);
+    init_ipack((int) 256 * sizeof (int16_t) * chans, pktpts, SubStreamId);
     float_to_int (samples, (int16_t *)blk_ptr, flags);
     // push data to driver
     blk_ptr  += (int) 256 * sizeof (int16_t) * chans;
@@ -351,8 +349,7 @@ void A52decoder::clear()
  * for now, lets assume we always have 48kHz!!
  */
 
-void A52decoder::decode(uint8_t * start, int size,
-			 uint32_t pktpts)
+void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubStreamId)
 {
     int bit_rate;
 
@@ -412,8 +409,7 @@ void A52decoder::decode(uint8_t * start, int size,
 		    player.seenAPTS(pktpts);
 		    DEBUG_A52("sending PTS\n");
 		}
-		if (convertSample (flags, state,
-				   sendPTS ? pktpts : 0))
+		if (convertSample(flags, state, sendPTS ? pktpts : 0, SubStreamId))
 		    goto error;
 		pktpts  = 0;
 		sendPTS = false;
