@@ -1297,7 +1297,7 @@ bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 	uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
 	SPUassembler.Get(buffer, SPUassembler.getSize());
 
-    if ( DVDSetup.ShowSubtitles==1 || isInMenuDomain || ( forcedDisplay && !isInMenuDomain ) // fixme: funny hack ;-) makes forcedDisplay obsolete .. ??
+        if ( DVDSetup.ShowSubtitles || isInMenuDomain || ( forcedDisplay && !isInMenuDomain ) 
 	     /**
 	      * the problem is: both, the letterbox and the wide spu stream,
 	      * does contain the force field, so i guess its just the menu flag .. 
@@ -1609,14 +1609,18 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                       break;
 	          }
 
-		    data++;
-		    datalen -= 10; // 3 (mandatory header) + 6 (PS header)
-            if ( currentNavSubpStream != -1 &&  thisSpuId == currentNavSubpStream ) {
-                
-		        SPUassembler.Put(data, datalen, pktpts);
+		  data++;
+		  datalen -= 10; // 3 (mandatory header) + 6 (PS header)
 
-	            if ( SPUdecoder && SPUassembler.ready() ) {
-    		        if( ! playSPU(thisSpuId, data, datalen) ) {
+                  if ( currentNavSubpStream != -1 &&  thisSpuId == currentNavSubpStream ) 
+		  {
+                
+		    SPUassembler.Put(data, datalen, pktpts);
+
+	            if ( SPUdecoder && SPUassembler.ready() ) 
+		    {
+    		        if( ! playSPU(thisSpuId, data, datalen) ) 
+			{
 
                         /**
                          *
@@ -1624,7 +1628,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                             thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
                             isInMenuDomain, dvdnav_is_domain_vts(nav), forcedSubsOnly);
                          */
-                    }
+                        }
 	            }
             }
 	 } else {
