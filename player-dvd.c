@@ -2079,7 +2079,7 @@ void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &
     int64_t TotalTicks = GetPGCLengthInTicks();
 
     TotalBlockNum = pgcTotalBlockNum;
-    BlockNum = TotalTicks>0 ? (Ticks * TotalBlockNum / TotalTicks) : 0:
+    BlockNum = TotalTicks>0 ? (Ticks * TotalBlockNum / TotalTicks) : 0;
 }
 
 
