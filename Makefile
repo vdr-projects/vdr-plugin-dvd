@@ -45,6 +45,11 @@ INCLUDES += -I$(VDRDIR)/include -I$(DVBDIR)/include -I$(NAVDIR)
 
 DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
+# to use xine videoout:
+ifdef POLLTIMEOUTS_BEFORE_DEVICECLEAR
+DEFINES += -DPOLLTIMEOUTS_BEFORE_DEVICECLEAR=$(POLLTIMEOUTS_BEFORE_DEVICECLEAR)
+endif
+
 LIBS = -ldvdnav -la52
 
 ifdef DJBFFT
@@ -60,7 +65,7 @@ endif
 
 ### The object files (add further files here):
 
-OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o spu.o     \
+OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o     \
 	           ca52.o i18n.o setup-dvd.o 
 
 ### Implicit rules:

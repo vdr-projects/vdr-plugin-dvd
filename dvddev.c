@@ -88,8 +88,8 @@ int cDVD::vm_reset(void)
   int ret = ::vm_init(const_cast<char *>(deviceName));
   if (ret ==0) {
      ::vm_reset();
-     state.registers.SPRM[14] &= ~(0x0f <<  8);
-     state.registers.SPRM[14] |= (Setup.VideoFormat ? 0x03 : 0) << 10;
+     state.registers.SPRM[14] &= ~(0x0f <<  8); 
+     state.registers.SPRM[14] |= (Setup.VideoFormat ? 0x03 : 0) << 10; 
      state.registers.SPRM[14] |= 0x02 << 8;   // letterbox is default for dvb/vdr
      state.registers.SPRM[0]  = _lang2int( LangCodes()[Setup.DVDMenuLanguage] );  // Player Menu Languange code
      state.registers.SPRM[16] = _lang2int( LangCodes()[Setup.DVDAudioLanguage] ); // Initial Language Code for Audio
@@ -99,4 +99,3 @@ int cDVD::vm_reset(void)
   return ret;
 }
 #endif
-

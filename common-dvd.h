@@ -20,14 +20,10 @@
 //#define SUBPDEBUG
 //#define IFRAMEDEBUG
 
-#ifdef DEBUG
-    #undef  DEBUG
-#endif
-
 #ifdef DVDDEBUG
-#define DEBUG(format, args...) printf (format, ## args)
+#define DEBUGDVD(format, args...) printf (format, ## args)
 #else
-#define DEBUG(format, args...)
+#define DEBUGDVD(format, args...)
 #endif
 #ifdef PTSDEBUG
 #define DEBUGPTS(format, args...) printf (format, ## args)
@@ -54,10 +50,20 @@
 #else
 #define DEBUG_NAV(format, args...)
 #endif
+#ifdef NAV0DEBUG
+#define DEBUG_NAV0(format, args...) printf (format, ## args); fflush(NULL)
+#else
+#define DEBUG_NAV0(format, args...)
+#endif
 #ifdef SUBPDEBUG
 #define DEBUG_SUBP_ID(format, args...) printf (format, ## args)
 #else
 #define DEBUG_SUBP_ID(format, args...)
+#endif
+#ifdef SUBPDECDEBUG
+#define DEBUG_SUBP_DEC(format, args...) printf (format, ## args)
+#else
+#define DEBUG_SUBP_DEC(format, args...)
 #endif
 
 #ifdef IFRAMEDEBUG
@@ -72,5 +78,19 @@
 #define DEBUG_PTS(format, args...)
 #endif
 
-#endif // __COMMON_DVD_H
+#if VDRVERSNUM <= 10306
+#define MSG_ERROR(x)	Interface->Error(x)
+#define MSG_INFO(x)	Interface->Info(x)
+#else
+#define MSG_ERROR(x)	Skins.Message(mtError,x)
+#define MSG_INFO(x)	Skins.Message(mtInfo,x)
+#endif
+				
+// display error message with parameters on OSD
+#define EOSD(fmt,parms...)     {  char msg[132]; \
+                                  snprintf(msg, sizeof msg, fmt, parms); \
+                                  MSG_ERROR(msg); \
+                                  MSG_ERROR(msg); /* repeat once */ }
 
+
+#endif // __COMMON_DVD_H

@@ -20,7 +20,8 @@ class cDvdPlayerControl : public cControl {
 private:
   static bool dvd_active;
   bool visible, modeOnly, shown, displayFrames, forceDvdNavigation;
-  int lastCurrent, lastTotal, resumeValue;
+  void *osdTaker;
+  int lastCurrent, lastTotal;
 #if VDRVERSNUM<10307
   int osdPos;
   bool osdPosOffsetSet;
@@ -55,12 +56,12 @@ private:
 #endif
   void OsdClose();
   void ShowTimed(int Seconds = 0);
+  void updateShow(bool force=false);
 
   void DisplayAtBottom(const char *s = NULL);
   void ShowMode(void);
   bool ShowProgress(bool Initial);
 
-  bool IsSPUInUse(void) { return player && player->IsSPUInUse(); }
   bool IsDvdNavigationForced() { return forceDvdNavigation; }
 
 public:
@@ -70,11 +71,14 @@ public:
   virtual eOSState ProcessKey(eKeys Key);
   virtual void Show(void);
   virtual void Hide(void);
-  bool Visible(void) { return visible; }
-  int getResumeValue(void) { return resumeValue; }
-  void setResumeValue(int rv) { resumeValue = rv; }
+  bool OsdVisible(void *me);
+  bool OsdTaken(void *me);
+  bool TakeOsd(void *obj);
   static bool DVDActive() { return dvd_active; };
   const char * GetDisplayHeaderLine();
+
+protected:
+  void HideOwnOsd(void);
 
 private:
   cDvdPlayer *player;

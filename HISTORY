@@ -1,21 +1,73 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
-2004-06-xx: Version 0.3.4-x
-    - added support for 32 substreams (thx to René van den Braken)
-    - fixed some aspect ratio problems (thx to André Weidemann)
 
-2004-06-05: Version 0.3.4-rc12 .. sven at jausoft.com
-    - fixed 'forced subs only' mode
-    - added resume (last 10 movies)
-    - fixed picture/sound errors in AC3 Decoder 
+2004-06-10: Version 0.3.5-b02  
+    - SPU AUTO PROBLEM:
+    	 *
+	#define FORCED_SUBS_ONLY_SEMANTICS
+	 * this was "weak"'s solution of a forced 
+	 * SPU only stream choice,
+	 * which does _not_ work ..
+	 *
+	 * Problem:
+	 *   - forcedDisplay | menu ctrseq within the SPU,
+	 *     means kinda "just do it"
+	 *
+	 *   - special SPU channels, which only shows up
+	 *     e.g. if a klingon speaks klingon,
+	 *     are handled by a special SPU channel id,
+	 *     which dvdnav will choose for you automatic,
+	 *     and if your appropriate language is set
+	 *     as the default language !
+	 *   FIXME ??
+	 *
 
-2004-05-25: Version 0.3.4-rc11 .. sven at jausoft.com 
-    - fixed some display errors during navigation
-    - ringbuffer implemented
-    - fixed buffer overflow in sound handling
-    - fixed language selection bug in plugin setup
-    - added 'forced subs only' mode
-    - added support for vdr >= 1.3.7
+    - correct pre-parse of SPU to check for forcedDisplay ctrl-seq
+    	- take forceDisplay into account, if outta menu space
+
+    - take care of all SPU channel id's [0x00 .. 0x1F]
+    - take care of all Audio channel id's [0x00 .. 0x1F]
+
+    - all SPU and Audio channels are looked up at VTS_CHANGE,
+      and are therefore available if start a new title !
+
+    - take very good care ;-), of who owns the OSD,
+    	this one is needed to use softdevices, alike vdr-xine !
+	*** be aware that we do need the very little patch
+		patches/vdr-1.3.10_spu_01.diff
+	*** to enable access to 
+		- cSpuDecoder::Hide,Draw,IsVisible
+		- cDvbSpuDecoder::Hide,Draw,IsVisible
+	now you can switch to dvd-osd, vdr-menu and spu,
+	without seg fault, or else with a softdevice ..
+
+    - minimized dvdnav access for title string data ..
+
+    - many stuff learned about SPU control, and channel hopping ;-)
+
+    - please apply the mandatory patches to the regarding vanilla version:
+    	- vdr-1.3.10_spu_01.diff (see above, spu stuff) 
+	- vdr-xine-0.3.4-withSpu_02.diff (add dvbspu to the xineDevice)
+
+
+2004-06-08: 
+    - merge with inofficial fork @ dvdplugin.pimps.at ..:
+	    - fixed some display errors during navigation
+	    - ringbuffer implemented
+	    - fixed buffer overflow in sound handling
+	    - fixed language selection bug in plugin setup
+	    - added 'forced subs only' mode
+	    - added support for vdr >= 1.3.7, and < 1.3.7 !
+
+2004-05-26: Version 0.3.5-b01
+    - ported to vdr 1.3.8, no more support for vdr pre 1.3.8
+    - added DevicePoll timeout > MAX_POLL_TOs -> DeviceClear 
+    	- good for softdevices, like vdr-xine
+    - added some patches for vdr 1.3.8 support ..
+
+2003-11-18: Version 0.3.4-rc11 .. sven at jausoft.com
+    - cleaned up termination (as well as UC: no disc inserted ..)
+    - fixed case where device->GetSTC returns < 0 (dxr3 users)
 
 2003-11-11: Version 0.3.4-rc10 .. sven at jausoft.com
     - fixed setting correct 16:9 / 4:3 bits in mpeg stream

@@ -2,14 +2,6 @@ This is the DVD plugin for the Video Disk Recorder (VDR).
 
 +++
 
-The original plugin maintainer, Sven Goethel, has been unreachable for quite a while now,
-therefore all versions >= 0.3.4-rc11 of the plugin can _meanwhile_ be found at:
-http://dvdplugin.pimps.at
-
-Contact: http://www.vdrportal.de
-
-+++
-
 Project's homepage:          http://www.jausoft.com/Files/vdr/vdr-dvd/
 
 Written by:                  
@@ -29,16 +21,18 @@ See the file COPYING for license information.
 Requirements:
 -------------
 
-vdr-1.2.6		http://cadsoft.de/vdr/
-libdvdcss		http://www.videolan.org/libdvdcss/download.html
-libdvdnav-0.1.9		http://dvd.sf.net
-liba52			http://liba52.sourceforge.net/
+vdr >= 1.3.8		http://cadsoft.de/vdr/
+libdvdcss >= 20030724	http://www.videolan.org/libdvdcss/download.html
+libdvdnav >= 20030930	http://dvd.sf.net
+a52dec >= 0.7.4		http://liba52.sourceforge.net/
 
 The plugin has been tested with the following versions:
 
-libdvdcss:	1.2.6
-libdvdnav:	0.1.9
-liba52:		0.7.3  (earlier version do not work!)
+libdvdcss:	20030724 (cvs)
+libdvdnav:	20030930 (cvs)
+liba52:		0.7.4
+
+(untestet with vdr < 1.3.10, < 1.3.7 )
 
 +++
 
@@ -92,9 +86,10 @@ Left/Right     rewind/forward (fast if play mode, slow if pause mode)
 kFastRew/kFastFwd
 
 1              skip to next     audio channel
-2              skip to next     subtitle ( if "no subtitle" is reached, progress display on, if subtitle language code is 
-                                prefixed with "forced-" (eg. 'forced-en') only forced subs will be shown )
-3              skip to next     angle
+2              skip to next     subtitle ( if "no subtitle" is reached, progress display on, 
+                                           if subtitle language code is prefixed with "forced-" 
+					   (eg. 'forced-en') only forced subs will be shown )
+3              skip to next     angle    (skip copyright notice)
 
 4              skip to previous chapter
 6              skip to next     chapter

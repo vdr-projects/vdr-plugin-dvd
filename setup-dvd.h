@@ -14,7 +14,7 @@
 #include <vdr/menuitems.h>
 
 class cDVDSetup {
-public:
+ public:
     int MenuLanguage;
     int AudioLanguage;
     int SpuLanguage;
@@ -22,23 +22,23 @@ public:
     int ShowSubtitles;
     int HideMainMenu;
     int ReadAHead;
-    int ResumeDisk;
 
     // AC3 stuff
     int AC3dynrng;
 
+ public:
     cDVDSetup(void);
 
     bool SetupParse(const char *Name, const char *Value);
 };
 
 class cMenuSetupDVD : public cMenuSetupPage {
-private:
+ private:
     cDVDSetup data;
     const char *spuOptionsText[3];
-protected:
+ protected:
     virtual void Store(void);
-public:
+ public:
     cMenuSetupDVD(void);
 };
 
