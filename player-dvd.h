@@ -116,8 +116,8 @@ class cDvdPlayer : public cPlayer, cThread {
 
     int currentNavSubpStream;
     bool currentNavSubpStreamLocked;
-    bool spuInUse, spuScan1stByte;
-    bool forcedSubsOnly;
+    bool spuInUse;
+    bool forcedSubsOnly, spu_state;
     
     cList<IntegerListObject> navSubpStreamSeen;
     void notifySeenSubpStream( int navSubpStream );

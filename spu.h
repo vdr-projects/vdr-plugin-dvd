@@ -56,21 +56,23 @@ class cSPUassembler: public simpleFIFO
     int Put(const uint8_t *Data, int Count, uint32_t Pts);
 
     int getSPUCommand( unsigned char* packet, unsigned int size );
-    int getSPUCommandQuick( unsigned char* packet );
-
+    
     unsigned int getNextBytes( unsigned int num );
     void setByte( unsigned char* byte );
 
-    /* actual byte position in the encoded stream */
+   /* actual byte position in the encoded stream */
 	unsigned char* byte_pos;
 
-	/* size of the spu */
-    unsigned int spu_size;
-
-    /* offset to the command sequence section */
-    unsigned int spuOffsetLast;
-    int previousCommand;
-    bool usePrevious;
+   /* size of the spu */
+   unsigned int spu_size;
+   /* amount of data received */
+   unsigned int spu_dataReceived;
+   /* offset to the command sequence section */
+   unsigned int spu_offset;
+   /* command at 1st byte of packet? */
+   bool spu_commandOverhead;
+   /* command found but another data packet to receive? */
+   bool spu_packetOverhead;   
 };
 
 #endif

@@ -165,10 +165,11 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     prev_e_ptm = 0;
     ptm_offs = 0;
     DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
-    SPUassembler.spuOffsetLast = 0;
-    SPUassembler.previousCommand = -1;
-    SPUassembler.usePrevious = false;
-    spuScan1stByte = false;
+    spu_state = false;
+    SPUassembler.spu_dataReceived = 0;
+	 SPUassembler.spu_commandOverhead = 0;
+	 SPUassembler.spu_packetOverhead = 0;
+	 SPUassembler.spu_offset = 0;
 
     skipPlayVideo=0;
     fastWindFactor=1;
@@ -1385,8 +1386,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                         currentNavSubpStreamLocked, DVDSetup.ShowSubtitles);
                         break;
                     }
-
-                    //forced subs: todo -> rewrite it. realy awful but hopefully works now
+                    
                     if ( SPUdecoder && (currentNavSubpStream != -1) && ( thisSpuId == currentNavSubpStream ) ) {
                         spuInUse=true;
 
@@ -1395,62 +1395,28 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                         SPUassembler.Put(data, datalen, pktpts);
 
                         //check for forced subs
+                        //note: completely rewritten. looks good now.
                         if( !IsInMenuDomain() && forcedSubsOnly ) {
-                            int spuh;
+                            int i = SPUassembler.getSPUCommand( data, datalen );
+                            switch ( i ) {
+                              case 0:  //forced play
+                                 spu_state = true;
+                              break;
+                              
+                              case 1:  //normal play
+                                 spu_state = false;
+                              break;                                 
+                            } //switch                            
                             
-                            //offset matches datalen
-                            if( SPUassembler.spuOffsetLast == datalen ) {
-                                 SPUassembler.spuOffsetLast = 0;
-                                 spuScan1stByte = true;
-                                 break;
+                            if (SPUassembler.ready()) {
+                              uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
+                              SPUassembler.Get(buffer, SPUassembler.getSize());
+                              if( spu_state )
+                                 SPUdecoder->processSPU(SPUassembler.getPts(), buffer);
+                              DEBUG_SUBP_ID("processSPU: %12d\n", SPUassembler.getPts());
+                              seenPTS(pktpts);
                             }
-                            if( spuScan1stByte == true ) {
-                              spuh = SPUassembler.getSPUCommandQuick(data);
-                              spuScan1stByte = false;
-                            }
-                            else {
-                                                        
-                            if( !SPUassembler.usePrevious ) {
-                              //get command sequence
-                              spuh = SPUassembler.getSPUCommand(data, datalen);
-                            }
-                            //special case: command offset within 1st packet, but data spanning packets
-                            else {
-                              spuh = SPUassembler.previousCommand;
-                              SPUassembler.usePrevious = false;
-                              //SPUassembler.spuOffsetLast = 0;
-                            }
-                            if( SPUassembler.usePrevious ) {
-                              spuh = SPUassembler.previousCommand;
-                              SPUassembler.usePrevious = false;
-                            }
-                           }
-                           
-                            //code is 0x01 (play)
-                            if( spuh == 1  ) {
-                                spuInUse=false;
-                                if (SPUassembler.ready()) {
-                                    uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
-                                    SPUassembler.Get(buffer, SPUassembler.getSize());
-                                    DEBUG_SUBP_ID("processSPU: %12d\n", SPUassembler.getPts());
-                                    seenPTS(VideoPts);
-                                }
-                                //DEBUG_SPU("spu header: %d", spuh);
-                                break;
-                            }
-                            //code is 0x00 (forced play)
-                            /*if( spuh == 0  ) {
-                                DEBUG_SPU("spu header: %d", spuh);
-                            }
-                            //error?
-                            if( spuh == 5 ) {
-                                DEBUG_SPU("spu decoding failure in player-dvd.c ? : %d", spuh);
-                            }*/
-                            //data is spanning packets
-                            if( spuh > 2 ) {
-                                SPUassembler.spuOffsetLast = spuh;
-                                //DEBUG_SPU("next offset: %d", SPUassembler.spuOffsetLast);
-                            }
+                            break;                            
                         }
 
                         if (SPUassembler.ready()) {
@@ -2183,7 +2149,11 @@ void cDvdPlayer::NextSubpStream()
     if( forcedSubsOnly || currentNavSubpStream==-1 ) {
         i = ( i + 1 ) % navSubpStreamSeen.Count();
         forcedSubsOnly = false;
-        SPUassembler.spuOffsetLast = 0;
+        
+        //not sure if this is necessary
+        SPUassembler.spu_offset = 0;
+        SPUassembler.spu_packetOverhead = false;
+        SPUassembler.spu_commandOverhead = false;
     }
     else {
         i = ( i ) % navSubpStreamSeen.Count();

@@ -204,121 +204,84 @@ void cSPUassembler::setByte( unsigned char* byte ) {
 
 int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    unsigned char command;
-   unsigned int  next_cs_offset;
-   bool special = false;
+   int helperBytes = 0;
    
-   //byte overhead?
-   if( size <= 20 ) {
-      usePrevious = true;
-      spuOffsetLast = 0;
-      return -1;
+   //increase data received
+   spu_dataReceived += size;
+   
+   //command allready found, packet contains only data
+   if( spu_packetOverhead ) {
+      spu_packetOverhead = false;
+      spu_dataReceived = 0;
+      return 3;
    }
    
    // set data pointer to begin of the packet
    setByte( packet );
-
-   //check if dealing with spanning data
-   if( spuOffsetLast > 0 ) {
-  		spu_size = size;
-
-      //check for spanning packet
-      if ( spu_size < spuOffsetLast ) return ( spuOffsetLast - spu_size );
-
-    	// set data pointer to begin of the control sequence
-    	setByte( packet + spuOffsetLast );
-     	getNextBytes(2);
-     	spuOffsetLast = 0;
-
-	}
-	//no spanning packet
-	else {
-
-   		// first 2 bytes contains the spu size
-	   	spu_size = getNextBytes(2);
-
-	   	// get offset to the Control Sequence
-   		next_cs_offset = getNextBytes(2);
-
-   	  //cout << "SPU Size: " << spu_size << endl;
-   		if ( next_cs_offset == 0 ) return -2;
-   		//special case: command offset within 1st packet, but data spanning packets
-   		if ( next_cs_offset+2 < size && spu_size > size )
-   		   special = true;
-   		if ( next_cs_offset > size ) return (next_cs_offset - size + 2);
-
-   		// set data pointer to begin of the control sequence
-   		setByte( packet+next_cs_offset );
-
-   		// first 2 bytes of the control sequence contains the start time   		
-   		//cout << "Start Time: " << start_time << endl;
-   		next_cs_offset = getNextBytes(2);
-   	}
-
-   	while( (command = getNextBytes(1)) != 0xff ) {
-     //cout << "Display Control Command: " << (int) command;
-
-     switch( command ) {
-       case 0x00: // forced play
-         previousCommand = 0;
-         //cout << "  Menu" << endl;
-         if( special ) {
-               usePrevious = true;
-               return -1;
-         }
-         return 0;
-       break;
-
-       case 0x01: // display start
-         //cout << "  display start" << endl;
-         previousCommand = 1;
-         if( special ) {
-            usePrevious = true;
-            return -1;
-         }
-         return 1;
-       break;
-
-       case 0x02: // display stop
-         previousCommand = 2;
-         //cout << "  display stop" << endl;
-         if( special ) {
-            usePrevious = true;
-            return -1;
-         }
-         return 2;
-       break;
-	 }//switch
-   	} //while
-   	return 4;
-}
-
-int cSPUassembler::getSPUCommandQuick( unsigned char* packet ) {
-   unsigned char command;
-   // set data pointer to begin of the packet
-   setByte( packet );
    
-   while( (command = getNextBytes(1)) != 0xff ) {
-     //cout << "Display Control Command: " << (int) command;
-
-     switch( command ) {
+   //no spanning data or command at 1st byte?
+   if( spu_offset == 0 && !spu_commandOverhead ) {
+      //get size
+      spu_size = getNextBytes(2);
+      spu_dataReceived = size;
+      
+      // get offset to the Control Sequence
+   	spu_offset = getNextBytes(2);
+   	
+   	// subtract 4 bytes from size to make the checks work
+   	size = size - 4;
+   	
+   	//we need 4 bytes we've lost
+   	helperBytes += 4;
+   }
+   
+   //offset not within packet?
+   if( spu_offset > size ) {
+      spu_offset -= size;
+      return 3;
+   }
+        
+   //offset matches packetsize
+   if( spu_offset == size ) {
+      spu_commandOverhead = true;
+      spu_offset = 0;
+      return 3;
+   }
+      
+   //offset within packet but another packet to receive?
+   if( spu_offset < size && spu_dataReceived < spu_size )
+      spu_packetOverhead = true;   
+   
+   //goto offset
+   setByte( packet + spu_offset + helperBytes );
+         
+   //get byte
+   command = getNextBytes(1);   
+   
+   //check byte
+   switch( command ) {
        case 0x00: // forced play
-         previousCommand = 0;
-         //cout << "  Menu" << endl;
+         spu_offset = 0;
+         spu_commandOverhead = false;
          return 0;
        break;
 
        case 0x01: // display start
-         //cout << "  display start" << endl;
-         previousCommand = 1;
+         spu_offset = 0;
+         spu_commandOverhead = false;
          return 1;
        break;
 
        case 0x02: // display stop
-         previousCommand = 2;
-         //cout << "  display stop" << endl;
+         spu_offset = 0;
+         spu_commandOverhead = false;
          return 2;
        break;
-	 }//switch
-   } //while
-   return 4;
+       
+       default:
+         spu_offset = 0;
+         spu_commandOverhead = false;
+         return 4;
+       break;
+   }//switch
 }
