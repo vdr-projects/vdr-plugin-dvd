@@ -27,14 +27,6 @@ class cDvdPlayer;
 #include "dvdspu.h"
 #include "ca52.h"
 
-typedef struct pts_struct {
-    uint64_t lastpts;
-    uint64_t currentpts;
-    uint64_t laststc;
-    uint64_t currentstc;
-    int64_t  ptsdiff;
-};
-
 class IntegerListObject : public cListObject {
     private:
         int value;
@@ -134,9 +126,6 @@ class cDvdPlayer : public cPlayer, cThread {
     uint64_t pktptsAudio;
     uint64_t pktptsLastAudio;
     
-    pts_struct pktPtsVideo;
-    pts_struct pktPtsAudio;
-
     uint64_t pictureNumber;
     bool     pictureFlip;
 

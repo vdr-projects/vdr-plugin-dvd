@@ -239,7 +239,7 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts)
     blk_ptr[3] = PRIVATE_STREAM1;
     blk_ptr[4] = (length >> 8) & 0xff;
     blk_ptr[5] = length & 0xff;
-    blk_ptr[6] = 0x80;
+    blk_ptr[6] = 0x84;
     blk_ptr[7] = pktpts ? 0x80 : 0;
     blk_ptr[8] = header;
     blk_ptr += 9;
