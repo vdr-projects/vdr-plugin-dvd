@@ -694,7 +694,7 @@ void cDvdPlayer::Action(void) {
             if (PollTimeouts == POLLTIMEOUTS_BEFORE_DEVICECLEAR) {
 	            dsyslog("clearing device because of consecutive poll timeouts %d",
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
-                DEBUG_CONTROL("clearing device because of consecutive poll timeouts %d",
+                DEBUG_CONTROL("clearing device because of consecutive poll timeouts %d\n",
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
 	            DeviceReset();
                 PollTimeouts = 0;
@@ -722,7 +722,8 @@ void cDvdPlayer::Action(void) {
 	  		        if (!firstClear) DeviceReset();
 		        }
 
-		res = PlayPes(write_blk, blk_size);
+        /** !! Skip Stillpicture **/
+        res = (IframeCnt > 0 && frameType == ftVideo) ? blk_size : PlayPes(write_blk, blk_size);
 
 		if (trickMode) {
 		    DEBUG_CONTROL("PLAYED  : todo=%d, written=%d\n", blk_size, res);
@@ -790,7 +791,7 @@ void cDvdPlayer::Action(void) {
             int iframeSize;
             unsigned char *iframe=iframeAssembler->Get(iframeSize);
 
-            DEBUG_IFRAME("I-Frame: DeviceStillPicture: IframeCnt=%d->-1, iframe=%d, used=%d; ",
+            DEBUG_IFRAME("I-Frame: DeviceStillPicture: IframeCnt=%d->-1, iframe=%d, used=%d;\n",
 	    	IframeCnt, iframe!=NULL, iframeSize);
 
             if ( iframe && iframeSize>0 ) {
@@ -1507,7 +1508,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	                int  ptype2 = cPStream::packetType(data);
 		            if (ptype2 == SC_PICTURE) {
 	                    havePictureHeader = true;
-                        iframeAssembler->Clear();
+                        /** get last IFRAME */
+                        if (haveSequenceHeader)
+                            iframeAssembler->Clear();
 		                VideoPts += 3600;
 		                lastFrameType = (uchar)(data[5] >> 3) & 0x07;
 		                if (!currentFrameType)
