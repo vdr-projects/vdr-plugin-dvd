@@ -41,11 +41,6 @@ class cPStream {
     static int stuffingLength (const uint8_t *data) { return data[13] & 0x07; }
     static int packetLength   (const uint8_t *data) { return (data[4] << 8) + data[5] + 6; }
     static int PESHeaderLength(const uint8_t *data) { return (data[8]); }
-    static void SetPacketLength(uint8_t *data, int length) {
-        length -= 6;
-        data[4] = (length >> 8);
-        data[5] = (length & 0xff);
-    }
 
     static uint64_t fromPTS(const uint8_t *p)
     {
@@ -92,7 +87,7 @@ class cPStream {
     static uint8_t fromSCRext(const uint8_t *data)
 	{
 	    uint8_t ret;
-	    
+
 	    ret  = (data[0] & 0x03) << 7;
 	    ret |=  data[1] >> 1;
 
