@@ -71,3 +71,4 @@ class cSPUassembler: public simpleFIFO
 };
 
 #endif
+

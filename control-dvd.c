@@ -809,3 +809,4 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 #endif
     return osContinue;
 }
+

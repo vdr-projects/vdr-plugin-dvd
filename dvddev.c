@@ -99,3 +99,4 @@ int cDVD::vm_reset(void)
   return ret;
 }
 #endif
+

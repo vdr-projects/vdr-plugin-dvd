@@ -30,3 +30,4 @@ public:
   };
 
 #endif //__VDR_DVDDEV_H
+

@@ -44,3 +44,4 @@ class cMenuSetupDVD : public cMenuSetupPage {
 extern cDVDSetup DVDSetup;
 
 #endif // __SETUP_DVD_H
+

@@ -2427,3 +2427,5 @@ bool cDvdPlayer::GetReplayMode(bool &Play, bool &Forward, int &Speed)
      Speed = -1;
   return true;
 }
+
+

@@ -266,3 +266,4 @@ int cSPUassembler::getSPUCommand( unsigned char* packet, unsigned int size ) {
    	} //while
    	return 4;
 }
+
