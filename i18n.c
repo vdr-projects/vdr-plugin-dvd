@@ -8,7 +8,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -37,6 +37,9 @@ const char *ISO639code[] = {
 #if VDRVERSNUM > 10312
     "et",
 #endif
+#if VDRVERSNUM > 10315
+    "da",
+#endif
 };
 
 const tI18nPhrase DvdPhrases[] = {
@@ -62,6 +65,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "DVD",                                              // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "DVD",                                              // Dansk
+#endif
     },
     {
     "Plugin.DVD$turn VDR into an (almost) full featured DVD player",    // English
@@ -84,6 +90,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                             // Hrvatski (Croatian)
 #if VDRVERSNUM > 10312
         "",                                                             // Eesti
+#endif
+#if VDRVERSNUM > 10315
+        "",                                                             // Dansk
 #endif
     },
     {
@@ -108,6 +117,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
+#endif
     },
     {
     "Setup.DVD$Preferred audio language",                   // English
@@ -130,6 +142,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
+#endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
 #endif
     },
     {
@@ -154,6 +169,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
+#endif
     },
     {
     "Setup.DVD$Player region code",                         // English
@@ -176,6 +194,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
+#endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
 #endif
     },
     {
@@ -200,6 +221,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
+#endif
     },
     {
      "Setup.DVD$Hide Mainmenu Entry",
@@ -223,6 +247,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
+#endif
     },
     {
      "Setup.DVD$ReadAHead",
@@ -244,7 +271,10 @@ const tI18nPhrase DvdPhrases[] = {
         "ReadAHead",                                        // Русский (Russian)
         "ReadAHead",                                        // Hrvatski (Croatian)
 #if VDRVERSNUM > 10312
-        "",                                                 // Eesti
+        "ReadAHead",                                        // Eesti
+#endif
+#if VDRVERSNUM > 10315
+        "ReadAHead",                                        // Dansk
 #endif
     },
     {
@@ -269,6 +299,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
+#endif
     },
     {
     "Error.DVD$Error fetching data from DVD!",              // English
@@ -291,6 +324,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
+#endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
 #endif
     },
     {
@@ -315,6 +351,9 @@ const tI18nPhrase DvdPhrases[] = {
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
 #endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
+#endif
     },
     {
     "Error.DVD$Current audio track not seen!",              // English
@@ -337,6 +376,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
 #if VDRVERSNUM > 10312
         "",                                                 // Eesti
+#endif
+#if VDRVERSNUM > 10315
+        "",                                                 // Dansk
 #endif
     },
     { NULL }
