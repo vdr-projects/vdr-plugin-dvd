@@ -1640,11 +1640,15 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
         }
         case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
             lastFrameType = AUDIO_STREAM_S;
-	    int audioVal = cPStream::packetType(sector);
-	    int audioId  = audioVal & AudioTrackMask;
+	        int audioVal = cPStream::packetType(sector);
+	        int audioId  = audioVal & AudioTrackMask;
             int audioTrackIndex = notifySeenAudioTrack(AUDIO_STREAM_S+audioId);
-            DeviceSetAvailableTrack(ttAudio, audioId, audioVal);
-	    (void) audioTrackIndex;
+
+            int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
+            audioLanguageCode = audioLanguageCode >> 8 | (audioLanguageCode & 0xff) << 8;
+
+            DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
+	        (void) audioTrackIndex;
 
             // no sound in trick mode
             if (noAudio)

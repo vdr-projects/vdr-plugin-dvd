@@ -1,6 +1,8 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - add mpeg2 audio language
+
 2005-01-24 Version 0.3.6-b02
     - added respect to vdr 1.3.19 multiple ac3 audioid's,
       as well as converting ac3->lpcm with the same audio id's
