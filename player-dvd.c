@@ -1683,7 +1683,14 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 				(unsigned int)(stcPTS/90U), 
 				(unsigned int)(ptsFlag?pktpts/90U:0), 
 				(unsigned int)(VideoPts/90U), r);
-			      PlayAudio(sector, r);
+                    //remove AC3 Header
+                    int ac3offset = sector[8] + 9;
+                    int ac3length = cPStream::packetLength(sector) - 4;
+                    cPStream::SetPacketLength(sector, ac3length);
+                    //backward to save data
+                    for(int i=ac3offset-1; i>=0; i--)
+                        sector[i+4] = sector[i];
+                    PlayAudio(sector+4, r-4);
  		      }
 
 		      if ( audioType == aLPCM || playMULTICHANNEL) 
