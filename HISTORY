@@ -1,6 +1,6 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
-
+    - fix allways showed subtitles
     - fix audiotrackcount and audiolanguage in progress display
     - add mpeg2 audio language
 

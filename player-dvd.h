@@ -180,7 +180,7 @@ class cDvdPlayer : public cPlayer, cThread {
     void SendIframe(bool doSend);
 
     int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
-    bool playSPU(int spuId, unsigned char *data, int datalen);
+    void playSPU(int spuId, unsigned char *data, int datalen);
 
 protected: //Player
     virtual void Activate(bool On);
@@ -402,7 +402,9 @@ public:
 // --- cDvdPlayer ---------------------------------------------------
 
 inline bool cDvdPlayer::IsInMenuDomain() const
-{ return isInMenuDomain; }
+{
+    return isInMenuDomain;
+}
 
 inline bool cDvdPlayer::IsInStillFrame() const
 {

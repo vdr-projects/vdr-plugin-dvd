@@ -1045,29 +1045,30 @@ void cDvdPlayer::Action(void) {
 		    ev->logical, ev->logical,
 	            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
-          if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
-		      cSpuDecoder::eScaleMode mode = getSPUScaleMode();
+            if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
+		        cSpuDecoder::eScaleMode mode = getSPUScaleMode();
 
-		      if (mode == cSpuDecoder::eSpuLetterBox ) {
-		          // TV 4:3,  DVD 16:9
-			  currentNavSubpStream = ev->physical_letterbox & SubpStreamMask;
-			  DEBUG_SUBP_ID("dvd choosing letterbox SPU stream: curNavSpu=%d 0x%X\n",
-			     currentNavSubpStream, currentNavSubpStream);
-		      } else {
-			  currentNavSubpStream = ev->physical_wide & SubpStreamMask;
-			  DEBUG_SUBP_ID("dvd choosing wide SPU stream: curNavSpu=%d 0x%X\n",
-			     currentNavSubpStream, currentNavSubpStream);
-		      }
-    		      currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
-		      changeNavSubpStreamOnceInSameCell=false;
-	      } else {
-		      DEBUG_SUBP_ID("DVDNAV_SPU_STREAM_CHANGE: ignore (locked=%d/%d|not enabled=%d), menu=%d, feature=%d \n",
-		          currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell,
-			  DVDSetup.ShowSubtitles,
-                  IsInMenuDomain(), isInFeature);
-	      }
-	      break;
-	  }
+                /* !!! Bit 7 set means hide, and only let Forced display show (see vm.c from libdvdnav) */
+		        if (mode == cSpuDecoder::eSpuLetterBox ) {
+		            // TV 4:3,  DVD 16:9
+                    currentNavSubpStream = ev->physical_letterbox & (0x80 | SubpStreamMask);
+    			    DEBUG_SUBP_ID("dvd choosing letterbox SPU stream: curNavSpu=%d 0x%X\n",
+                        currentNavSubpStream, currentNavSubpStream);
+		        } else {
+                    currentNavSubpStream = ev->physical_wide & (0x80 | SubpStreamMask);
+			        DEBUG_SUBP_ID("dvd choosing wide SPU stream: curNavSpu=%d 0x%X\n",
+			            currentNavSubpStream, currentNavSubpStream);
+		        }
+    		    currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
+		        changeNavSubpStreamOnceInSameCell=false;
+	        } else {
+		        DEBUG_SUBP_ID("DVDNAV_SPU_STREAM_CHANGE: ignore (locked=%d/%d|not enabled=%d), menu=%d, feature=%d \n",
+		            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell,
+			    DVDSetup.ShowSubtitles,
+                    IsInMenuDomain(), isInFeature);
+	        }
+	        break;
+	    }
 	    case DVDNAV_AUDIO_STREAM_CHANGE: {
 	        DEBUG_NAV("%s:%d:NAV AUDIO STREAM CHANGE\n", __FILE__, __LINE__);
 	        dvdnav_audio_stream_change_event_t *ev;
@@ -1426,7 +1427,7 @@ void cDvdPlayer::SendIframe(bool doSend) {
     }
 }
 
-bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
+void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 {
     int spuSize = SPUassembler.getSize();
     uint8_t *buffer = new uint8_t[spuSize];
@@ -1437,7 +1438,6 @@ bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 
 	SPUdecoder->processSPU(SPUassembler.getPts(), buffer, allowedShow);
     if(IsInMenuDomain()) seenVPTS(pktpts); // else should be seen later ..
-    return true;
 }
 
 int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio)
@@ -1815,9 +1815,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		        }
 	        }
 	        else if ( ((int)*data & 0xE0) == 0x20 ) {
-	            int thisSpuId = (int)(*data) & SubpStreamMask;
+	            int spuId = (int)(*data) & SubpStreamMask;
+                notifySeenSubpStream(spuId);
 		        ptype = 'S';
-
 		        if (OsdInUse()) {
 		            /**
 		             * somebody uses the osd ..
@@ -1829,18 +1829,10 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		        data++;
 		        datalen -= 10; // 3 (mandatory header) + 6 (PS header)
 
-                if ( currentNavSubpStream != -1 &&  thisSpuId == currentNavSubpStream ) {
-
+                if (currentNavSubpStream != -1 && spuId == (currentNavSubpStream & (DVDSetup.ShowSubtitles ? SubpStreamMask : 0x80 | SubpStreamMask))) {
 		            SPUassembler.Put(data, datalen, pktpts);
-                    if ( SPUdecoder && SPUassembler.ready() ) {
-    		            if( !playSPU(thisSpuId, data, datalen) ) {
-                            /**
-                             *
-                            DEBUG_SUBP_ID("packet not shown spu stream: got=%d, cur=%d, SPUdecoder=%d, menu=%d, feature=%d, forcedSubsOnly=%d\n",
-                                thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
-                                IsInMenuDomain(), isInFeature, forcedSubsOnly);
-                             */
-                        }
+                    if (SPUdecoder && SPUassembler.ready()) {
+                        playSPU(spuId, data, datalen);
 	                }
                 }
 	        } else {
@@ -2357,15 +2349,15 @@ void cDvdPlayer::setAllSubpStreams(void)
     }
 }
 
-void cDvdPlayer::notifySeenSubpStream( int navSubpStream )
+void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
 {
-    int i=navSubpStreamSeen.Count()-1;
+    int i = navSubpStreamSeen.Count()-1;
 
     while ( i >= 0)
     {
-	if ( navSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
-		break; // found
-	i--;
+	    if ( navSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
+	    	break; // found
+	    i--;
     }
 
     if ( i < 0 )
@@ -2407,7 +2399,9 @@ void cDvdPlayer::SetCurrentNavSubpStreamUsrLocked(bool lock)
 }
 
 int  cDvdPlayer::GetCurrentNavSubpStream(void) const
-{ return currentNavSubpStream; }
+{
+    return currentNavSubpStream;
+}
 
 int  cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
 {
@@ -2415,7 +2409,7 @@ int  cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
 
     while ( i >= 0)
     {
-	if ( currentNavSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
+	if ( (currentNavSubpStream & SubpStreamMask) == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
 		break; // found
 	i--;
     }
@@ -2465,9 +2459,6 @@ int cDvdPlayer::SetSubpStream(int id)
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
     if(currentNavSubpStream==-1) forcedSubsOnly=true;
     SetCurrentNavSubpStreamUsrLocked(true);
-    #ifdef FORCED_SUBS_ONLY_SEMANTICS
-	    if(forcedSubsOnly) changeNavSubpStreamOnceInSameCell=true;
-    #endif
 
     if( currentNavSubpStream!=-1 && nav!=NULL) {
 	    lang_code1=GetCurrentNavSubpStreamLangCode();
@@ -2489,44 +2480,27 @@ int cDvdPlayer::NextSubpStream()
     static char buffer[10];
     uint16_t lang_code1;
     const char * p1 = (char *)&lang_code1;
-    int i=navSubpStreamSeen.Count()-1;
+
+    if (navSubpStreamSeen.Count() == 0)
+       return 0;
+
+    int i = navSubpStreamSeen.Count() - 1;
 
     LOCK_THREAD;
     while ( i >= 0)
     {
-	if ( currentNavSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue() )
-		break; // found
-	i--;
+	    if (currentNavSubpStream == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue())
+	    	break; // found
+	    i--;
     }
 
-    if( i<0 ) {
-	      esyslog("ERROR: internal error current subp stream 0x%X not seen !\n",
-			currentNavSubpStream);
-	      return -1;
-    }
+    i = ( i + 1 ) % navSubpStreamSeen.Count();
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: found curNavSubp(0x%X) at idx = %d\n",
 		currentNavSubpStream, i);
 
-#ifdef FORCED_SUBS_ONLY_SEMANTICS
-    //switch normal subs/ forced subs only
-    if( forcedSubsOnly || currentNavSubpStream==-1 ) {
-    	i = ( i + 1 ) % navSubpStreamSeen.Count();
-    	forcedSubsOnly = false;
-        DEBUG_SUBP_ID("SPU forcedSubsOnly=%d DISABLED\n", forcedSubsOnly);
-    }
-    else {
-    	i = ( i ) % navSubpStreamSeen.Count();
-    	forcedSubsOnly = true;
-        DEBUG_SUBP_ID("SPU forcedSubsOnly=%d ENABLED\n", forcedSubsOnly);
-    }
-#else
-    i = ( i + 1 ) % navSubpStreamSeen.Count();
-#endif
-
     currentNavSubpStream = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
-    if(currentNavSubpStream==-1) forcedSubsOnly=true;
 
     if( currentNavSubpStream!=-1 && nav!=NULL) {
 	    lang_code1=GetCurrentNavSubpStreamLangCode();
@@ -2537,9 +2511,6 @@ int cDvdPlayer::NextSubpStream()
     }
 
     SetCurrentNavSubpStreamUsrLocked(true);
-#ifdef FORCED_SUBS_ONLY_SEMANTICS
-    if(forcedSubsOnly) changeNavSubpStreamOnceInSameCell=true;
-#endif
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, forcedSubsOnly=%d, locked=%d/%d\n",
 		currentNavSubpStream, i, buffer, forcedSubsOnly,
@@ -2563,21 +2534,7 @@ void cDvdPlayer::GetSubpLangCode( const char ** subplang_str ) const
         } else  {
 	    buff2[0]=p1[1];
 	    buff2[1]=p1[0];
-#ifdef FORCED_SUBS_ONLY_SEMANTICS
-	    if( forcedSubsOnly )
-	    {
-		buff2[2]='-';
-		buff2[3]='a';
-		buff2[4]='u';
-		buff2[5]='t';
-		buff2[6]='o';
-		buff2[7]=0;
-	    } else {
-		buff2[2]=0;
-	    }
-#else
 	    buff2[2]=0;
-#endif
         }
     }
 
