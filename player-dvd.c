@@ -1432,7 +1432,11 @@ void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
     int spuSize = SPUassembler.getSize();
     uint8_t *buffer = new uint8_t[spuSize];
     SPUassembler.Get(buffer, SPUassembler.getSize());
-    bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced();
+    /**
+     * !(spuId & 0x80) controls subpictures from dvd-menu
+     */
+    bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced() || !(spuId & 0x80);
+
     DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, spu_size:%d, menuDomain=%d, pts: %12lld\n",
         forcedSubsOnly, spuSize, IsInMenuDomain(), SPUassembler.getPts());
 
@@ -1829,11 +1833,13 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		        data++;
 		        datalen -= 10; // 3 (mandatory header) + 6 (PS header)
 
-                if (currentNavSubpStream != -1 && spuId == (currentNavSubpStream & (DVDSetup.ShowSubtitles ? SubpStreamMask : 0x80 | SubpStreamMask))) {
+                /**
+                 * !!! currentNavSubpStream is used for Bit 7 from libdvdnav, it controls 'forced subs'
+                 */
+                if (currentNavSubpStream != -1 && spuId == (currentNavSubpStream & SubpStreamMask)) {
 		            SPUassembler.Put(data, datalen, pktpts);
-                    if (SPUdecoder && SPUassembler.ready()) {
-                        playSPU(spuId, data, datalen);
-	                }
+                    if (SPUdecoder && SPUassembler.ready())
+                        playSPU(currentNavSubpStream, data, datalen);
                 }
 	        } else {
                 DEBUGDVD("PRIVATE_STREAM2 unhandled (a)id: %d 0x%X\n",
