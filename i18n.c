@@ -34,6 +34,9 @@ const char *ISO639code[] = {
     "ca",
     "ru",
     "hr",
+#if VDRVERSNUM > 10312
+    "et",
+#endif
 };
 
 const tI18nPhrase DvdPhrases[] = {
@@ -56,6 +59,9 @@ const tI18nPhrase DvdPhrases[] = {
         "DVD",                                              // Català
         "DVD",                                              // ÀãááÚØÙ (Russian)
         "DVD",                                              // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "DVD",                                              // Eesti
+#endif
     },
     {
     "Plugin.DVD$turn VDR into an (almost) full featured DVD player",    // English
@@ -76,6 +82,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                             // Català
         "",                                                             // ÀãááÚØÙ (Russian)
         "",                                                             // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                             // Eesti
+#endif
     },
     {
     "Setup.DVD$Preferred menu language",                    // English
@@ -96,6 +105,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Setup.DVD$Preferred audio language",                   // English
@@ -116,6 +128,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Setup.DVD$Preferred subtitle language",                // English
@@ -136,6 +151,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Setup.DVD$Player region code",                         // English
@@ -156,6 +174,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Setup.DVD$Display subtitles",                          // English
@@ -176,6 +197,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
      "Setup.DVD$Hide Mainmenu Entry",
@@ -196,6 +220,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "ÁÚàëâì ÚÞÜÐÝÔã Ò ÓÛÐÒÝÞÜ ÜÕÝî",                    // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
      "Setup.DVD$ReadAHead",
@@ -216,6 +243,9 @@ const tI18nPhrase DvdPhrases[] = {
         "ReadAHead",                                        // Català
         "ReadAHead",                                        // ÀãááÚØÙ (Russian)
         "ReadAHead",                                        // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Error.DVD$Error opening DVD!",                         // English
@@ -236,6 +266,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Error.DVD$Error fetching data from DVD!",              // English
@@ -256,6 +289,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Error.DVD$Current subp stream not seen!",              // English
@@ -276,6 +312,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     {
     "Error.DVD$Current audio track not seen!",              // English
@@ -296,6 +335,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Català
         "",                                                 // ÀãááÚØÙ (Russian)
         "",                                                 // Hrvatski (Croatian)
+#if VDRVERSNUM > 10312
+        "",                                                 // Eesti
+#endif
     },
     { NULL }
 };
