@@ -1,7 +1,10 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
+2004-06-xx: Version 0.3.4-x
+    - added support for 32 substreams (thx to René van den Braken)
+    - fixed some aspect ratio problems (thx to André Weidemann)
 
-2004-06-05: Version 0.3.4-12 .. sven at jausoft.com
+2004-06-05: Version 0.3.4-rc12 .. sven at jausoft.com
     - fixed 'forced subs only' mode
     - added resume (last 10 movies)
     - fixed picture/sound errors in AC3 Decoder 
