@@ -27,7 +27,7 @@ const char *ISO639code[] = {
     "se",
     "ro",
     "hu",
-    "",
+    "ca",
 #if VDRVERSNUM>=10300
     "ru",
 #endif
