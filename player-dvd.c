@@ -1636,7 +1636,10 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	    int audioVal = cPStream::packetType(sector);
 	    int audioId  = audioVal & AudioTrackMask;
             int audioTrackIndex = notifySeenAudioTrack(AUDIO_STREAM_S+audioId);
-            DeviceSetAvailableTrack(ttAudio, audioId, audioVal);
+            int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
+            audioLanguageCode = audioLanguageCode >> 8 | (audioLanguageCode & 0xff) << 8;
+
+            DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
 	    (void) audioTrackIndex;
 
             // no sound in trick mode
@@ -2732,7 +2735,7 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
     LOCK_THREAD;
 
     int id = 0;
-    if ( IS_AUDIO_TRACK(Type) ) 
+    if ( IS_AUDIO_TRACK(Type) )
     {
     	id = ( Type - ttAudio ) + AUDIO_STREAM_S ;
     } else {
@@ -2747,7 +2750,7 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         i--;
     }
 
-    if(i < 0 && navAudioTracksSeen.Count() > -1) {
+    if(i < 0 && navAudioTracksSeen.Count() > 0) {
         id = ((IntegerListObject *)navAudioTracksSeen.Get(0))->getValue();
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: .. not found !\n");
     } else {
