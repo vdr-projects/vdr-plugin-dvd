@@ -282,8 +282,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     current_pci = 0;
     prev_e_ptm = 0;
     ptm_offs = 0;
-    DVDSetup.ShowSubtitles == 2 ? forcedSubsOnly = true : forcedSubsOnly = false;
-    DEBUG_SUBP_ID("SPU showSubs=%d, forcedSubsOnly=%d\n", DVDSetup.ShowSubtitles, forcedSubsOnly);
+    DEBUG_SUBP_ID("SPU showSubs=%d\n", DVDSetup.ShowSubtitles);
 
     skipPlayVideo=false;
     fastWindFactor=1;
@@ -1437,8 +1436,8 @@ void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
      */
     bool allowedShow = DVDSetup.ShowSubtitles || currentNavSubpStreamUsrLocked || IsDvdNavigationForced() || !(spuId & 0x80);
 
-    DEBUG_SUBP_ID("playSPU: SPU proc, forcedSubsOnly:%d, spu_size:%d, menuDomain=%d, pts: %12lld\n",
-        forcedSubsOnly, spuSize, IsInMenuDomain(), SPUassembler.getPts());
+    DEBUG_SUBP_ID("playSPU: SPU proc, spu_size:%d, menuDomain=%d, pts: %12lld\n",
+        spuSize, IsInMenuDomain(), SPUassembler.getPts());
 
 	SPUdecoder->processSPU(SPUassembler.getPts(), buffer, allowedShow);
     if(IsInMenuDomain()) seenVPTS(pktpts); // else should be seen later ..
@@ -2463,7 +2462,6 @@ int cDvdPlayer::SetSubpStream(int id)
 
     currentNavSubpStream = id;
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
-    if(currentNavSubpStream==-1) forcedSubsOnly=true;
     SetCurrentNavSubpStreamUsrLocked(true);
 
     if( currentNavSubpStream!=-1 && nav!=NULL) {
@@ -2474,8 +2472,8 @@ int cDvdPlayer::SetSubpStream(int id)
 	    sprintf(buffer,"auto");
     }
 
-    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, forcedSubsOnly=%d, locked=%d/%d\n",
-		currentNavSubpStream, i, buffer, forcedSubsOnly,
+    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
+		currentNavSubpStream, i, buffer,
 		currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
     return id;
@@ -2518,8 +2516,8 @@ int cDvdPlayer::NextSubpStream()
 
     SetCurrentNavSubpStreamUsrLocked(true);
 
-    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, forcedSubsOnly=%d, locked=%d/%d\n",
-		currentNavSubpStream, i, buffer, forcedSubsOnly,
+    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
+		currentNavSubpStream, i, buffer,
 		currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
     return 0;
 }

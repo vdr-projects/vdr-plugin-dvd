@@ -100,7 +100,6 @@ class cDvdPlayer : public cPlayer, cThread {
     uint16_t currentNavSubpStreamLangCode;
     bool currentNavSubpStreamUsrLocked;
     bool changeNavSubpStreamOnceInSameCell;
-    bool forcedSubsOnly;
 
     cList<IntegerListObject> navSubpStreamSeen;
     void notifySeenSubpStream( int navSubpStream );
