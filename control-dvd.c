@@ -716,11 +716,14 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                         break;
 
                     case k1: if(player) {
-                        player->NextAudioID();
+                        if ( player->NextAudioID()==-1 )
+                            Skins.Message(mtError, tr("Error.DVD$Current audio track not seen!"));
                         break;
                     }
                     case k2: if(player) {
-                        player->NextSubpStream();
+                        if ( player->NextSubpStream()==-1) 
+                            Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
+
                         if ( player->GetCurrentNavSubpStream()==-1 )
                         {
                             Hide();

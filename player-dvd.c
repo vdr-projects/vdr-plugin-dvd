@@ -2534,7 +2534,7 @@ int cDvdPlayer::SetSubpStream(int id)
     return id;
 }
 
-void cDvdPlayer::NextSubpStream()
+int cDvdPlayer::NextSubpStream()
 {
     static char buffer[10];
     uint16_t lang_code1;
@@ -2550,10 +2550,9 @@ void cDvdPlayer::NextSubpStream()
     }
 
     if( i<0 ) {
-          Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
 	      esyslog("ERROR: internal error current subp stream 0x%X not seen !\n",
 			currentNavSubpStream);
-	      return;
+	      return -1;
     }
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: found curNavSubp(0x%X) at idx = %d\n", 
@@ -2595,6 +2594,7 @@ void cDvdPlayer::NextSubpStream()
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, forcedSubsOnly=%d, locked=%d/%d\n",
 		currentNavSubpStream, i, buffer, forcedSubsOnly, 
 		currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
+    return 0;
 }
 
 void cDvdPlayer::GetSubpLangCode( const char ** subplang_str ) const 
@@ -2801,13 +2801,13 @@ int cDvdPlayer::SetAudioID(int id)
     return id;
 }
 
-void cDvdPlayer::NextAudioID()
+int cDvdPlayer::NextAudioID()
 {
     static char buffer[10];
     const char * p1 = (char *)&currentNavAudioTrackLangCode;
     int i=navAudioTracksSeen.Count()-1;
 
-    if(!DVDActiveAndRunning()) return ;
+    if(!DVDActiveAndRunning()) return 0;
 
     LOCK_THREAD;
 
@@ -2819,10 +2819,9 @@ void cDvdPlayer::NextAudioID()
     }
 
     if( i<0 ) {
-          Skins.Message(mtError, tr("Error.DVD$Current audio track not seen!"));
 	      esyslog("ERROR: internal error current audio track 0x%X not seen !\n",
 			currentNavAudioTrack);
-	      return;
+	      return -1;
     }
 
     DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: found curNavAu(0x%X) at idx = %d\n", 
@@ -2840,6 +2839,7 @@ void cDvdPlayer::NextAudioID()
 
     DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: curNavAu next to 0x%X, %s\n", 
 		currentNavAudioTrack, buffer);
+    return 0;
 }
 
 const char **cDvdPlayer::GetAudioTracks(int *CurrentTrack) const 

@@ -349,7 +349,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int  GetCurrentNavSubpStreamIdx(void) const ;
     uint16_t GetCurrentNavSubpStreamLangCode(void) const;
     int  GetNavSubpStreamNumber (void) const ;
-    void NextSubpStream();
+    int NextSubpStream();
     void GetSubpLangCode( const char ** subplang_str ) const ;
 
     /**
@@ -362,7 +362,7 @@ class cDvdPlayer : public cPlayer, cThread {
     /**
      * jump to the next audio id (rotate)
      */
-    void NextAudioID();
+    int NextAudioID();
 
     bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
