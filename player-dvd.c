@@ -404,14 +404,6 @@ void cDvdPlayer::Action(void) {
    const char * diskStamp;
    bool doResume;
    int lastTitlePlayed=-1, lastBlocksPlayed=0, lastArrayIndex=-1;
-   doResume = setDiskStamp( &diskStamp, nav );
-   if( doResume && DVDSetup.ResumeDisk ) {
-      checkDiskStamps( diskStamp, lastTitlePlayed, lastBlocksPlayed, lastArrayIndex);
-   }
-   else {
-      controller->setResumeValue(2);
-   }
-   //end resume initialisation
 
     if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) == DVDNAV_STATUS_ERR) {
         running = false;
@@ -427,6 +419,16 @@ void cDvdPlayer::Action(void) {
     dvdnav_menu_language_select(nav,  const_cast<char *>(ISO639code[DVDSetup.MenuLanguage]));
     dvdnav_audio_language_select(nav, const_cast<char *>(ISO639code[DVDSetup.AudioLanguage]));
     dvdnav_spu_language_select(nav,   const_cast<char *>(ISO639code[DVDSetup.SpuLanguage]));
+
+    doResume = setDiskStamp( &diskStamp, nav );
+    if( doResume && DVDSetup.ResumeDisk ) {
+       checkDiskStamps( diskStamp, lastTitlePlayed, lastBlocksPlayed, lastArrayIndex);
+    }
+    else {
+       controller->setResumeValue(2);
+    }
+    //end resume initialisation
+
     if (IsAttached())
     {
         SPUdecoder = cDevice::PrimaryDevice()->GetSpuDecoder();
@@ -920,10 +922,10 @@ void cDvdPlayer::Action(void) {
         if ( cache_ptr && cache_ptr!=event_buf )
             dvdnav_free_cache_block(nav, cache_ptr);
     }
-        //resume get pos when exit
-        if( DVDSetup.ResumeDisk && !IsInMenuDomain() && doResume)
-            Save(diskStamp, lastArrayIndex);
-        //resume end
+    //resume get pos when exit
+    if( DVDSetup.ResumeDisk && !IsInMenuDomain() && doResume)
+        Save(diskStamp, lastArrayIndex);
+    //resume end
 
     DEBUG_NAV("%s:%d: empty\n", __FILE__, __LINE__);
     Empty();
@@ -954,7 +956,6 @@ void cDvdPlayer::ClearButtonHighlight(void) {
         DEBUG_NAV("DVD NAV SPU clear buttonsd\n");
     }
 }
-
 
 void cDvdPlayer::UpdateButtonHighlight(void) {
     LOCK_THREAD;
@@ -1018,26 +1019,29 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode() {
     //      DVD      4:3
     if (!Setup.VideoFormat && dvd_aspect != 0 ) {
         //
-    // if we are here, then
-    //  TV==4:3 && DVD==16:9
-    //
-    if (vaspect != 2) {
+        // if we are here, then
+        //  TV==4:3 && DVD==16:9
         //
-        //and the actual material on the DVD is not 4:3
-        //
-        if (!(perm & 1)) {  // letterbox is allowed, keep 16:9 and wxh
-        newMode = cSpuDecoder::eSpuLetterBox;
-        vaspect = 0x03;
-        } else if (!(perm & 2)) {    // pan& scan allowed ..
-        newMode = cSpuDecoder::eSpuPanAndScan;
-        vaspect = 0x02;   // 4:3
+        if ( (vaspect != 2) || (vaspect==2 && dvd_aspect==3) ) {
+            //
+            //and the actual material on the DVD is not 4:3
+            //
+            if ( !(perm & 1) ) {  // letterbox is allowed, keep 16:9 and wxh
+                newMode = cSpuDecoder::eSpuLetterBox;
+                vaspect = 0x03;
+            } else if ( !(perm & 2) ) {    // pan& scan allowed ..
+                newMode = cSpuDecoder::eSpuPanAndScan;
+                vaspect = 0x02;   // 4:3
                 // vdf = vdfCENTER_CUT_OUT;
-        // hsize  = o_hsize  / ( 4 * 3 ) * 16 ; // streched hsize
-        // hsize  = o_hsize  / 16 * 3 * 4; // shorten hsize
-        // vsize = o_vsize /  9 * 4 * 3; // stretched vsize
-        // vsize = o_vsize /  ( 3 * 4 ) * 9 ; // shorten vsize
+                // hsize  = o_hsize  / ( 4 * 3 ) * 16 ; // streched hsize
+                // hsize  = o_hsize  / 16 * 3 * 4; // shorten hsize
+                // vsize = o_vsize /  9 * 4 * 3; // stretched vsize
+                // vsize = o_vsize /  ( 3 * 4 ) * 9 ; // shorten vsize
+            } else if ( vaspect==2 && dvd_aspect==3 ) {
+                newMode = cSpuDecoder::eSpuLetterBox;
+                vaspect = 0x03;   // 16:9
+            }
         }
-    }
     }
 
     if (SPUdecoder) SPUdecoder->setScaleMode(newMode);
@@ -1342,6 +1346,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                     }
 
                     if (audioType == aLPCM || playMULTICHANNEL) {
+
                         rframe = new cFrame(sector, r, ftAudio);
                         DEBUG_AUDIO_PLAY("dvd pcm/fake stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
                             (unsigned int)(stcPTS/90U),
@@ -1355,7 +1360,7 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                             (unsigned int)(stcPTS/90U),
                             (unsigned int)(ptsFlag?pktpts/90U:0),
                             (unsigned int)(VideoPts/90U), datalen);
-                            a52dec.decode(data, datalen, pktpts);
+                        a52dec.decode(data, datalen, pktpts);
                     } else if (audioType == aDTS && !BitStreamOutActive ) {
                         // todo DTS ;-)
                         DEBUG_AUDIO_PLAY("dvd aDTS n.a.\n");
@@ -1498,7 +1503,7 @@ bool cDvdPlayer::Save(const char * diskStamp, int arrayIndex)
         if( len >= 500000 ) {
             //read array from file
             snprintf( path, sizeof(path), "%s/.resumedat", cPlugin::ConfigDirectory("dvd") );
-        f=fopen(path,"r");
+            f=fopen(path,"r");
             if (f) {
                 while(fgets(s, sizeof(s), f)!=NULL) {
                     lindex++;
@@ -1578,9 +1583,7 @@ void cDvdPlayer::Pause(void)
 void cDvdPlayer::Stop(void)
 {
   if(!DVDActiveAndRunning()) return;
-
-  running = false;
-  usleep( 100000 ) ;  // 100ms
+  Activate(false);
 }
 
 void cDvdPlayer::Play(void)
@@ -2537,26 +2540,15 @@ bool cDvdPlayer::setDiskStamp(const char ** stamp_str, dvdnav_t * nav ) const
     int event, len;
     int titleNumber=-1, titleNo=-1, chapterNumber=-1, chapterNo=-1;
 
-    //open dvdnav
-        if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) == DVDNAV_STATUS_ERR) {
-        ERROR_MESSAGE("Error opening DVD!");
-        return false;
-    }
-    dvdnav_set_readahead_flag(nav, DVDSetup.ReadAHead);
-    if (DVDSetup.PlayerRCE != 0)
-        dvdnav_set_region_mask(nav, 1 << (DVDSetup.PlayerRCE - 1));
-    else
-        dvdnav_set_region_mask(nav, 0xffff);
-
-   //try to get infos
-   if( dvdnav_get_title_string(nav, &titleString ) != DVDNAV_STATUS_OK)
-      return false;
-   if( dvdnav_get_number_of_titles(nav, &titleNumber) != DVDNAV_STATUS_OK)
-      return false;
-   if( dvdnav_current_title_info(nav, &titleNo, &chapterNo) != DVDNAV_STATUS_OK)
-      return false;
-   if( dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber) != DVDNAV_STATUS_OK)
-      return false;
+    //try to get infos
+    if( dvdnav_get_title_string(nav, &titleString ) != DVDNAV_STATUS_OK)
+       return false;
+    if( dvdnav_get_number_of_titles(nav, &titleNumber) != DVDNAV_STATUS_OK)
+       return false;
+    if( dvdnav_current_title_info(nav, &titleNo, &chapterNo) != DVDNAV_STATUS_OK)
+       return false;
+    if( dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber) != DVDNAV_STATUS_OK)
+       return false;
 
     while( dvdnav_get_position( nav, &currentblock, &totalblocks) != DVDNAV_STATUS_OK ) {
         if( dvdnav_get_next_block(nav, bufi, &event, &len) != DVDNAV_STATUS_OK )
