@@ -372,6 +372,10 @@ void A52decoder::decode(uint8_t * start, int size,
 	int res = a52asm.put(start, size, pktpts);
 	start += res;
 	size  -= res;
+    if ( res==0 ) {
+        clear();
+        break;
+    }
 	if (a52asm.ready()) {
 
 	    int length;
@@ -497,32 +501,33 @@ int A52assembler::put(uint8_t *buf, int len, uint32_t pts)
     uint8_t *end = data + len;
 
     while(syncword != char2short(0x77, 0x0b)) {
-	if (data >= end) {
-	    DEBUG_A52("skipping %d bytes without finding anything\n", data - buf);
-	    return data - buf;
-	}
+	    if (data >= end) {
+	        DEBUG_A52("skipping %d bytes without finding anything\n", data - buf);
+	        return data - buf;
+	    }
         syncword = (syncword << 8) | *data++;
     }
     
     int frmsize  = 0;
     if (!curfrm) {
-	int datasize = 1920;
-	if (end - data > 3)
-	    datasize = frmsize = parse_syncinfo(data);
-	curfrm = new A52frame(datasize, frmsize, pts);
+	    int datasize = 1920;
+	    if (end - data > 3)
+	        datasize = frmsize = parse_syncinfo(data);
+	    curfrm = new A52frame(datasize, frmsize, pts);
     }
     if (curfrm->size == 0) {
-	if (curfrm->pos < 6) {
-	    frmsize = 6 - curfrm->pos;
-	} else {
-	    curfrm->size = parse_syncinfo(curfrm->frame+2);
-	    frmsize = curfrm->size - curfrm->pos;
-	}
+	    if (curfrm->pos < 6) {
+	        frmsize = 6 - curfrm->pos;
+	    } else {
+	        curfrm->size = parse_syncinfo(curfrm->frame+2);
+	        frmsize = curfrm->size - curfrm->pos;
+	    }
     } else
-	frmsize = curfrm->size - curfrm->pos;
+	    frmsize = curfrm->size - curfrm->pos;
     
     if (frmsize > end - data)
-	frmsize = end - data;
+	    frmsize = end - data;
+    if (frmsize<0) return 0;
     memcpy(curfrm->frame + curfrm->pos, data, frmsize);
     curfrm->pos += frmsize;
 
