@@ -560,6 +560,7 @@ void cDvdPlayerControl::updateShow(bool force)
         if (timeoutShow && time(NULL) > timeoutShow) 
         {
             Hide();
+            ShowMode();
             timeoutShow = 0;
             return;
         }
