@@ -787,7 +787,7 @@ void cDvdPlayer::Action(void) {
                       ;
 	            DeviceReset();
 	    }
-            int iframeSize=iframeAssembler->Available();
+            int iframeSize;
             unsigned char *iframe=iframeAssembler->Get(iframeSize);
 
             DEBUG_IFRAME("I-Frame: DeviceStillPicture: IframeCnt=%d->-1, iframe=%d, used=%d; ", 
@@ -1311,7 +1311,7 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
     // nothing has to be done, if 
     //		TV	16:9
     // 		DVD 	 4:3
-    if (!Setup.VideoFormat && dvd_aspect != 0) {
+    if (!Setup.VideoFormat && dvd_aspect != 0 && isInMenuDomain) {
     	//
 	// if we are here, then 
 	//	TV==4:3 && DVD==16:9
