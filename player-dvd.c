@@ -1537,11 +1537,14 @@ bool cDvdPlayer::Save(const char * diskStamp, int arrayIndex)
                     }
                 }
                 fclose(f);
-                return true;
+                result = true;
             }
+            for (unsigned int i = 0; i < 10; i++)
+                if ( stamps[i] ) free(stamps[i]);
+
         }
     }
-    return false;
+    return result;
 }
 
 void cDvdPlayer::Activate(bool On)
