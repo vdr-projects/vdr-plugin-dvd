@@ -1297,10 +1297,7 @@ bool cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
 	uint8_t *buffer = new uint8_t[SPUassembler.getSize()];
 	SPUassembler.Get(buffer, SPUassembler.getSize());
 
-	if ( ( currentNavSubpStream != -1 && 
-	       spuId == currentNavSubpStream 
-	     ) 
-	     || ( forcedDisplay && !isInMenuDomain ) // fixme: funny hack ;-) makes forcedDisplay obsolete .. ??
+    if ( DVDSetup.ShowSubtitles==1 || isInMenuDomain || ( forcedDisplay && !isInMenuDomain ) // fixme: funny hack ;-) makes forcedDisplay obsolete .. ??
 	     /**
 	      * the problem is: both, the letterbox and the wide spu stream,
 	      * does contain the force field, so i guess its just the menu flag .. 
