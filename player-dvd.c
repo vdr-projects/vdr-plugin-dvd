@@ -1612,14 +1612,14 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                       break;
 	          }
 
-		  data++;
-		  datalen -= 10; // 3 (mandatory header) + 6 (PS header)
-		  SPUassembler.Put(data, datalen, pktpts);
+		    data++;
+		    datalen -= 10; // 3 (mandatory header) + 6 (PS header)
+            if ( currentNavSubpStream != -1 &&  thisSpuId == currentNavSubpStream ) {
+                
+		        SPUassembler.Put(data, datalen, pktpts);
 
-	          if ( SPUdecoder && SPUassembler.ready() )
-		  {
-    		      if( ! playSPU(thisSpuId, data, datalen) )
-		      {
+	            if ( SPUdecoder && SPUassembler.ready() ) {
+    		        if( ! playSPU(thisSpuId, data, datalen) ) {
 
                         /**
                          *
@@ -1627,8 +1627,9 @@ void cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                             thisSpuId, currentNavSubpStream, SPUdecoder!=NULL,
                             isInMenuDomain, dvdnav_is_domain_vts(nav), forcedSubsOnly);
                          */
-                      }
-	          }
+                    }
+	            }
+            }
 	 } else {
                     DEBUGDVD("PRIVATE_STREAM2 unhandled (a)id: %d 0x%X\n",
                         (int)(*data), (int)(*data));
