@@ -1315,11 +1315,13 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
 	// if we are here, then 
 	//	TV==4:3 && DVD==16:9
 	//
-	if (vaspect != 2) {
+        if ( (vaspect != 2) || ( vaspect==2 && dvd_aspect==3 ) ) 
+	{
 	    //
 	    //and the actual material on the DVD is not 4:3
 	    //
-	    if (!(perm & 1)) {  // letterbox is allowed, keep 16:9 and wxh
+	    if (!(perm & 1)) 
+	    {  // letterbox is allowed, keep 16:9 and wxh
 		newMode = cSpuDecoder::eSpuLetterBox;
 		vaspect = 0x03;
 	    } else if (!(perm & 2)) {    // pan& scan allowed ..
@@ -1331,6 +1333,10 @@ cSpuDecoder::eScaleMode cDvdPlayer::doScaleMode()
 		// vsize = o_vsize /  9 * 4 * 3; // stretched vsize
 		// vsize = o_vsize /  ( 3 * 4 ) * 9 ; // shorten vsize
 	    }
+ 	} else if ( vaspect==2 && dvd_aspect==3 ) 
+	{   // use letterbox (honor dvd_aspect)
+	    newMode = cSpuDecoder::eSpuLetterBox;
+	    vaspect = 0x03;   // 16:9
 	}
     }
 
@@ -2149,7 +2155,10 @@ int64_t cDvdPlayer::GetPGCLengthInTicks()
 void cDvdPlayer::BlocksToPGCTicks( uint32_t BlockNum, int64_t & Ticks, int64_t & TotalTicks ) 
 {
   TotalTicks = GetPGCLengthInTicks();
-  Ticks = BlockNum * (TotalTicks / pgcTotalBlockNum) ;
+  if(pgcTotalBlockNum>0)
+	  Ticks = BlockNum * (TotalTicks / pgcTotalBlockNum) ;
+  else
+	  Ticks = 0;
 }
 
 
