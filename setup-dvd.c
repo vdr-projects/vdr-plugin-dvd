@@ -25,7 +25,7 @@ cDVDSetup::cDVDSetup(void)
     AudioLanguage = 0;
     SpuLanguage   = 0;
     PlayerRCE     = 2;
-    ShowSubtitles = 2;
+    ShowSubtitles = 0;
     HideMainMenu  = 0;
     ReadAHead     = 0;
     
@@ -51,17 +51,13 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
 
 cMenuSetupDVD::cMenuSetupDVD(void)
 {
-    spuOptionsText[0] = tr("never");
-    spuOptionsText[1] = tr("always");
-    spuOptionsText[2] = tr("Setup.DVD$forced only");
-
     data = DVDSetup;
     SetSection(tr("DVD"));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"),     &data.MenuLanguage,  I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"),    &data.AudioLanguage, I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage,   I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),         &data.PlayerRCE));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles, 3, spuOptionsText));
+    Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),        &data.HideMainMenu));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                  &data.ReadAHead));
 

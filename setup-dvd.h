@@ -35,7 +35,6 @@ class cDVDSetup {
 class cMenuSetupDVD : public cMenuSetupPage {
  private:
     cDVDSetup data;
-    const char *spuOptionsText[3];
  protected:
     virtual void Store(void);
  public:
