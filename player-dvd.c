@@ -1312,12 +1312,12 @@ void cDvdPlayer::DoScaleMode(int &vaspect)
     // nothing has to be done, if
     //		TV	16:9
     // 		DVD 	 4:3
-    if (!Setup.VideoFormat && dvd_aspect!=0 && IsInMenuDomain()) {
+    if (!Setup.VideoFormat && dvd_aspect != 0) {
     	//
 	// if we are here, then
 	//	TV==4:3 && DVD==16:9
 	//
-        if (vaspect != 2 || (vaspect==2 && dvd_aspect==3)) {
+        if (vaspect != 2) {
 	        //
 	        //and the actual material on the DVD is not 4:3
 	        //
@@ -1325,10 +1325,10 @@ void cDvdPlayer::DoScaleMode(int &vaspect)
 	        	vaspect = 0x03;
     	    else if (!(dvd_scaleperm & 2)) {    // pan& scan allowed ..
 	        	vaspect = 0x02;   // 4:3
-                if (vaspect==2 && dvd_aspect==3) // use letterbox (honor dvd_aspect)
-    	            vaspect = 0x03;   // 16:9
             }
         }
+        if (vaspect == 2 && dvd_aspect == 3) // use letterbox (honor dvd_aspect)
+            vaspect = 0x03;   // 16:9
     }
 }
 
