@@ -2316,7 +2316,6 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
 	    int channel, channel_active=0;
         uint16_t subpStreamLanguageCode = 0;
 	    channel = navSubpStream;
-	    buff2[0]=0;
 	    if(nav != NULL) {
             subpStreamLanguageCode = GetNavSubpStreamLangCode(channel);
 	    	channel_active = dvdnav_get_active_spu_stream(nav);
@@ -2421,7 +2420,7 @@ int cDvdPlayer::NextSubpStream()
     SetCurrentNavSubpStreamUsrLocked(true);
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
-        currentNavSubpStream, i, /(char *)&currentNavSubpStreamLangCode,
+        currentNavSubpStream, i, (char *)&currentNavSubpStreamLangCode,
 		currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
     return 0;
 }
