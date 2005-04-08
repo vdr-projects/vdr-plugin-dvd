@@ -1261,15 +1261,45 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
             DEBUG_NAV("DVD NAV SPU highlight evt: NULL\n");
     }
 
-    int buttonN;
-    dvdnav_highlight_area_t hl;
+    int buttonN = -1;
 
     dvdnav_get_current_highlight(nav, &buttonN);
 
     ClearButtonHighlight();
 
     if (SPUdecoder && current_pci && TakeOsd()) {
-	    if (dvdnav_get_highlight_area(current_pci, buttonN, 0, &hl) == DVDNAV_STATUS_OK) {
+        dvdnav_highlight_area_t hl;
+
+        //libdvdnav does not support button groups
+        //but letterbox and pan&scan need it for correct highlight information
+
+        bool libdvd_workaround = false;
+
+        if (current_pci->hli.hl_gi.btngr_ns) {
+            int btns_per_group = 36 / current_pci->hli.hl_gi.btngr_ns;
+            btni_t *button_ptr = NULL;
+            int modeMask = SPUdecoder->getScaleMode() << 1;
+
+            if (!button_ptr && current_pci->hli.hl_gi.btngr_ns >= 1 && (current_pci->hli.hl_gi.btngr1_dsp_ty & modeMask))
+                button_ptr = &current_pci->hli.btnit[0 * btns_per_group + buttonN - 1];
+            if (!button_ptr && current_pci->hli.hl_gi.btngr_ns >= 2 && (current_pci->hli.hl_gi.btngr2_dsp_ty & modeMask))
+                button_ptr = &current_pci->hli.btnit[1 * btns_per_group + buttonN - 1];
+            if (!button_ptr && current_pci->hli.hl_gi.btngr_ns >= 3 && (current_pci->hli.hl_gi.btngr3_dsp_ty & modeMask))
+                button_ptr = &current_pci->hli.btnit[2 * btns_per_group + buttonN - 1];
+
+            if (button_ptr && button_ptr->btn_coln != 0) {
+                int sx = button_ptr->x_start;
+                int ex = button_ptr->x_end;
+                if ((ex - sx + 1) & 0x03)
+                    ex += 4 - ((ex - sx + 1) & 0x03);
+
+                SPUdecoder->setHighlight(sx, button_ptr->y_start, ex, button_ptr->y_end, current_pci->hli.btn_colit.btn_coli[button_ptr->btn_coln-1][0]);
+                libdvd_workaround = true;
+            }
+        }
+
+
+        if (!libdvd_workaround && dvdnav_get_highlight_area(current_pci, buttonN, 0, &hl) == DVDNAV_STATUS_OK) {
             DEBUG_NAV("DVD NAV SPU highlight button: %d: %d/%d %d/%d (%dx%d)\n",
 		        buttonN, hl.sx, hl.sy, hl.ex, hl.ey, hl.ex-hl.sx+1, hl.ey-hl.sy+1);
 

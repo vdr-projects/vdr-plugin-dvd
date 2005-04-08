@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - fix highlight in letterbox and pan&scan mode (need patch vdr-1.3.23-dvbspu.c.diff)
     - fix highlight button when button == 0
     - change menu detection (test)
     - use DeviceClrAvailableTracks/DeviceSetCurrentAudioTrack from vdr 
