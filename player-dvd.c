@@ -1253,12 +1253,12 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
 {
     LOCK_THREAD;
 
-    if(hlevt) {
-            DEBUG_NAV("DVD NAV SPU highlight evt: %d: %d/%d %d/%d (%dx%d)\n",
-		        hlevt->buttonN, hlevt->sx, hlevt->sy, hlevt->ex, hlevt->ey,
-		        hlevt->ex-hlevt->sx+1, hlevt->ey-hlevt->sy+1);
+    if (hlevt) {
+        DEBUG_NAV("DVD NAV SPU highlight evt: %d: %d/%d %d/%d (%dx%d)\n",
+		    hlevt->buttonN, hlevt->sx, hlevt->sy, hlevt->ex, hlevt->ey,
+		    hlevt->ex-hlevt->sx+1, hlevt->ey-hlevt->sy+1);
     } else {
-            DEBUG_NAV("DVD NAV SPU highlight evt: NULL\n");
+        DEBUG_NAV("DVD NAV SPU highlight evt: NULL\n");
     }
 
     int buttonN = -1;
@@ -1278,7 +1278,7 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
         if (current_pci->hli.hl_gi.btngr_ns) {
             int btns_per_group = 36 / current_pci->hli.hl_gi.btngr_ns;
             btni_t *button_ptr = NULL;
-            int modeMask = SPUdecoder->getScaleMode() << 1;
+            int modeMask = 1 << SPUdecoder->getScaleMode();
 
             if (!button_ptr && current_pci->hli.hl_gi.btngr_ns >= 1 && (current_pci->hli.hl_gi.btngr1_dsp_ty & modeMask))
                 button_ptr = &current_pci->hli.btnit[0 * btns_per_group + buttonN - 1];
@@ -1340,13 +1340,13 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
 void cDvdPlayer::DoScaleMode(int &vaspect)
 {
     // nothing has to be done, if
-    //		TV	16:9
-    // 		DVD 	 4:3
+    // TV  16:9
+    // DVD 4:3
     if (!Setup.VideoFormat && dvd_aspect != 0) {
     	//
-	// if we are here, then
-	//	TV==4:3 && DVD==16:9
-	//
+	    // if we are here, then
+	    //	TV==4:3 && DVD==16:9
+	    //
         if (vaspect != 2) {
 	        //
 	        //and the actual material on the DVD is not 4:3
