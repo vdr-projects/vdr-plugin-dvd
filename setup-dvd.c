@@ -66,7 +66,7 @@ cMenuSetupDVD::cMenuSetupDVD(void)
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),         &data.HideMainMenu));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"),                   &data.ReadAHead));
-    Add(new cMenuEditIntItem( tr("Setup.DVD$Gain (analog)"),                        &data.Gain, -10, 10));
+    Add(new cMenuEditIntItem( tr("Setup.DVD$Gain (analog)"),               &data.Gain, 0, 10));
 }
 
 void cMenuSetupDVD::Store(void)
