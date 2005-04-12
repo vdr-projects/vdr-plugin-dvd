@@ -19,6 +19,7 @@
 //#define NAVDEBUG
 //#define SUBPDEBUG
 //#define IFRAMEDEBUG
+//#define IFRAMEDEBUG2
 
 #ifdef DVDDEBUG
 #define DEBUGDVD(format, args...) printf (format, ## args)
