@@ -1,13 +1,14 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-    - fix highlight in letterbox and pan&scan mode (need patch vdr-1.3.23-dvbspu.c.diff)
+    - fix error in picturetype detection to save still iframes
+    - fix highlight in letterbox and pan&scan mode (need patch vdr-1.3.23-dvbspu.c.diff works also on vdr-1.3.22)
     - fix highlight button when button == 0
     - change menu detection (test)
     - use DeviceClrAvailableTracks/DeviceSetCurrentAudioTrack from vdr 
     - only set possible subtitles
     - fix subtitlehandling in replay display
-    - fix aspectratio in pan and scan mode (need patch vdr-1.3.20_aspectratio.diff)
+    - fix aspectratio in pan and scan mode
     - fix stillpicture in menu
     - fix allways showed subtitles
     - fix audiotrackcount and audiolanguage in progress display
