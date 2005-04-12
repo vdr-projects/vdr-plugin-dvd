@@ -28,8 +28,6 @@
 bool cDvdPlayerControl::dvd_active = false;
 
 #define DVDDEBUG
-#undef  DEBUG
-#define DEBUG(format, args...) printf (format, ## args); fflush(NULL)
 
 #define DEBUG_KEY(format, args...)
 #define DEBUG_SHOW(format, args...)
@@ -144,33 +142,27 @@ void cDvdPlayerControl::Goto(int Seconds, bool Still)
 
 void cDvdPlayerControl::OsdClose()
 {
-    if(displayReplay) {
-	    delete displayReplay;
-	    displayReplay = NULL;
-    }
+    DELETENULL(displayReplay);
 }
 
 void cDvdPlayerControl::OsdOpen(void)
 {
-    if (visible)
-    {
-	DEBUG("DVD-Ctrl: OsdOpen: allready visible\n");
-	return;
+    if (visible) {
+        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: allready visible\n");
+	    return;
     }
 
-    if ( OsdTaken(this) )
-    {
+    if (OsdTaken(this)) {
         if(player) {
-		DEBUG("DVD-Ctrl: OsdOpen: AllreadyOpen -> HideSPU ... \n");
-		player->HideSPU();
-	}
+            DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> HideSPU ... \n");
+		    player->HideSPU();
+	    }
     }
-    if (!TakeOsd((void *)this))
-    {
-	DEBUG("DVD-Ctrl: OsdOpen: AllreadyOpen -> !visible, osdTaken=%d\n", OsdTaken(this));
+    if (!TakeOsd((void *)this)) {
+        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> !visible, osdTaken=%d\n", OsdTaken(this));
     	visible=false;
     } else {
-	DEBUG("DVD-Ctrl: OsdOpen: visible\n");
+        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: visible\n");
     	visible=true;
         displayReplay=Skins.Current()->DisplayReplay(modeOnly);
     }
@@ -598,13 +590,13 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
   DEBUG_KEY("cDvdPlayerControl::ProcessKey key: %d 0x%X, state=unknown\n", Key, Key);
 
   if (player && player->DVDRemoveable()) {
-     DEBUG("cDvdPlayerControl::ProcessKey DVDRemoveable -> Stop\n");
+     DEBUG_KEY("cDvdPlayerControl::ProcessKey DVDRemoveable -> Stop\n");
      Hide();
      DEBUG_KEY("DVD-Ctrl: ProcessKey END\n");
      return osEnd;
   }
   if (!Active()) {
-     DEBUG("cDvdPlayerControl::ProcessKey !Active -> Stop\n");
+     DEBUG_KEY("cDvdPlayerControl::ProcessKey !Active -> Stop\n");
      Hide();
      Stop();
      DEBUG_KEY("DVD-Ctrl: ProcessKey END\n");
@@ -715,15 +707,14 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 	                    state=osEnd;
                         break;
                     case k2: if(player) {
-                        if ( player->NextSubpStream()==-1)
-                            Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
+                                if (player->NextSubpStream() == -1)
+                                    Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
 
-                        if ( player->GetCurrentNavSubpStream()==-1 )
-                        {
-                            Hide();
-                            Show();
-                        }
-                    }
+                                if (player->GetCurrentNavSubpStream() == -1) {
+                                    Hide();
+                                    Show();
+                                }
+                             }
                     break;
                     case k3: if(player) player->NextAngle(); break;
 
