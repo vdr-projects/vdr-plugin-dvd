@@ -1471,6 +1471,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		                uchar foundFrameType = (uchar)(data[5] >> 3) & 0x07;
                         if (foundFrameType < I_FRAME || P_FRAME < foundFrameType) {
                             data++;
+                            datalen--;
                             continue;
                         }
                         havePictureHeader = true;
