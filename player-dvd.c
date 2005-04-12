@@ -1468,9 +1468,14 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	            if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
 	                int  ptype2 = cPStream::packetType(data);
 		            if (ptype2 == SC_PICTURE) {
-	                    havePictureHeader = true;
-		                VideoPts += 3600;
-		                lastFrameType = (uchar)(data[5] >> 3) & 0x07;
+		                uchar foundFrameType = (uchar)(data[5] >> 3) & 0x07;
+                        if (foundFrameType < I_FRAME || P_FRAME < foundFrameType) {
+                            data++;
+                            continue;
+                        }
+                        havePictureHeader = true;
+                        VideoPts += 3600;
+                        lastFrameType = foundFrameType;
 		                if (!currentFrameType)
 		                    currentFrameType = lastFrameType;
 		                //
@@ -1495,7 +1500,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 			            // a aspect
 			            // x any
 
-
 			            hsize    = (int) ( data[0] & 0xff ) << 4 ; // bits 04..11
 			            hsize   |= (int) ( data[1] & 0xf0 ) >> 4 ; // bits 00..03
 
@@ -1505,17 +1509,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 			            vaspect  = (int) ( data[3] & 0xf0 ) >> 4 ;
 
                         DoScaleMode(vaspect);
-
-/**
- * we won't change width/height yet ..
-			            data[0]  = (uchar) ( ( hsize & 0xff0 ) >> 4 );
-
-			            data[1]  = 0x00; // clear w/h nibble
-			            data[1] |= (uchar) ( ( hsize & 0x00f ) << 4 );
-
-			            data[1] |= (uchar) ( ( vsize & 0xf00 ) >> 8 );
-			            data[2]  = (uchar) ( ( vsize & 0x0ff )      );
- */
 
 			            data[3] &= 0x0f;
 			            data[3] |= (uchar) ( ( vaspect & 0x0f ) << 4);
@@ -1559,7 +1552,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	                currentFrameType = 0;
 	                lastFrameType = 0xff;
 		            do_copy=false;
-		        } else {
+                } else {
                     DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", r, iframeAssembler->Available());
                     iframeAssembler->Put(sector, r);
                     DEBUG_IFRAME2("%d (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%d,p:%llu)\n",
