@@ -1458,9 +1458,10 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             data += cPStream::PESHeaderLength(sector);
             //skip mandatory header bytes
             data += 3;
+            datalen -= 3;
 
 	        uint8_t currentFrameType = 0;
-	        bool do_copy =  (lastFrameType == I_FRAME) &&  !(data[0] == 0 && data[1] == 0 && data[2] == 1);
+	        bool do_copy = (lastFrameType == I_FRAME) &&  !(data[0] == 0 && data[1] == 0 && data[2] == 1);
 	        bool havePictureHeader = false;
 	        bool haveSequenceHeader = false;
 	        bool haveSliceBeforePicture = false;
@@ -1469,7 +1470,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	                int  ptype2 = cPStream::packetType(data);
 		            if (ptype2 == SC_PICTURE) {
 		                uchar foundFrameType = (uchar)(data[5] >> 3) & 0x07;
-                        if (foundFrameType < I_FRAME || P_FRAME < foundFrameType) {
+                        if (foundFrameType < I_FRAME || B_FRAME < foundFrameType) {
                             data++;
                             datalen--;
                             continue;
@@ -1543,8 +1544,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 datalen--;
 	        }
 
-            if ( stillFrame && (currentFrameType <= I_FRAME || do_copy)) {
-	            if ( haveSliceBeforePicture ) {
+            if (stillFrame && (currentFrameType <= I_FRAME || do_copy)) {
+	            if (haveSliceBeforePicture) {
                     DEBUG_IFRAME2("I-Frame: clr  (%d,%d,c:%d,p:%d,s:%d,x:%d,v:%u,p:%llu) !\n",
 		    	        currentFrameType, lastFrameType,
 		    	        (int)do_copy, (int)havePictureHeader, (int)haveSequenceHeader,
@@ -1552,7 +1553,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		    	        cntVidBlocksPlayed, pictureNumber);
 	                currentFrameType = 0;
 	                lastFrameType = 0xff;
-		            do_copy=false;
+		            do_copy = false;
                 } else {
                     DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", r, iframeAssembler->Available());
                     iframeAssembler->Put(sector, r);
