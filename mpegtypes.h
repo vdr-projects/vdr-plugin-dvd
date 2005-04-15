@@ -36,8 +36,8 @@
 #define PICTURE_DISPLAY_EXTENSION    0x07
 
 #define I_FRAME 0x01
-#define B_FRAME 0x02
-#define P_FRAME 0x03
+#define P_FRAME 0x02
+#define B_FRAME 0x03
 
 #define aAC3   0x80
 #define aDTS   0x88
@@ -63,7 +63,7 @@
 #define PES_CRC_FLAG     0x02
 #define PES_EXT_FLAG     0x01
 
-//pts_dts flags 
+//pts_dts flags
 #define PTS_ONLY         0x80
 #define PTS_DTS          0xC0
 
