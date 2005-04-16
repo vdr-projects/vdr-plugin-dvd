@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2001.2002 Andreas Schultz <aschultz@warp10.net>
  *
- * This code is distributed under the terms and conditions of the 
+ * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  *
  */
@@ -22,7 +22,7 @@
 #include "setup-dvd.h"
 #include "i18n.h"
 
-static const char *VERSION        = "0.3.6-b02";
+static const char *VERSION        = "0.3.6-b03";
 static const char *DESCRIPTION    = "Plugin.DVD$turn VDR into an (almost) full featured DVD player";
 static const char *MAINMENUENTRY  = "Plugin.DVD$DVD";
 
@@ -44,7 +44,7 @@ public:
   virtual bool Initialize(void);
   virtual bool Start(void);
   virtual void Housekeeping(void);
-  virtual const char *MainMenuEntry(void) { 
+  virtual const char *MainMenuEntry(void) {
 		return DVDSetup.HideMainMenu ? NULL : tr(MAINMENUENTRY);
 	}
   virtual cOsdMenu *MainMenuAction(void);

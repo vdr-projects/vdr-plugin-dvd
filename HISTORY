@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2005-04-16 Version 0.3.6-b03
     - add finnish translation (thanks to Ville Skyttä)
     - fix error in picturetype detection to save still iframes
     - fix highlight in letterbox and pan&scan mode (need patch vdr-1.3.23-dvbspu.c.diff works also on vdr-1.3.22)
