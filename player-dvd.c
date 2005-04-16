@@ -1458,7 +1458,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             data += cPStream::PESHeaderLength(sector);
             //skip mandatory header bytes
             data += 3;
-            datalen -= 3;
 
 	        uint8_t currentFrameType = 0;
 	        bool do_copy = (lastFrameType == I_FRAME) &&  !(data[0] == 0 && data[1] == 0 && data[2] == 1);
