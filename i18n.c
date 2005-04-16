@@ -246,7 +246,7 @@ const tI18nPhrase DvdPhrases[] = {
      "Gain (analog)",                                       // Português
      "Gain (analog)",                                       // Français
      "Gain (analog)",                                       // Norsk
-     "Gain (analog)",                                       // suomi
+     "Äänen vahvistus (analoginen)",                        // suomi
      "Gain (analog)",                                       // Polski
      "Gain (analog)",                                       // Español
      "Gain (analog)",                                       // ÅëëçíéêÜ (Greek)
