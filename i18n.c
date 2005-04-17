@@ -195,7 +195,7 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
      "Setup.DVD$Hide Mainmenu Entry",
-        "Hauptmenüeintrag verstecken"                       // Deutsch
+        "Hauptmenüeintrag verstecken",                      // Deutsch
         "",                                                 // Slovenski
         "Nascondi voce menù",                               // Italiano
         "",                                                 // Nederlands
