@@ -267,7 +267,7 @@ struct LPCMHeader { int id:8;              // id
                     };
  *
  */
-    blk_ptr[0] = aLPCM + SubStreamId; // substream ID
+    blk_ptr[0] = aLPCM | SubStreamId; // substream ID
     // other stuff (see DVB specs), may be ignored by driver
     // but try to set it up correctly ..
     blk_ptr[1] = 0x07;  // number of frames

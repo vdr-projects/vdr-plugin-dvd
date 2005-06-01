@@ -1664,15 +1664,13 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
 	        if(audioType == aAC3 || audioType == aDTS || audioType == aLPCM) {
                 int audioId = audioVal & AC3AudioTrackMask;
-                if (!Setup.UseDolbyDigital && audioType == aAC3)
-                   audioVal |= aLPCM;
 		        ptype = 'A';
 
                 int audioTrackIndex = notifySeenAudioTrack(audioId);
                 int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
 
 				if (!Setup.UseDolbyDigital && audioType == aAC3)
-                	DeviceSetAvailableTrack(ttAudio, audioId, aLPCM + audioId, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
+                	DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
                 else
                 	DeviceSetAvailableTrack(ttDolby, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
 				(void)audioTrackIndex;
@@ -2579,12 +2577,12 @@ int cDvdPlayer::GetNavAudioTrackNumber (void) const
 
 void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 {
-    if(!DVDActiveAndRunning())
+    if(!DVDActiveAndRunning() || !TrackId)
         return;
 
     LOCK_THREAD;
 
-    int id = IS_AUDIO_TRACK(Type) ? (Type - ttAudio) : (Type - ttDolby);
+    int id = TrackId->id & (IS_DOLBY_TRACK(Type) ? AC3AudioTrackMask : AudioTrackMask);
 
     DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: dd=%d, index=%d, id=0x%2X\n", IS_DOLBY_TRACK(Type), Type, id);
 
