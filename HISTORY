@@ -1,6 +1,10 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - add workaround for lcdproc-crashing (thanks to Joachim Wilke)
+    - change SetVideoDisplayFormat to DeviceSetVideoDisplayFormat
+    - fix error in i18.c (thanks to Ville Skyttä)
+
 2005-04-16 Version 0.3.6-b03
     - add finnish translation (thanks to Ville Skyttä)
     - fix error in picturetype detection to save still iframes

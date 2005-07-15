@@ -1101,9 +1101,9 @@ void cDvdPlayer::Action(void) {
 	      DEBUG_NAV("%s:%d:NAV VTS CHANGE -> Empty, setAll-spu&audio \n", __FILE__, __LINE__);
 	      Empty(true);
 	      UpdateBlockInfo(); // TEST
-              UpdateVTSInfo(); // TEST
+          UpdateVTSInfo(); // TEST
 	      setAllSubpStreams();
-              setAllAudioTracks();
+          setAllAudioTracks();
 	      SetTitleInfoString();
 	      SetTitleString();
 	      SetAspectString();
@@ -1116,7 +1116,7 @@ void cDvdPlayer::Action(void) {
 	       */
               memcpy(&lastCellEventInfo, cache_ptr, sizeof(dvdnav_cell_change_event_t));
 	      UpdateBlockInfo(); // TEST
-              UpdateVTSInfo(); // TEST
+          UpdateVTSInfo(); // TEST
 	      BlocksToPGCTicks( 1, pgcTicksPerBlock, pgcTotalTicks);
 #ifdef CTRLDEBUG
 	      printCellInfo(lastCellEventInfo, pgcTicksPerBlock, pgcTotalTicks);
@@ -1126,7 +1126,7 @@ void cDvdPlayer::Action(void) {
 	      stillFrame = (dvdnav_get_next_still_flag(nav) != 0) ? CELL_STILL : 0;
 	      // cell change .. game over ..
 	      changeNavSubpStreamOnceInSameCell=false;
-    	      SetTitleInfoString();
+    	  SetTitleInfoString();
 	      break;
 	  }
 	  case DVDNAV_NAV_PACKET: {
@@ -1154,8 +1154,7 @@ void cDvdPlayer::Action(void) {
 	      DEBUG_NAV("%s:%d:NAV STOP\n", __FILE__, __LINE__);
 	      running = false;
 	      break;
-	  case DVDNAV_HIGHLIGHT:
-	  {
+	  case DVDNAV_HIGHLIGHT: {
 	      DEBUG_NAV("%s:%d:NAV HIGHLIGHT\n", __FILE__, __LINE__);
 	      dvdnav_highlight_event_t *hlevt = (dvdnav_highlight_event_t *)cache_ptr;
 	      UpdateButtonHighlight(hlevt);
@@ -1164,36 +1163,31 @@ void cDvdPlayer::Action(void) {
 	  case DVDNAV_SPU_CLUT_CHANGE:
 	      DEBUG_NAV("%s:%d:NAV SPU CLUT CHANGE SPUdecoder=%d\n",
 			__FILE__, __LINE__, SPUdecoder!=NULL);
-	      if (SPUdecoder)
-	      {
-	  	  ClearButtonHighlight();
-		  SPUdecoder->setPalette((uint32_t *)cache_ptr);
+	      if (SPUdecoder) {
+	  	    ClearButtonHighlight();
+		    SPUdecoder->setPalette((uint32_t *)cache_ptr);
 	      }
 	      break;
 	  case DVDNAV_HOP_CHANNEL:
 	      DEBUG_NAV("%s:%d:NAV HOP CHANNEL -> Empty\n", __FILE__, __LINE__);
               //Empty reset backward play!!!
-              if ( !trickMode )
-	      {
+          if ( !trickMode ) {
               //if (playDir != pdBackward)
 	            Empty(true);
 	      }
 	      UpdateBlockInfo(); // TEST
-              UpdateVTSInfo(); // TEST
+          UpdateVTSInfo(); // TEST
 	      break;
 	  default:
 	      DEBUG_NAV("%s:%d:NAV ???\n", __FILE__, __LINE__);
 	      break;
       }
 #ifdef DVDDEBUG
-      if ((event != DVDNAV_BLOCK_OK) &&
-	  (event != DVDNAV_NAV_PACKET) &&
-	  (event != DVDNAV_STILL_FRAME))
-	  DEBUGDVD("got event (%d)%s, len %d\n",
-		   event, dvd_ev[event], len);
+      if ((event != DVDNAV_BLOCK_OK) && (event != DVDNAV_NAV_PACKET) && (event != DVDNAV_STILL_FRAME))
+	      DEBUGDVD("got event (%d)%s, len %d\n", event, dvd_ev[event], len);
 #endif
       if (cache_ptr != 0 && cache_ptr != event_buf)
-	  dvdnav_free_cache_block(nav, cache_ptr);
+	      dvdnav_free_cache_block(nav, cache_ptr);
   }
 
   DEBUG_NAV("%s:%d: empty\n", __FILE__, __LINE__);
@@ -2040,6 +2034,11 @@ bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
     CurrentFrame = (int) (( CurrentTicks / 90000L ) * FRAMESPERSEC) ;
     TotalFrame   = (int) (( TotalTicks   / 90000L ) * FRAMESPERSEC) ;
 
+    //workaround for lcdproc-crashing
+    if (CurrentFrame == TotalFrame) {
+        CurrentFrame=0;
+        TotalFrame=1;
+    }
     return true;
 }
 
@@ -2076,7 +2075,7 @@ void cDvdPlayer::UpdateVTSInfo()
            videoDisplayformat = vdfLetterBox;
         else if (!(dvd_scaleperm & 2))
            videoDisplayformat = vdfPanAndScan;
-        cDevice::cDevice::PrimaryDevice()->SetVideoDisplayFormat(videoDisplayformat);
+        DeviceSetVideoDisplayFormat(videoDisplayformat);
     }
 }
 
