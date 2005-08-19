@@ -312,7 +312,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
 
     titleinfo_str=0;
     title_str=0;
-    aspect_str=0;
+    aspect_str = NULL;
     SetTitleInfoString();
     SetTitleString();
     SetAspectString();
@@ -326,9 +326,14 @@ cDvdPlayer::~cDvdPlayer()
     delete []event_buf;
     delete iframeAssembler;
     delete ringBuffer;
-    if(titleinfo_str) { free(titleinfo_str); titleinfo_str=0; }
-    if(title_str) { free(title_str); title_str=0; }
-    if(aspect_str) { free(aspect_str); aspect_str=0; }
+    if(titleinfo_str)
+		free(titleinfo_str);
+
+    if(title_str)
+		free(title_str);
+
+    if(aspect_str)
+		free(aspect_str);
 }
 
 void cDvdPlayer::setController (cDvdPlayerControl *ctrl )
@@ -2618,15 +2623,18 @@ char * cDvdPlayer::GetTitleString() const
 void cDvdPlayer::SetTitleString()
 {
 	static const char * title_holder = NULL;
-    dvdnav_status_t res;
 
-	if(title_str) { free(title_str); title_str=0; }
+	if (title_str) {
+		free(title_str);
+		title_str = NULL;
+	}
 
-        if(!DVDActiveAndRunning()) { title_str=strdup(dummy_title); return; }
+    if(!DVDActiveAndRunning()) {
+		title_str = strdup(dummy_title);
+		return;
+	}
 
-	res=dvdnav_get_title_string(nav, &title_holder);
-        if(res==DVDNAV_STATUS_OK)
-	{
+	if (dvdnav_get_title_string(nav, &title_holder) == DVDNAV_STATUS_OK) {
         	title_str = strdup(title_holder);
 	} else {
 		title_str = strdup(dummy_title);
@@ -2643,7 +2651,10 @@ void cDvdPlayer::SetTitleInfoString()
 	int titleNumber=-1, titleNo=-1, chapterNumber=-1, chapterNo=-1;
 	int num_angle = -1, cur_angle = -1;
 
-	if(titleinfo_str) { free(titleinfo_str); titleinfo_str=0; }
+	if (titleinfo_str) {
+		free(titleinfo_str);
+		titleinfo_str = NULL;
+	}
 
         if(!DVDActiveAndRunning()) { titleinfo_str=strdup(dummy_title); return; }
 
@@ -2651,7 +2662,7 @@ void cDvdPlayer::SetTitleInfoString()
   	dvdnav_current_title_info(nav, &titleNo, &chapterNo);
         dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber);
 
-  	if(titleNo >= 1) {
+  	if (titleNo >= 1) {
     		/* no menu here */
     		/* Reflect angle info if appropriate */
     		dvdnav_get_angle_info(nav, &cur_angle, &num_angle);
@@ -2706,26 +2717,33 @@ void cDvdPlayer::GetAudioLangCode(const char ** audiolang_str) const
 	*audiolang_str = buffer;
 }
 
-char * cDvdPlayer::GetAspectString() const
+char *cDvdPlayer::GetAspectString() const
 {
 	return strdup(aspect_str);
 }
 
 void cDvdPlayer::SetAspectString()
 {
-	int aspect;
+	if (aspect_str) {
+		free(aspect_str);
+		aspect_str = NULL;
+	}
 
-	if(titleinfo_str) { free(aspect_str); aspect_str=0; }
+    if (!DVDActiveAndRunning()) {
+		aspect_str = strdup(dummy_n_a);
+		return;
+	}
 
-        if(!DVDActiveAndRunning()) { aspect_str=strdup(dummy_n_a); return; }
-
-	aspect=dvdnav_get_video_aspect(nav);
+	int aspect = dvdnav_get_video_aspect(nav);
 
 	switch(aspect) {
-		case 0: asprintf(&aspect_str, " 4:3"); break;
-		case 2: asprintf(&aspect_str, "16:9_"); break;
-		case 3: asprintf(&aspect_str, "16:9"); break;
-		default: aspect_str=strdup(dummy_n_a);
+		case 0: asprintf(&aspect_str, " 4:3");
+		        break;
+		case 2: asprintf(&aspect_str, "16:9_");
+		        break;
+		case 3: asprintf(&aspect_str, "16:9");
+		        break;
+		default: aspect_str = strdup(dummy_n_a);
 	}
 }
 
@@ -2782,4 +2800,3 @@ int cDvdPlayer::callAudioMenu(void)
     SetCurrentNavAudioTrackUsrLocked(false);
     return dvdnav_menu_call(nav, DVD_MENU_Audio);
 }
-
