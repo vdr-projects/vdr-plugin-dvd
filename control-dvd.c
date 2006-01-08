@@ -54,13 +54,21 @@ cDvdPlayerControl::cDvdPlayerControl(void):cControl(player = new cDvdPlayer()) {
 
     player->setController(this);
 
+#if VDRVERSNUM >= 10337
+    cStatus::MsgReplaying(this, "DVD", NULL, true);
+#else
     cStatus::MsgReplaying(this, "DVD");
+#endif
 }
 
 cDvdPlayerControl::~cDvdPlayerControl()
 {
     Hide();
+#if VDRVERSNUM >= 10337
+    cStatus::MsgReplaying(this, NULL, NULL, false);
+#else
     cStatus::MsgReplaying(this, NULL);
+#endif
     Stop();
     assert(dvd_active == true);
     dvd_active = false;
@@ -206,30 +214,29 @@ void cDvdPlayerControl::HideOwnOsd(void)
 
 bool cDvdPlayerControl::TakeOsd(void * owner)
 {
-  if(owner==(void *)-1 || !OsdTaken(owner))
-  {
-      DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
-	  osdTaker=owner; // not taken by other: new owner
-	  return true;
-  } else {
-          DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken!\n", owner);
-  }
-  return false;
+    if(owner == (void *)-1 || !OsdTaken(owner)) {
+        DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
+	    osdTaker=owner; // not taken by other: new owner
+	    return true;
+    } else {
+        DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken!\n", owner);
+    }
+    return false;
 }
 
 bool cDvdPlayerControl::OsdTaken(void *me)
 {
-  if(osdTaker && !cOsd::IsOpen()) {
+    if (osdTaker && !cOsd::IsOpen()) {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) !IsOpen->taker:=NULL\n", me);
-  	osdTaker=NULL; // update info ..
-  }
-  DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) != %p := %d \n", me, osdTaker, osdTaker!=me);
-  return osdTaker!=NULL && osdTaker!=me;
+  	    osdTaker = NULL; // update info ..
+    }
+    DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) != %p := %d \n", me, osdTaker, osdTaker!=me);
+    return osdTaker != NULL && osdTaker != me;
 }
 
 bool cDvdPlayerControl::OsdVisible(void *me)
 {
-  return visible || OsdTaken(me) ;
+    return visible || OsdTaken(me) ;
 }
 
 void cDvdPlayerControl::ShowMode(void)
@@ -310,7 +317,11 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
             lastCurrent = lastTotal = -1;
             last_title_buffer[0]=0;
             displayReplay->SetTitle("unknown title");
+#if VDRVERSNUM >= 10337
+            cStatus::MsgReplaying(this, "unknown title", NULL, true);
+#else
             cStatus::MsgReplaying(this, "unknown title");
+#endif
         }
 
         if (player) {
@@ -318,7 +329,11 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
             if ( strcmp(title_buffer,last_title_buffer) != 0 ) {
                 displayReplay->SetTitle(title_buffer);
                 if (!Initial) displayReplay->Flush();
+#if VDRVERSNUM >= 10337
+                cStatus::MsgReplaying(this, title_buffer, NULL, true);
+#else
                 cStatus::MsgReplaying(this, title_buffer);
+#endif
                 strcpy(last_title_buffer, title_buffer);
             }
         }
@@ -547,10 +562,8 @@ void cDvdPlayerControl::updateShow(bool force)
 {
     DEBUG_SHOW("DVD-Ctrl: updateShow: force=%d, visible=%d, modeOnly=%d\n",
         force, visible, modeOnly);
-    if (visible || force)
-    {
-        if (timeoutShow && time(NULL) > timeoutShow)
-        {
+    if (visible || force) {
+        if (timeoutShow && time(NULL) > timeoutShow) {
             Hide();
             ShowMode();
             timeoutShow = 0;
@@ -568,7 +581,11 @@ void cDvdPlayerControl::updateShow(bool force)
 	        title_buffer = GetDisplayHeaderLine();
             if ( strcmp(title_buffer,last_title_buffer) != 0 ) {
  	            strcpy(last_title_buffer, title_buffer);
- 	            cStatus::MsgReplaying(this, title_buffer);
+#if VDRVERSNUM >= 10337
+                cStatus::MsgReplaying(this, title_buffer, NULL, true);
+#else
+                cStatus::MsgReplaying(this, title_buffer);
+#endif
             }
         }
     }
@@ -577,6 +594,7 @@ void cDvdPlayerControl::updateShow(bool force)
 eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 {
   DEBUG_KEY("DVD-Ctrl: ProcessKey BEGIN\n");
+
   eOSState state = cOsdObject::ProcessKey(Key);
 
   if (state != osUnknown) {
@@ -602,6 +620,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
      DEBUG_KEY("DVD-Ctrl: ProcessKey END\n");
      return osEnd;
   }
+
   updateShow();
 
   bool DisplayedFrames = displayFrames;
@@ -624,7 +643,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 
   state = osContinue;
 
-  if ( ( player && player->IsInMenuDomain() ) || forceDvdNavigation ) {
+  if ((player && player->IsInMenuDomain()) || forceDvdNavigation) {
 
       switch (Key) {
           case kRed: forceDvdNavigation=false; break;
@@ -642,10 +661,10 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 	      DoShowMode = false;
 	      displayFrames = DisplayedFrames;
 	      if (DvdNavigation(Key)) {
-		  break;
+		      break;
 	      }
 	  default:
-              state = osUnknown;
+          state = osUnknown;
 	      break;
       }
   } else {
