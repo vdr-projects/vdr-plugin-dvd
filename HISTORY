@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - changes for vdr-1.3.38
     - fix memleak in SetAspectString
     - add workaround for lcdproc-crashing (thanks to Joachim Wilke)
     - change SetVideoDisplayFormat to DeviceSetVideoDisplayFormat
