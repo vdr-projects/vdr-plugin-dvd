@@ -36,6 +36,9 @@ const char *ISO639code[] = {
     "hr",
     "et",
     "da",
+#if VDRVERSNUM >= 10342
+    "cs",
+#endif
 };
 
 const tI18nPhrase DvdPhrases[] = {
@@ -56,10 +59,13 @@ const tI18nPhrase DvdPhrases[] = {
         "DVD",                                              // Romaneste
         "DVD",                                              // Magyar
         "DVD",                                              // Catalр
-        "DVD",                                              // Русский (Russian)
+        "Проигрыватель DVD",                                // Русский (Russian)
         "DVD",                                              // Hrvatski (Croatian)
         "DVD",                                              // Eesti
         "DVD",                                              // Dansk
+#if VDRVERSNUM >= 10342
+        "DVD",                                              // Czech
+#endif
     },
     {
     "Plugin.DVD$turn VDR into an (almost) full featured DVD player",    // English
@@ -78,10 +84,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                             // Romaneste
         "",                                                             // Magyar
         "",                                                             // Catalр
-        "",                                                             // Русский (Russian)
+        "Проигрыватель DVD",                                            // Русский (Russian)
         "",                                                             // Hrvatski (Croatian)
         "",                                                             // Eesti
         "",                                                             // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                             // Czech
+#endif
     },
     {
     "Setup.DVD$Preferred menu language",                    // English
@@ -100,10 +109,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Предпочитаемый язык меню",                         // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Setup.DVD$Preferred audio language",                   // English
@@ -122,10 +134,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Предпочитаемый язык аудио",                        // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Setup.DVD$Preferred subtitle language",                // English
@@ -144,10 +159,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Предпочитаемый язык субтитров",                    // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Setup.DVD$Player region code",                         // English
@@ -166,10 +184,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Код зоны",                                         // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Setup.DVD$Display subtitles",                          // English
@@ -188,10 +209,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Показывать субтитры",                              // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
      "Setup.DVD$Hide Mainmenu Entry",
@@ -214,6 +238,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
      "Setup.DVD$ReadAHead",
@@ -232,10 +259,13 @@ const tI18nPhrase DvdPhrases[] = {
         "ReadAHead",                                        // Romaneste
         "ReadAHead",                                        // Magyar
         "ReadAHead",                                        // Catalр
-        "ReadAHead",                                        // Русский (Russian)
+        "Упреждающее чтение",                               // Русский (Russian)
         "ReadAHead",                                        // Hrvatski (Croatian)
         "ReadAHead",                                        // Eesti
         "ReadAHead",                                        // Dansk
+#if VDRVERSNUM >= 10342
+        "ReadAHead",                                        // Czech
+#endif
     },
     {
      "Setup.DVD$Gain (analog)",
@@ -254,10 +284,13 @@ const tI18nPhrase DvdPhrases[] = {
      "Gain (analog)",                                       // Romaneste
      "Gain (analog)",                                       // Magyar
      "Gain (analog)",                                       // Catalр
-     "Gain (analog)",                                       // Русский (Russian)
+     "Усиление (аналог.)",                                  // Русский (Russian)
      "Gain (analog)",                                       // Hrvatski (Croatian)
      "Gain (analog)",                                       // Eesti
      "Gain (analog)",                                       // Dansk
+#if VDRVERSNUM >= 10342
+     "Gain (analog)",                                       // Czech
+#endif
     },
     {
     "Error.DVD$Error opening DVD!",                         // English
@@ -276,10 +309,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Ошибка открытия DVD!",                             // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Error.DVD$Error fetching data from DVD!",              // English
@@ -298,10 +334,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Ошибка чтения DVD!",                               // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Error.DVD$Current subp stream not seen!",              // English
@@ -320,10 +359,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Недоступен видеопоток текущего раздела!",          // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     {
     "Error.DVD$Current audio track not seen!",              // English
@@ -342,10 +384,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Romaneste
         "",                                                 // Magyar
         "",                                                 // Catalр
-        "",                                                 // Русский (Russian)
+        "Недоступен текущий аудиопоток!",                   // Русский (Russian)
         "",                                                 // Hrvatski (Croatian)
         "",                                                 // Eesti
         "",                                                 // Dansk
+#if VDRVERSNUM >= 10342
+        "",                                                 // Czech
+#endif
     },
     { NULL }
 };
