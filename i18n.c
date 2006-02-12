@@ -72,7 +72,7 @@ const tI18nPhrase DvdPhrases[] = {
         "verwandelt VDR in einen (fast) vollständigen DVD Spieler",     // Deutsch
         "",                                                             // Slovenski
         "",                                                             // Italiano
-        "",                                                             // Nederlands
+        "Verander VDR in een (bijna) complete DVD-speler",              // Nederlands
         "",                                                             // Português
         "",                                                             // Français
         "",                                                             // Norsk
@@ -222,7 +222,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Hauptmenüeintrag verstecken",                      // Deutsch
         "",                                                 // Slovenski
         "Nascondi voce menù",                               // Italiano
-        "",                                                 // Nederlands
+        "Verberg vermelding in het hoofdmenu",              // Nederlands
         "",                                                 // Português
         "",                                                 // Français
         "",                                                 // Norsk
@@ -247,7 +247,7 @@ const tI18nPhrase DvdPhrases[] = {
         "ReadAHead",                                        // Deutsch
         "ReadAHead",                                        // Slovenski
         "ReadAHead",                                        // Italiano
-        "ReadAHead",                                        // Nederlands
+        "Vooruit lezen",                                    // Nederlands
         "ReadAHead",                                        // Português
         "ReadAHead",                                        // Français
         "ReadAHead",                                        // Norsk
@@ -272,7 +272,7 @@ const tI18nPhrase DvdPhrases[] = {
      "Verstärkung (analog)",                                // Deutsch
      "Gain (analog)",                                       // Slovenski
      "Gain (analog)",                                       // Italiano
-     "Gain (analog)",                                       // Nederlands
+     "Versterking (analoog)",                               // Nederlands
      "Gain (analog)",                                       // Português
      "Gain (analog)",                                       // Français
      "Gain (analog)",                                       // Norsk
@@ -297,7 +297,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Fehler beim öffnen der DVD!",                      // Deutsch
         "",                                                 // Slovenski
         "",                                                 // Italiano
-        "",                                                 // Nederlands
+        "Fout bij het openen van de DVD!",                  // Nederlands
         "",                                                 // Português
         "",                                                 // Français
         "",                                                 // Norsk
@@ -322,7 +322,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Fehler beim lesen von der DVD!",                   // Deutsch
         "",                                                 // Slovenski
         "",                                                 // Italiano
-        "",                                                 // Nederlands
+        "Error bij het verkrijgen van data van de DVD!",    // Nederlands
         "",                                                 // Português
         "",                                                 // Français
         "",                                                 // Norsk
@@ -347,7 +347,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Der ausgewählte Untertitel ist nicht vorhanden!",  // Deutsch
         "",                                                 // Slovenski
         "",                                                 // Italiano
-        "",                                                 // Nederlands
+        "De gekozen ondertiteling is niet beschikbaar!",    // Nederlands
         "",                                                 // Português
         "",                                                 // Français
         "",                                                 // Norsk
@@ -372,7 +372,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Die ausgewählte Audiospur ist nicht vorhanden!",   // Deutsch
         "",                                                 // Slovenski
         "",                                                 // Italiano
-        "",                                                 // Nederlands
+        "Het gekozen audiospoort is niet beschikbaar",      // Nederlands
         "",                                                 // Português
         "",                                                 // Français
         "",                                                 // Norsk
