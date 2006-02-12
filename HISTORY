@@ -1,6 +1,8 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - updated Spanish OSD texts (thanks to Jesus Bravo Alvarez)
+    - add Danish translation (thanks to Mogens Elneff)
     - add polish translation (thanks to Jaroslaw Swierczynski)
     - changes for vdr-1.3.42
     - add russian language (thanks to Vyacheslav Dikonov)
