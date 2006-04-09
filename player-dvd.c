@@ -632,15 +632,15 @@ void cDvdPlayer::Action(void) {
 //    IframeCnt = -1; // mark that we have to reset the device, before 1st PlayVideo ..
 
     running = true;
-    eFrameType frameType=ftUnknown;
+    eFrameType frameType = ftUnknown;
 
     bool firstClear = true;
 
-    while( running && nav ) {
+    while(running && nav) {
 
         if (!pframe) {
-            pframe=ringBuffer->Get();
-            if ( pframe ) {
+            pframe = ringBuffer->Get();
+            if (pframe) {
                 write_blk=pframe->Data();
                 blk_size=pframe->Count();
                 frameType=pframe->Type();
@@ -668,10 +668,10 @@ void cDvdPlayer::Action(void) {
         }
  */
 /**
-      DEBUG_CONTROL("dvd: menu=%d, v:%u, a:%u, p:%d, stc:%8ums, blk_size=%3d, skipPlayV=%d, IframeCnt=%d, stillTimer=%8ums\n",
-        IsInMenuDomain(), cntVidBlocksPlayed, cntAudBlocksPlayed, playedPacket,
-		(unsigned int)(stcPTS/90U),
-		blk_size, skipPlayVideo, IframeCnt, stillTimer/90U);
+        DEBUG_CONTROL("dvd: menu=%d, v:%u, a:%u, p:%d, stc:%8ums, blk_size=%3d, skipPlayV=%d, IframeCnt=%d, stillTimer=%8ums\n",
+            IsInMenuDomain(), cntVidBlocksPlayed, cntAudBlocksPlayed, playedPacket,
+		    (unsigned int)(stcPTS/90U),
+		    blk_size, skipPlayVideo, IframeCnt, stillTimer/90U);
  */
 
         sleept_done = 0;
@@ -689,7 +689,7 @@ void cDvdPlayer::Action(void) {
         }
         sleept = 0;
         if (playMode == pmPause || playMode == pmStill) {
-	        sleept = 10*90U;  // 10ms*90t/ms
+            cCondWait::SleepMs(10);
 	        continue;
         }
 
@@ -715,11 +715,11 @@ void cDvdPlayer::Action(void) {
         if (pframe) {
             int res = blk_size;
             if( !skipPlayVideo ) {
-                if (firstClear && (frameType==ftDolby || frameType==ftAudio) && IframeCnt==0) {
+                if (firstClear && (frameType == ftDolby || frameType == ftAudio) && IframeCnt == 0) {
                     DeviceReset();
-                    firstClear=false;
+                    firstClear = false;
                 }
-                if ( IframeCnt < 0 && frameType==ftVideo ) {
+                if (IframeCnt < 0 && frameType == ftVideo) {
                     // we played an IFrame with DeviceStillPicture, or else -> reset !
                     DEBUG_CONTROL("clearing device because of IframeCnt < 0 && VideoFrame\n");
                     IframeCnt = 0;
@@ -1668,10 +1668,10 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 int audioTrackIndex = notifySeenAudioTrack(audioId);
                 int audioLanguageCode = GetNavAudioTrackLangCode(audioId);
 
-				if (!Setup.UseDolbyDigital && audioType == aAC3)
-                	DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
+                if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
+                	DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageCode != 0xFFFF ? (char *)&audioLanguageCode : NULL);
                 else
-                	DeviceSetAvailableTrack(ttDolby, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
+                	DeviceSetAvailableTrack(ttDolby, audioId, audioVal, audioLanguageCode != 0xFFFF ? (char *)&audioLanguageCode : NULL);
 				(void)audioTrackIndex;
 
 		        if (ptsFlag) {
