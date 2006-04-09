@@ -1,6 +1,9 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - fix pcm audiotrackhandling in audiomenu
+    - add Slovenian translation (thanks to Matjaz Thaler)
+    - add Greek translation (thanks to Dimitrios Dimitrakos)
     - add Czech translation (thanks to Vladimír Bárta)
     - add Estonian translation (thanks to Arthur Konovalov)
     - updated the Dutch OSD texts (thanks to Maarten Wisse).
