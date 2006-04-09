@@ -70,7 +70,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Plugin.DVD$turn VDR into an (almost) full featured DVD player",    // English
         "verwandelt VDR in einen (fast) vollständigen DVD Spieler",     // Deutsch
-        "",                                                             // Slovenski
+        "spremeni VDR v (skoraj) popolen DVD predvajalnik",             // Slovenski
         "",                                                             // Italiano
         "Verander VDR in een (bijna) complete DVD-speler",              // Nederlands
         "",                                                             // Português
@@ -79,7 +79,7 @@ const tI18nPhrase DvdPhrases[] = {
         "DVD-soitin",                                                   // suomi
         "Zmienia VDR w odtwarzacz DVD",                                 // Polski
         "Convierte VDR en un reproductor DVD (casi) completo",          // Español
-        "",                                                             // ÅëëçíéêÜ (Greek)
+        "Metatropi tou VDR se ena (sxedon) olokliromeno DVD",           // ÅëëçíéêÜ (Greek)
         "",                                                             // Svenska
         "",                                                             // Romaneste
         "",                                                             // Magyar
@@ -95,7 +95,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Setup.DVD$Preferred menu language",                    // English
         "Bevorzugte Spache für Menüs",                      // Deutsch
-        "",                                                 // Slovenski
+        "Prednostni jezik za menije",                       // Slovenski
         "menu - linguaggio preferito",                      // Italiano
         "Taalkeuze voor menu",                              // Nederlands
         "",                                                 // Português
@@ -104,7 +104,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Haluttu valikkokieli",                             // suomi
         "Preferowany jêzyk menu",                           // Polski
         "Idioma preferido para los menús",                  // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Protinomeni glossa gia menou",                     // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -120,7 +120,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Setup.DVD$Preferred audio language",                   // English
         "Bevorzugte Sprache für Dialog",                    // Deutsch
-        "",                                                 // Slovenski
+        "Prednostni jezik za zvok",                         // Slovenski
         "audio - linguaggio preferito",                     // Italiano
         "Taalkeuze voor geluid",                            // Nederlands
         "",                                                 // Português
@@ -129,7 +129,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Haluttu ääniraita",                                // suomi
         "Preferowany jêzyk d¼wiêku",                        // Polski
         "Idioma preferido para el sonido",                  // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Protinomeni glossa gia ton dialogo",               // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -145,7 +145,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Setup.DVD$Preferred subtitle language",                // English
         "Bevorzugte Spache für Untertitel",                 // Deutsch
-        "",                                                 // Slovenski
+        "Prednostni jezik za podnapise",                    // Slovenski
         "sottotitoli - linguaggio preferito",               // Italiano
         "Taalkeuze voor ondertitels",                       // Nederlands
         "",                                                 // Português
@@ -154,7 +154,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Haluttu tekstityskieli",                           // suomi
         "Preferowany jêzyk napisów",                        // Polski
         "Idioma preferido para los subtítulos",             // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Protinomeni glossa ipotitlon",                     // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -170,7 +170,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Setup.DVD$Player region code",                         // English
         "Regionalkode für DVD Spieler",                     // Deutsch
-        "",                                                 // Slovenski
+        "Regionalna koda za predvajalnik",                  // Slovenski
         "region code del DVD player",                       // Italiano
         "Regiocode van Speler",                             // Nederlands
         "",                                                 // Português
@@ -179,7 +179,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Soittimen aluekoodi",                              // suomi
         "Kod regionu odtwarzacza",                          // Polski
         "Código de zona del lector",                        // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Kodikos Zonis DVD",                                // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -195,7 +195,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Setup.DVD$Display subtitles",                          // English
         "Untertitel anzeigen",                              // Deutsch
-        "",                                                 // Slovenski
+        "Prika¾i podnapise",                                // Slovenski
         "Visualizza sottotitoli",                           // Italiano
         "Toon ondertitels",                                 // Nederlands
         "",                                                 // Português
@@ -204,7 +204,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Näytä tekstitys",                                  // suomi
         "Wy¶wietlaj napisy",                                // Polski
         "Mostrar subtítulos",                               // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Endiksi ipotitlon",                                // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -220,7 +220,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
      "Setup.DVD$Hide Mainmenu Entry",
         "Hauptmenüeintrag verstecken",                      // Deutsch
-        "",                                                 // Slovenski
+        "Skrij galvni meni",                                // Slovenski
         "Nascondi voce menù",                               // Italiano
         "Verberg vermelding in het hoofdmenu",              // Nederlands
         "",                                                 // Português
@@ -229,7 +229,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Piilota valinta päävalikosta",                     // suomi
         "Ukryj pozycjê w g³ównym menu",                     // Polski
         "Ocultar entrada en el menú principal",             // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Apokripsi sto vasiko menou",                       // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -245,7 +245,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
      "Setup.DVD$ReadAHead",
         "ReadAHead",                                        // Deutsch
-        "ReadAHead",                                        // Slovenski
+        "Beri vnaprej",                                       // Slovenski
         "ReadAHead",                                        // Italiano
         "Vooruit lezen",                                    // Nederlands
         "ReadAHead",                                        // Português
@@ -270,7 +270,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
      "Setup.DVD$Gain (analog)",
      "Verstärkung (analog)",                                // Deutsch
-     "Gain (analog)",                                       // Slovenski
+     "Ojaèanje (analogno)",                                 // Slovenski
      "Gain (analog)",                                       // Italiano
      "Versterking (analoog)",                               // Nederlands
      "Gain (analog)",                                       // Português
@@ -279,7 +279,7 @@ const tI18nPhrase DvdPhrases[] = {
      "Äänen vahvistus (analoginen)",                        // suomi
      "Zysk (analogowo)",                                    // Polski
      "Ganancia (analógico)",                                // Español
-     "Gain (analog)",                                       // ÅëëçíéêÜ (Greek)
+     "Gain (analogika)",                                    // ÅëëçíéêÜ (Greek)
      "Gain (analog)",                                       // Svenska
      "Gain (analog)",                                       // Romaneste
      "Gain (analog)",                                       // Magyar
@@ -295,7 +295,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Error.DVD$Error opening DVD!",                         // English
         "Fehler beim öffnen der DVD!",                      // Deutsch
-        "",                                                 // Slovenski
+        "Napaka pri odpiranju DVD-ja!",                     // Slovenski
         "",                                                 // Italiano
         "Fout bij het openen van de DVD!",                  // Nederlands
         "",                                                 // Português
@@ -304,7 +304,7 @@ const tI18nPhrase DvdPhrases[] = {
         "DVD:n avaaminen epäonnistui!",                     // suomi
         "B³±d otwierania DVD!",                             // Polski
         "¡Error abriendo el DVD!",                          // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Lathos sto anigma tou DVD",                        // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -320,7 +320,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Error.DVD$Error fetching data from DVD!",              // English
         "Fehler beim lesen von der DVD!",                   // Deutsch
-        "",                                                 // Slovenski
+        "Napaka pri branju podatkov iz DVD-ja!",            // Slovenski
         "",                                                 // Italiano
         "Error bij het verkrijgen van data van de DVD!",    // Nederlands
         "",                                                 // Português
@@ -329,7 +329,7 @@ const tI18nPhrase DvdPhrases[] = {
         "DVD:n lukeminen epäonnistui",                      // suomi
         "B³±d pobierania danych z DVD!",                    // Polski
         "¡Error obteniendo datos del DVD!",                 // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "Lathos sto diavasma tou DVD",                      // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -345,7 +345,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Error.DVD$Current subp stream not seen!",              // English
         "Der ausgewählte Untertitel ist nicht vorhanden!",  // Deutsch
-        "",                                                 // Slovenski
+        "Izbrani podnapisi niso prisotni!",                 // Slovenski
         "",                                                 // Italiano
         "De gekozen ondertiteling is niet beschikbaar!",    // Nederlands
         "",                                                 // Português
@@ -354,7 +354,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Tekstitysraitaa ei havaita!",                      // suomi
         "Wybrane napisy nie istniej±!",                     // Polski
         "¡Subtítulos actuales no encontrados!",             // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "O epilegmenos ipotitlos den iparxi",               // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
@@ -370,7 +370,7 @@ const tI18nPhrase DvdPhrases[] = {
     {
     "Error.DVD$Current audio track not seen!",              // English
         "Die ausgewählte Audiospur ist nicht vorhanden!",   // Deutsch
-        "",                                                 // Slovenski
+        "Izbrani zvoèni zapis ni prisoten!",                // Slovenski
         "",                                                 // Italiano
         "Het gekozen audiospoort is niet beschikbaar",      // Nederlands
         "",                                                 // Português
@@ -379,7 +379,7 @@ const tI18nPhrase DvdPhrases[] = {
         "Ääniraitaa ei havaita!",                           // suomi
         "Wybrana ¶cie¿ka d¼wiêkowa nie istnieje!",          // Polski
         "¡Pista de audio actual no encontrada!",            // Español
-        "",                                                 // ÅëëçíéêÜ (Greek)
+        "I Epilegmeni desmi ixou den mpori na wrethi",      // ÅëëçíéêÜ (Greek)
         "",                                                 // Svenska
         "",                                                 // Romaneste
         "",                                                 // Magyar
