@@ -205,7 +205,12 @@ void cDvdPlayerControl::HideOwnOsd(void)
 
     if (visible) {
         OsdClose();
+#if VDRVERSNUM >= 10500
+        SetNeedsFastResponse(false);
+        visible = false;
+#else
         needsFastResponse = visible = false;
+#endif
         modeOnly = false;
         lastPlay = lastForward = false;
         lastSpeed = -1;
@@ -307,7 +312,11 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
     if (GetIndex(Current, Total) && Total > 0) {
 	    DEBUG_SHOW("DVD-Ctrl: ShowProgress: ... \n");
         if (!visible) {
+#if VDRVERSNUM >= 10500
+            SetNeedsFastResponse(true);
+#else
             needsFastResponse = true;
+#endif
             OsdOpen();
         }
         if (!visible)
