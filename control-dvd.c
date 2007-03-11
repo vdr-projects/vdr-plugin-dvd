@@ -445,7 +445,7 @@ void cDvdPlayerControl::TimeSearchDisplay(void)
 
 void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
 {
-#define STAY_SECONDS_OFF_END 10
+    #define STAY_SECONDS_OFF_END 10
     int Seconds = (timeSearchTime >> 24) * 36000 + ((timeSearchTime & 0x00FF0000) >> 16) * 3600 + ((timeSearchTime & 0x0000FF00) >> 8) * 600 + (timeSearchTime & 0x000000FF) * 60;
     int Current = (lastCurrent / FRAMESPERSEC);
     int Total = (lastTotal / FRAMESPERSEC);
@@ -475,10 +475,13 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
             inputActive = NoneInput;
             break;
         }
+        case kPlay:
         case kUp:
+        case kPause:
         case kDown:
+        case kOk:
             Seconds = min(Total - STAY_SECONDS_OFF_END, Seconds);
-            switch ( inputActive ) {
+            switch (inputActive) {
                 case TimeSearchInput:
                     Goto(Seconds, Key == kDown);
                     break;
