@@ -98,8 +98,8 @@ Audio          select audio track
 					   (eg. 'forced-en') only forced subs will be shown )
 3              skip to next     angle    (skip copyright notice)
 
-4              skip to previous chapter
-6              skip to next     chapter
+4, kPrev       skip to previous chapter
+6, kNext       skip to next     chapter
 7, kChanDn     skip to previous title
 9, kChanUp     skip to next     title
 

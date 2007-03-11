@@ -704,25 +704,32 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
   }
 
 
-  if(state==osUnknown) {
-      state = osContinue;
+    if (state == osUnknown) {
+        state = osContinue;
 
-      switch (Key) {
-	  // Positioning:
-	  case kRed:     TimeSearch(); break;
-	  case kGreen|k_Repeat:
-	  case kGreen:   SkipSeconds(-60); break;
-	  case kYellow|k_Repeat:
-	  case kYellow:  SkipSeconds( 60); break;
-	  case kBlue:    TrackSearch(); break;
-
-	  default: {
-	      DoShowMode = false;
-	      displayFrames = DisplayedFrames;
-	      switch (Key) {
-		  // Menu control:
+        switch (Key) {
+	        // Positioning:
+	        case kRed:
+                TimeSearch();
+                break;
+	        case kGreen | k_Repeat:
+	        case kGreen:
+                SkipSeconds(-60);
+                break;
+	        case kYellow | k_Repeat:
+	        case kYellow:
+                SkipSeconds(60);
+                break;
+	        case kBlue:
+                TrackSearch();
+                break;
+            default: {
+	            DoShowMode = false;
+	            displayFrames = DisplayedFrames;
+	            switch (Key) {
+		        // Menu control:
                     case kOk:
-                        if (visible && !modeOnly ) {
+                        if (visible && !modeOnly) {
                             Hide();
                             DoShowMode = true;
                         } else
@@ -732,38 +739,51 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                     case kBack:
                         Hide();
                         Stop();
-	                    state=osEnd;
+	                    state = osEnd;
                         break;
-                    case k2: if(player) {
-                                if (player->NextSubpStream() == -1)
-                                    Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
-
-                                if (player->GetCurrentNavSubpStream() == -1) {
-                                    Hide();
-                                    Show();
-                                }
-                             }
-                    break;
-                    case k3: if(player) player->NextAngle(); break;
-
-                    case k4: if(player) player->PreviousPart(); break;
-                    case k6: if(player) player->NextPart(); break;
-
+                    case k2:
+                        if (player) {
+                            if (player->NextSubpStream() == -1)
+                                Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
+                            if (player->GetCurrentNavSubpStream() == -1) {
+                                Hide();
+                                Show();
+                            }
+                        }
+                        break;
+                    case k3:
+                        if (player)
+                            player->NextAngle();
+                        break;
+                    case kPrev:
+                    case k4:
+                        if (player)
+                            player->PreviousPart();
+                        break;
+                    case kNext:
+                    case k6:
+                        if (player)
+                            player->NextPart();
+                        break;
                     case kChanDn:
-                    case k7: if(player) player->PreviousTitle(); break;
-
+                    case k7:
+                        if (player)
+                            player->PreviousTitle();
+                        break;
                     case kChanUp:
-                    case k9: if(player) player->NextTitle(); break;
+                    case k9:
+                        if (player)
+                            player->NextTitle();
+                        break;
                     case k5:
-                        if(visible && !modeOnly ) {
+                        if (visible && !modeOnly) {
                             Hide();
                             player->callRootMenu();
                         } else {
                             Hide();
-                            forceDvdNavigation=true;
+                            forceDvdNavigation = true;
                         }
                         break;
-
                     case k8:
                         if (player) {
                             Hide();
@@ -776,16 +796,14 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                             player->callAudioMenu();
                         }
                         break;
-
                     default:
-	  	                state=osUnknown;
+	  	                state = osUnknown;
                 }
             }
         }
     }
 
-    if (DoShowMode && state!=osEnd)
-    {
+    if (DoShowMode && state != osEnd) {
         DEBUG_SHOW("cDvdPlayerControl::ProcessKey ShowMode\n");
         ShowMode();
     }
