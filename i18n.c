@@ -36,8 +36,9 @@ const char *ISO639code[] = {
     "hr",
     "et",
     "da",
-#if VDRVERSNUM >= 10342
     "cs",
+#if VDRVERSNUM >= 10502
+    "tr",
 #endif
 };
 
@@ -63,8 +64,9 @@ const tI18nPhrase DvdPhrases[] = {
         "DVD",                                              // Hrvatski (Croatian)
         "DVD",                                              // Eesti
         "DVD",                                              // Dansk
-#if VDRVERSNUM >= 10342
         "DVD",                                              // Czech
+#if VDRVERSNUM >= 10502
+        "DVD",                                              // Türkçe
 #endif
     },
     {
@@ -88,8 +90,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                             // Hrvatski (Croatian)
         "DVD-mängija",                                                  // Eesti
         "forvandler VDR til en (næsten) normal DVD afspiller",          // Dansk
-#if VDRVERSNUM >= 10342
         "Pøemìní VDR v plnohodnotný DVD pøehrávaè",                     // Czech
+#if VDRVERSNUM >= 10502
+        "VDR'i (nerdeyse) tam DVD oynatýcýsýna çevirir"                 // Türkçe
 #endif
     },
     {
@@ -113,8 +116,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Eelistatud menüükeel",                             // Eesti
         "Foretrukket sprog for menuer",                     // Dansk
-#if VDRVERSNUM >= 10342
         "Preferovaný jazyk menu",                           // Czech
+#if VDRVERSNUM >= 10502
+        "Menülerin dil tercihi"                             // Türkçe
 #endif
     },
     {
@@ -138,8 +142,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Eelistatud audiokeel",                             // Eesti
         "Foretrukket sprog for lyd",                        // Dansk
-#if VDRVERSNUM >= 10342
         "Preferovaný jazyk zvuku",                          // Czech
+#if VDRVERSNUM >= 10502
+        "Diyaloglarýn dil tercihi"                          // Türkçe
 #endif
     },
     {
@@ -163,8 +168,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Eelistatud subtiitritekeel",                       // Eesti
         "Foretrukket sprog for undertekster",               // Dansk
-#if VDRVERSNUM >= 10342
         "Preferovaný jazyk titulkù",                        // Czech
+#if VDRVERSNUM >= 10502
+        "Altyazýlarýn dil tercihi"                          // Türkçe
 #endif
     },
     {
@@ -188,8 +194,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Mängija regioonikood",                             // Eesti
         "Afspillerens regions kode",                        // Dansk
-#if VDRVERSNUM >= 10342
         "Regionální kód pøehrávaèe",                        // Czech
+#if VDRVERSNUM >= 10502
+        "DVD oynatýcýnýn bölge kodu"                        // Türkçe
 #endif
     },
     {
@@ -213,12 +220,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Subtiitrite kuvamine",                             // Eesti
         "Vis undertekster",                                 // Dansk
-#if VDRVERSNUM >= 10342
         "Zobrazovat titulky",                               // Czech
+#if VDRVERSNUM >= 10502
+        "Altyazýlarý göster"                                // Türkçe
 #endif
     },
     {
-     "Setup.DVD$Hide Mainmenu Entry",
+    "Setup.DVD$Hide Mainmenu Entry",
         "Hauptmenüeintrag verstecken",                      // Deutsch
         "Skrij galvni meni",                                // Slovenski
         "Nascondi voce menù",                               // Italiano
@@ -238,12 +246,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Peita peamenüü valikust",                          // Eesti
         "Skjul DVD i hovedmenuen",                          // Dansk
-#if VDRVERSNUM >= 10342
         "Skrýt polo¾ku v hlavním menu",                     // Czech
+#if VDRVERSNUM >= 10502
+        "Ana menüde sakla"                                  // Türkçe
 #endif
     },
     {
-     "Setup.DVD$ReadAHead",
+    "Setup.DVD$ReadAHead",
         "ReadAHead",                                        // Deutsch
         "Beri vnaprej",                                       // Slovenski
         "ReadAHead",                                        // Italiano
@@ -263,33 +272,35 @@ const tI18nPhrase DvdPhrases[] = {
         "ReadAHead",                                        // Hrvatski (Croatian)
         "ReadAHead",                                        // Eesti
         "Læs forud",                                        // Dansk
-#if VDRVERSNUM >= 10342
         "Dopøedné ètení",                                   // Czech
+#if VDRVERSNUM >= 10502
+        "Ýleri oku"                                         // Türkçe
 #endif
     },
     {
-     "Setup.DVD$Gain (analog)",
-     "Verstärkung (analog)",                                // Deutsch
-     "Ojaèanje (analogno)",                                 // Slovenski
-     "Gain (analog)",                                       // Italiano
-     "Versterking (analoog)",                               // Nederlands
-     "Gain (analog)",                                       // Português
-     "Gain (analog)",                                       // Français
-     "Gain (analog)",                                       // Norsk
-     "Äänen vahvistus (analoginen)",                        // suomi
-     "Zysk (analogowo)",                                    // Polski
-     "Ganancia (analógico)",                                // Español
-     "Gain (analogika)",                                    // ÅëëçíéêÜ (Greek)
-     "Gain (analog)",                                       // Svenska
-     "Gain (analog)",                                       // Romaneste
-     "Gain (analog)",                                       // Magyar
-     "Gain (analog)",                                       // Català
-     "ÃáØÛÕÝØÕ (ÐÝÐÛÞÓ.)",                                  // ÀãááÚØÙ (Russian)
-     "Gain (analog)",                                       // Hrvatski (Croatian)
-     "Helivõimendamine (analoog)",                          // Eesti
-     "Forstærkning (analog)",                               // Dansk
-#if VDRVERSNUM >= 10342
-     "Zesílení (analog)",                                   // Czech
+    "Setup.DVD$Gain (analog)",
+        "Verstärkung (analog)",                             // Deutsch
+        "Ojaèanje (analogno)",                              // Slovenski
+        "Gain (analog)",                                    // Italiano
+        "Versterking (analoog)",                            // Nederlands
+        "Gain (analog)",                                    // Português
+        "Gain (analog)",                                    // Français
+        "Gain (analog)",                                    // Norsk
+        "Äänen vahvistus (analoginen)",                     // suomi
+        "Zysk (analogowo)",                                 // Polski
+        "Ganancia (analógico)",                             // Español
+        "Gain (analogika)",                                 // ÅëëçíéêÜ (Greek)
+        "Gain (analog)",                                    // Svenska
+        "Gain (analog)",                                    // Romaneste
+        "Gain (analog)",                                    // Magyar
+        "Gain (analog)",                                    // Català
+        "ÃáØÛÕÝØÕ (ÐÝÐÛÞÓ.)",                               // ÀãááÚØÙ (Russian)
+        "Gain (analog)",                                    // Hrvatski (Croatian)
+        "Helivõimendamine (analoog)",                       // Eesti
+        "Forstærkning (analog)",                            // Dansk
+        "Zesílení (analog)",                                // Czech
+#if VDRVERSNUM >= 10502
+        "Kuvvetlendirmek (analog)"                          // Türkçe
 #endif
     },
     {
@@ -313,8 +324,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "DVD avamine ebaõnnestus!",                         // Eesti
         "Fejl ved åbning af DVD!",                          // Dansk
-#if VDRVERSNUM >= 10342
         "Chyba pøi otevírání DVD!",                         // Czech
+#if VDRVERSNUM >= 10502
+        "DVD açýlýþ hatasý!"                                // Türkçe
 #endif
     },
     {
@@ -338,12 +350,13 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Lugemine DVD-lt ebaõnnestus!",                     // Eesti
         "Fejl ved hentning af data fra DVD!",               // Dansk
-#if VDRVERSNUM >= 10342
         "Chyba pøi naèítání dat z DVD!",                    // Czech
+#if VDRVERSNUM >= 10502
+        "DVD okuma hatasý!"                                 // Türkçe
 #endif
     },
     {
-    "Error.DVD$Current subp stream not seen!",              // English
+    "Error.DVD$Current subtitle stream not seen!",          // English
         "Der ausgewählte Untertitel ist nicht vorhanden!",  // Deutsch
         "Izbrani podnapisi niso prisotni!",                 // Slovenski
         "",                                                 // Italiano
@@ -363,8 +376,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Subtiitriterada pole avastatud!",                  // Eesti
         "Valgte undertekst findes ikke!",                   // Dansk
-#if VDRVERSNUM >= 10342
         "Vybrané titulky nejsou k dispozici!",              // Czech
+#if VDRVERSNUM >= 10502
+        "Seçilen altyazý bulunamadý!"                       // Türkçe
 #endif
     },
     {
@@ -388,8 +402,9 @@ const tI18nPhrase DvdPhrases[] = {
         "",                                                 // Hrvatski (Croatian)
         "Audiorada pole avastatud!",                        // Eesti
         "Valgte lyd-spor findes ikke!",                     // Dansk
-#if VDRVERSNUM >= 10342
         "Vybraná zvuková stopa není k dispozici!",          // Czech
+#if VDRVERSNUM >= 10502
+        "Seçilen audio ses bulunamadý!"                     // Türkçe
 #endif
     },
     { NULL }
