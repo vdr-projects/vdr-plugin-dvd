@@ -12,6 +12,7 @@
 #include "config.h"
 #endif
 
+#include <vdr/config.h>
 #include "i18n.h"
 
 const char *ISO639code[] = {
