@@ -34,7 +34,7 @@ cDVDSetup::cDVDSetup(void)
     ReadAHead     = 0;
     Gain          = 4;
 
-    AC3dynrng  = 0;
+    AC3dynrng     = 0;
 }
 
 bool cDVDSetup::SetupParse(const char *Name, const char *Value)
@@ -59,9 +59,15 @@ cMenuSetupDVD::cMenuSetupDVD(void)
 {
     data = DVDSetup;
     SetSection(tr("Plugin.DVD$DVD"));
+#if VDRVERSNUM >= 10507
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"),     &data.MenuLanguage,  22, ISO639code));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"),    &data.AudioLanguage, 22, ISO639code));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage,   22, ISO639code));
+#else
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"),     &data.MenuLanguage,  I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"),    &data.AudioLanguage, I18nNumLanguages, I18nLanguages()));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage,   I18nNumLanguages, I18nLanguages()));
+#endif
     Add(new cMenuEditIntItem( tr("Setup.DVD$Player region code"),          &data.PlayerRCE));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"),           &data.ShowSubtitles));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"),         &data.HideMainMenu));
