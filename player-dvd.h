@@ -442,32 +442,32 @@ inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
 inline void cDvdPlayer::selectUpButton(void)
 {
     DEBUGDVD("selectUpButton\n");
-    if (current_pci) {
-      dvdnav_upper_button_select(nav, current_pci);
+    if (nav && current_pci) {
+        dvdnav_upper_button_select(nav, current_pci);
     }
 }
 
 inline void cDvdPlayer::selectDownButton(void)
 {
     DEBUGDVD("selectDownButton\n");
-    if (current_pci) {
-      dvdnav_lower_button_select(nav, current_pci);
+    if (nav && current_pci) {
+        dvdnav_lower_button_select(nav, current_pci);
     }
 }
 
 inline void cDvdPlayer::selectLeftButton(void)
 {
     DEBUGDVD("selectLeftButton\n");
-    if (current_pci) {
-      dvdnav_left_button_select(nav, current_pci);
+    if (nav && current_pci) {
+        dvdnav_left_button_select(nav, current_pci);
     }
 }
 
 inline void cDvdPlayer::selectRightButton(void)
 {
     DEBUGDVD("selectRightButton\n");
-    if (current_pci) {
-      dvdnav_right_button_select(nav, current_pci);
+    if (nav && current_pci) {
+        dvdnav_right_button_select(nav, current_pci);
     }
 }
 

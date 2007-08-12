@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - fix possible segfault's (thanks to Ioannis Petroglou)
     - add Turkish translation (thanks to Oktay Yolgeçen)
     - add kNext and kPrev keys
     - changes for vdr-1.5.0

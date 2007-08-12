@@ -2766,7 +2766,7 @@ int cDvdPlayer::callRootMenu(void)
     StillSkip();
 
     SetCurrentNavAudioTrackUsrLocked(false);
-    return dvdnav_menu_call(nav, DVD_MENU_Root);
+    return nav ? dvdnav_menu_call(nav, DVD_MENU_Root) : 0;
 }
 
 int cDvdPlayer::callTitleMenu(void)
@@ -2777,7 +2777,7 @@ int cDvdPlayer::callTitleMenu(void)
     StillSkip();
 
     SetCurrentNavAudioTrackUsrLocked(false);
-    return dvdnav_menu_call(nav, DVD_MENU_Title);
+    return nav ? dvdnav_menu_call(nav, DVD_MENU_Title) : 0;
 }
 
 int cDvdPlayer::callSubpMenu(void)
@@ -2787,7 +2787,7 @@ int cDvdPlayer::callSubpMenu(void)
     LOCK_THREAD;
     StillSkip();
 
-    return dvdnav_menu_call(nav, DVD_MENU_Subpicture);
+    return nav ? dvdnav_menu_call(nav, DVD_MENU_Subpicture) : 0;
 }
 
 int cDvdPlayer::callAudioMenu(void)
@@ -2798,5 +2798,5 @@ int cDvdPlayer::callAudioMenu(void)
     StillSkip();
 
     SetCurrentNavAudioTrackUsrLocked(false);
-    return dvdnav_menu_call(nav, DVD_MENU_Audio);
+    return nav ? dvdnav_menu_call(nav, DVD_MENU_Audio) : 0;
 }
