@@ -2615,81 +2615,83 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
     }
 }
 
-char * cDvdPlayer::GetTitleString() const
+char *cDvdPlayer::GetTitleString() const
 {
-	return strdup(title_str);
+    return strdup(title_str);
 }
 
 void cDvdPlayer::SetTitleString()
 {
-	static const char * title_holder = NULL;
+    static const char *title_holder = NULL;
 
-	if (title_str) {
-		free(title_str);
-		title_str = NULL;
+    if (title_str) {
+        free(title_str);
+        title_str = NULL;
 	}
 
-    if(!DVDActiveAndRunning()) {
-		title_str = strdup(dummy_title);
-		return;
-	}
+    if (!DVDActiveAndRunning()) {
+        title_str = strdup(dummy_title);
+        return;
+    }
 
-	if (dvdnav_get_title_string(nav, &title_holder) == DVDNAV_STATUS_OK) {
-        	title_str = strdup(title_holder);
-	} else {
-		title_str = strdup(dummy_title);
-	}
+    if (dvdnav_get_title_string(nav, &title_holder) == DVDNAV_STATUS_OK)
+        title_str = strdup(title_holder);
+    else
+        title_str = strdup(dummy_title);
 }
 
-char * cDvdPlayer::GetTitleInfoString() const
+char *cDvdPlayer::GetTitleInfoString() const
 {
 	return strdup(titleinfo_str);
 }
 
 void cDvdPlayer::SetTitleInfoString()
 {
-	int titleNumber=-1, titleNo=-1, chapterNumber=-1, chapterNo=-1;
-	int num_angle = -1, cur_angle = -1;
+    if (titleinfo_str) {
+        free(titleinfo_str);
+        titleinfo_str = NULL;
+    }
 
-	if (titleinfo_str) {
-		free(titleinfo_str);
-		titleinfo_str = NULL;
-	}
-
-        if(!DVDActiveAndRunning()) { titleinfo_str=strdup(dummy_title); return; }
-
-	dvdnav_get_number_of_titles(nav, &titleNumber);
-  	dvdnav_current_title_info(nav, &titleNo, &chapterNo);
-        dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber);
-
-  	if (titleNo >= 1) {
-    		/* no menu here */
-    		/* Reflect angle info if appropriate */
-    		dvdnav_get_angle_info(nav, &cur_angle, &num_angle);
-    	}
-
-	if(num_angle>1)
-		asprintf(&titleinfo_str, "%d/%d %d/%d %d/%d",
-			titleNo, titleNumber,  chapterNo, chapterNumber,
-			cur_angle, num_angle);
-	else
-		asprintf(&titleinfo_str, "%d/%d %d/%d",
-			titleNo, titleNumber,  chapterNo, chapterNumber);
-
-        return;
-}
-
-void cDvdPlayer::GetAudioLangCode(const char ** audiolang_str) const
-{
-	static char buffer[100];
-	char * audioTypeDescr = NULL;
-
-    if(!DVDActiveAndRunning()) {
-        *audiolang_str="n.a.";
+    if (!DVDActiveAndRunning()) {
+        titleinfo_str = strdup(dummy_title);
         return;
     }
 
-	switch (currentNavAudioTrackType) {
+    int angleNumber = -1;
+    int angleNumbers = -1;
+    int chapterNumber = -1;
+    int chapterNumbers = -1;
+    int titleNumber = -1;
+    int titleNumbers = -1;
+
+    dvdnav_get_number_of_titles(nav, &titleNumbers);
+    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    dvdnav_get_number_of_parts(nav, titleNumber, &chapterNumbers);
+
+    if (titleNumber >= 1) {
+        /* no menu here */
+  	    /* Reflect angle info if appropriate */
+        dvdnav_get_angle_info(nav, &angleNumber, &angleNumbers);
+    }
+
+    if (angleNumbers > 1)
+        asprintf(&titleinfo_str, "%d/%d %d/%d %d/%d", titleNumber, titleNumbers, chapterNumber, chapterNumbers, angleNumber, angleNumbers);
+    else
+        asprintf(&titleinfo_str, "%d/%d %d/%d", titleNumber, titleNumbers,  chapterNumber, chapterNumbers);
+    return;
+}
+
+void cDvdPlayer::GetAudioLangCode(const char **audiolang_str) const
+{
+	static char buffer[100];
+	char *audioTypeDescr = NULL;
+
+    if (!DVDActiveAndRunning()) {
+        *audiolang_str = "n.a.";
+        return;
+    }
+
+    switch (currentNavAudioTrackType) {
         case aAC3:
             audioTypeDescr = "ac3";
             break;
@@ -2705,57 +2707,57 @@ void cDvdPlayer::GetAudioLangCode(const char ** audiolang_str) const
         default:
             audioTypeDescr = "non";
             break;
-	}
+    }
 
-	if(GetNavAudioTrackNumber() > 1)
-		sprintf(buffer,"%s %d/%d %s",
-            currentNavAudioTrackLangCode != 0xFFFF ? (char *)&currentNavAudioTrackLangCode : "", GetCurrentNavAudioTrackIdx()+1, GetNavAudioTrackNumber(),
-			audioTypeDescr);
-	else
+    if (GetNavAudioTrackNumber() > 1)
+        sprintf(buffer,"%s %d/%d %s", currentNavAudioTrackLangCode != 0xFFFF ? (char *)&currentNavAudioTrackLangCode : "", GetCurrentNavAudioTrackIdx() + 1, GetNavAudioTrackNumber(), audioTypeDescr);
+    else
         sprintf(buffer,"%s %s", currentNavAudioTrackLangCode != 0xFFFF ? (char *)&currentNavAudioTrackLangCode : "", audioTypeDescr);
 
-	*audiolang_str = buffer;
+    *audiolang_str = buffer;
 }
 
 char *cDvdPlayer::GetAspectString() const
 {
-	return strdup(aspect_str);
+    return strdup(aspect_str);
 }
 
 void cDvdPlayer::SetAspectString()
 {
-	if (aspect_str) {
-		free(aspect_str);
-		aspect_str = NULL;
+    if (aspect_str) {
+        free(aspect_str);
+        aspect_str = NULL;
 	}
 
     if (!DVDActiveAndRunning()) {
-		aspect_str = strdup(dummy_n_a);
-		return;
+        aspect_str = strdup(dummy_n_a);
+        return;
 	}
 
-	int aspect = dvdnav_get_video_aspect(nav);
-
-	switch(aspect) {
-		case 0: asprintf(&aspect_str, " 4:3");
-		        break;
-		case 2: asprintf(&aspect_str, "16:9_");
-		        break;
-		case 3: asprintf(&aspect_str, "16:9");
-		        break;
-		default: aspect_str = strdup(dummy_n_a);
-	}
+    switch (dvdnav_get_video_aspect(nav)) {
+        case 0:
+            asprintf(&aspect_str, " 4:3");
+            break;
+        case 2:
+            asprintf(&aspect_str, "16:9_");
+            break;
+        case 3:
+            asprintf(&aspect_str, "16:9");
+            break;
+        default:
+            aspect_str = strdup(dummy_n_a);
+    }
 }
 
 bool cDvdPlayer::GetReplayMode(bool &Play, bool &Forward, int &Speed)
 {
-  Play = (playMode == pmPlay || playMode == pmFast);
-  Forward = (playDir == pdForward);
-  if (playMode == pmFast || playMode == pmSlow)
-     Speed = Setup.MultiSpeedMode ? abs(trickSpeed - NORMAL_SPEED) : 0;
-  else
-     Speed = -1;
-  return true;
+    Play = (playMode == pmPlay || playMode == pmFast);
+    Forward = (playDir == pdForward);
+    if (playMode == pmFast || playMode == pmSlow)
+        Speed = Setup.MultiSpeedMode ? abs(trickSpeed - NORMAL_SPEED) : 0;
+    else
+        Speed = -1;
+    return true;
 }
 
 int cDvdPlayer::callRootMenu(void)
@@ -2764,7 +2766,6 @@ int cDvdPlayer::callRootMenu(void)
 
     LOCK_THREAD;
     StillSkip();
-
     SetCurrentNavAudioTrackUsrLocked(false);
     return nav ? dvdnav_menu_call(nav, DVD_MENU_Root) : 0;
 }
@@ -2775,7 +2776,6 @@ int cDvdPlayer::callTitleMenu(void)
 
     LOCK_THREAD;
     StillSkip();
-
     SetCurrentNavAudioTrackUsrLocked(false);
     return nav ? dvdnav_menu_call(nav, DVD_MENU_Title) : 0;
 }
@@ -2786,7 +2786,6 @@ int cDvdPlayer::callSubpMenu(void)
 
     LOCK_THREAD;
     StillSkip();
-
     return nav ? dvdnav_menu_call(nav, DVD_MENU_Subpicture) : 0;
 }
 
@@ -2796,7 +2795,6 @@ int cDvdPlayer::callAudioMenu(void)
 
     LOCK_THREAD;
     StillSkip();
-
     SetCurrentNavAudioTrackUsrLocked(false);
     return nav ? dvdnav_menu_call(nav, DVD_MENU_Audio) : 0;
 }
