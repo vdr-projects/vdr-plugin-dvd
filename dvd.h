@@ -22,9 +22,6 @@
 #include "setup-dvd.h"
 #include "i18n.h"
 
-static const char *VERSION        = "0.3.6-b03";
-static const char *DESCRIPTION    = "Plugin.DVD$turn VDR into an (almost) full featured DVD player";
-static const char *MAINMENUENTRY  = "Plugin.DVD$DVD";
 
 // --- cPluginDvd ------------------------------------------------------------
 
@@ -37,16 +34,14 @@ private:
 public:
   cPluginDvd(void);
   virtual ~cPluginDvd();
-  virtual const char *Version(void) { return VERSION; }
-  virtual const char *Description(void) { return tr(DESCRIPTION); }
+  virtual const char *Version(void);
+  virtual const char *Description(void);
   virtual const char *CommandLineHelp(void);
   virtual bool ProcessArgs(int argc, char *argv[]);
   virtual bool Initialize(void);
   virtual bool Start(void);
   virtual void Housekeeping(void);
-  virtual const char *MainMenuEntry(void) {
-		return DVDSetup.HideMainMenu ? NULL : tr(MAINMENUENTRY);
-	}
+  virtual const char *MainMenuEntry(void);
   virtual cOsdMenu *MainMenuAction(void);
   virtual cMenuSetupPage *SetupMenu(void);
   virtual bool SetupParse(const char *Name, const char *Value);
