@@ -15,64 +15,60 @@
 #include <vdr/player.h>
 #include <vdr/thread.h>
 
+enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
+
 class cDvdPlayerControl : public cControl {
   friend class cDvdPlayer;
 private:
   static bool dvd_active;
-  bool visible, modeOnly, shown, displayFrames, forceDvdNavigation;
-  void *osdTaker;
-  int lastCurrent, lastTotal;
-  bool lastPlay, lastForward;
-  int lastSpeed;
-  cSkinDisplayReplay *displayReplay;
-
-  enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
-
-  InputProcessType inputActive;
+  bool displayFrames;
+  bool forceDvdNavigation;
   bool inputHide;
-  time_t timeoutShow;
-
-  int timeSearchTime, timeSearchPos;
-
+  bool lastForward;
+  bool lastPlay;
+  bool modeOnly;
+  bool shown;
+  bool visible;
+  void *osdTaker;
   int inputIntVal;
+  int lastCurrent;
+  int lastTotal;
+  int lastSpeed;
+  int timeSearchPos;
+  int timeSearchTime;
+  InputProcessType inputActive;
+  time_t timeoutShow;
   const char *inputIntMsg;
-
-  void TimeSearchDisplay(void);
-  void TimeSearchProcess(eKeys Key);
-  void TimeSearch(void);
-
-  void InputIntDisplay(const char * msg, int val);
-  void InputIntProcess(eKeys Key, const char * msg, int & val);
-
-  void TrackSearch(void);
+  void InputIntDisplay(const char *msg, int val);
+  void InputIntProcess(eKeys Key, const char *msg, int &val);
+  bool IsDvdNavigationForced(void) { return forceDvdNavigation; }
   void OsdOpen(void);
   void OsdClose();
   void ShowTimed(int Seconds = 0);
-  void UpdateShow(bool force = false);
-
   void ShowMode(void);
   bool ShowProgress(bool Initial);
-
-  bool IsDvdNavigationForced() { return forceDvdNavigation; }
-
+  void TimeSearchDisplay(void);
+  void TimeSearchProcess(eKeys Key);
+  void TimeSearch(void);
+  void TrackSearch(void);
+  void UpdateShow(bool force = false);
 public:
   cDvdPlayerControl(void);
   virtual ~cDvdPlayerControl();
-  bool DvdNavigation(eKeys Key);
+  virtual void Hide(void);
   virtual eOSState ProcessKey(eKeys Key);
   virtual void Show(void);
-  virtual void Hide(void);
+  static bool DVDActive() { return dvd_active; };
+  bool DvdNavigation(eKeys Key);
+  const char *GetDisplayHeaderLine();
   bool OsdVisible(void *me);
   bool OsdTaken(void *me);
   bool TakeOsd(void *obj);
-  static bool DVDActive() { return dvd_active; };
-  const char *GetDisplayHeaderLine();
-
 protected:
   void HideOwnOsd(void);
-
 private:
   cDvdPlayer *player;
+  cSkinDisplayReplay *displayReplay;
 public:
   bool Active(void);
   bool Start(const char *FileName);
