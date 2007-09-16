@@ -42,15 +42,15 @@ cDvdPlayerControl::cDvdPlayerControl(void):cControl(player = new cDvdPlayer()) {
     assert(dvd_active == false);
     dvd_active = true;
     visible = modeOnly = shown = displayFrames = false;
-    osdTaker=NULL;
+    osdTaker = NULL;
     lastCurrent = lastTotal = -1;
     lastPlay = lastForward = false;
     lastSpeed = -1;
-    displayReplay=NULL;
+    displayReplay = NULL;
     timeoutShow = 0;
     inputActive = NoneInput;
-    inputHide=true;
-    forceDvdNavigation=false;
+    inputHide = true;
+    forceDvdNavigation = false;
 
     player->setController(this);
 
@@ -78,14 +78,13 @@ cDvdPlayerControl::~cDvdPlayerControl()
 
 bool cDvdPlayerControl::Active(void)
 {
-  return player && player->Active();
+    return player && player->Active();
 }
 
 void cDvdPlayerControl::Stop(void)
 {
-    if(player) {
+    if(player)
         player->Stop();
-    }
 }
 
 void cDvdPlayerControl::Pause(void)
@@ -120,9 +119,7 @@ void cDvdPlayerControl::SkipSeconds(int Seconds)
 
 int cDvdPlayerControl::SkipFrames(int Frames)
 {
-    if (player)
-        return player->SkipFrames(Frames);
-  return -1;
+    return player ? player->SkipFrames(Frames) : -1;
 }
 
 bool cDvdPlayerControl::GetIndex(int &Current, int &Total, bool SnapToIFrame)
@@ -131,7 +128,7 @@ bool cDvdPlayerControl::GetIndex(int &Current, int &Total, bool SnapToIFrame)
         player->GetIndex(Current, Total, SnapToIFrame);
         return true;
     }
-    Current=-1; Total=-1;
+    Current = Total = -1;
     return false;
 }
 
@@ -143,9 +140,7 @@ bool cDvdPlayerControl::GetReplayMode(bool &Play, bool &Forward, int &Speed)
 void cDvdPlayerControl::Goto(int Seconds, bool Still)
 {
     if (player)
-    {
         player->Goto(Seconds, Still);
-    }
 }
 
 void cDvdPlayerControl::OsdClose()
@@ -168,10 +163,10 @@ void cDvdPlayerControl::OsdOpen(void)
     }
     if (!TakeOsd((void *)this)) {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> !visible, osdTaken=%d\n", OsdTaken(this));
-    	visible=false;
+    	visible = false;
     } else {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: visible\n");
-    	visible=true;
+    	visible = true;
         displayReplay=Skins.Current()->DisplayReplay(modeOnly);
     }
 }
@@ -194,7 +189,8 @@ void cDvdPlayerControl::Hide(void)
     DEBUG_SHOW("DVD-Ctrl: Hide\n");
 
     TakeOsd((void *)(-1)); // somebody else (external) might take the osd ..
-    if(player) player->HideSPU();
+    if (player)
+        player->HideSPU();
 
     HideOwnOsd();
 }
@@ -207,11 +203,10 @@ void cDvdPlayerControl::HideOwnOsd(void)
         OsdClose();
 #if VDRVERSNUM >= 10500
         SetNeedsFastResponse(false);
-        visible = false;
 #else
-        needsFastResponse = visible = false;
+        needsFastResponse = false;
 #endif
-        modeOnly = false;
+        visible = modeOnly = false;
         lastPlay = lastForward = false;
         lastSpeed = -1;
     }
@@ -219,9 +214,9 @@ void cDvdPlayerControl::HideOwnOsd(void)
 
 bool cDvdPlayerControl::TakeOsd(void * owner)
 {
-    if(owner == (void *)-1 || !OsdTaken(owner)) {
+    if (owner == (void *)-1 || !OsdTaken(owner)) {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
-	    osdTaker=owner; // not taken by other: new owner
+	    osdTaker = owner; // not taken by other: new owner
 	    return true;
     } else {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken!\n", owner);
@@ -272,26 +267,27 @@ void cDvdPlayerControl::ShowMode(void)
     }
 }
 
-const char * cDvdPlayerControl::GetDisplayHeaderLine()
+const char *cDvdPlayerControl::GetDisplayHeaderLine()
 {
-    char * titleinfo_str=NULL;
-    char * title_str=NULL;
-    char * aspect_str=NULL;
+    char *titleinfo_str = NULL;
+    char *title_str = NULL;
+    char *aspect_str = NULL;
 
-    const char * audiolang_str=NULL;
-    const char * spulang_str=NULL;
+    const char *audiolang_str = NULL;
+    const char *spulang_str = NULL;
 
     static char title_buffer[256];
 
-    title_buffer[0]=0;
-    if(!player) return title_buffer;
+    title_buffer[0] = 0;
+    if (!player)
+        return title_buffer;
 
     titleinfo_str = player->GetTitleInfoString();
-    title_str  = player->GetTitleString( );
-    aspect_str = player->GetAspectString( );
+    title_str  = player->GetTitleString();
+    aspect_str = player->GetAspectString();
 
-    player->GetAudioLangCode( &audiolang_str );
-    player->GetSubpLangCode( &spulang_str );
+    player->GetAudioLangCode(&audiolang_str);
+    player->GetSubpLangCode(&spulang_str);
 
     snprintf(title_buffer, 255, "%s, %s, %s, %s, %s    ",
     titleinfo_str, audiolang_str, spulang_str, aspect_str, title_str);
@@ -306,7 +302,7 @@ const char * cDvdPlayerControl::GetDisplayHeaderLine()
 bool cDvdPlayerControl::ShowProgress(bool Initial)
 {
     int Current, Total;
-    const char * title_buffer=NULL;
+    const char *title_buffer = NULL;
     static char last_title_buffer[256];
 
     if (GetIndex(Current, Total) && Total > 0) {
@@ -324,7 +320,7 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
 
         if (Initial) {
             lastCurrent = lastTotal = -1;
-            last_title_buffer[0]=0;
+            last_title_buffer[0] = 0;
             displayReplay->SetTitle("unknown title");
 #if VDRVERSNUM >= 10337
             cStatus::MsgReplaying(this, "unknown title", NULL, true);
@@ -335,9 +331,10 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
 
         if (player) {
             title_buffer = GetDisplayHeaderLine();
-            if ( strcmp(title_buffer,last_title_buffer) != 0 ) {
+            if (strcmp(title_buffer, last_title_buffer)) {
                 displayReplay->SetTitle(title_buffer);
-                if (!Initial) displayReplay->Flush();
+                if (!Initial)
+                    displayReplay->Flush();
 #if VDRVERSNUM >= 10337
                 cStatus::MsgReplaying(this, title_buffer, NULL, true);
 #else
@@ -352,7 +349,8 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
             displayReplay->SetTotal(IndexToHMSF(Total));
             displayReplay->SetCurrent(IndexToHMSF(Current, displayFrames));
             lastCurrent = Current;
-            if (!Initial) displayReplay->Flush();
+            if (!Initial)
+                displayReplay->Flush();
         }
         lastTotal = Total;
         ShowMode();
@@ -382,13 +380,12 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char * msg, int & val)
         case kRight:
         case kUp:
         case kDown:
-            switch ( inputActive ) {
+            switch (inputActive) {
                 case TimeSearchInput:
                     break;
                 case TrackSearchInput:
-                    if(player) {
+                    if(player)
 	                    player->GotoTitle(val);
-		            }
                     break;
                 default:
                     break;
@@ -400,7 +397,7 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char * msg, int & val)
             break;
     }
 
-    if (inputActive==NoneInput) {
+    if (inputActive == NoneInput) {
         if (inputHide)
             Hide();
         else
@@ -411,11 +408,9 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char * msg, int & val)
 
 void cDvdPlayerControl::TrackSearch(void)
 {
-    inputIntVal=0;
-    inputIntMsg="Track: ";
-
+    inputIntVal = 0;
+    inputIntMsg = "Track: ";
     inputHide = false;
-
     Show();
     if (visible)
 	    inputHide = true;
@@ -497,7 +492,7 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
             break;
     }
 
-    if (inputActive==NoneInput) {
+    if (inputActive == NoneInput) {
         if (inputHide)
             Hide();
         else
@@ -526,7 +521,8 @@ bool cDvdPlayerControl::DvdNavigation(eKeys Key)
         return false;
 
     HideOwnOsd();
-    if(player) player->DrawSPU();
+    if(player)
+        player->DrawSPU();
 
     switch (Key) {
     case kUp:
@@ -591,7 +587,7 @@ void cDvdPlayerControl::updateShow(bool force)
 
         if (player) {
 	        title_buffer = GetDisplayHeaderLine();
-            if ( strcmp(title_buffer,last_title_buffer) != 0 ) {
+            if (strcmp(title_buffer,last_title_buffer)) {
  	            strcpy(last_title_buffer, title_buffer);
 #if VDRVERSNUM >= 10337
                 cStatus::MsgReplaying(this, title_buffer, NULL, true);
