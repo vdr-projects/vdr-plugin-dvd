@@ -296,56 +296,56 @@ public:
      */
     void Goto(int Seconds, bool Still = false);
 
-    int GotoAngle(int angle);
+    int GotoAngle(int Angle);
 
     /**
      * jump to the next Angle (rotate)
      */
-    void NextAngle();
+    void NextAngle(void);
 
     /**
      * jump to the next Title (rotate)
      */
-    void NextTitle();
+    void NextTitle(void);
 
     /**
      * goto to the Title
      *
      * return set title ..
      */
-    int GotoTitle(int title);
+    int GotoTitle(int Title);
 
     /**
      * jump to the previous Title (rotate)
      */
-    void PreviousTitle();
+    void PreviousTitle(void);
 
     /**
      * goto to the Part
      *
      * return set Part ..
      */
-    int GotoPart(int part);
+    int GotoPart(int Part);
 
     /**
      * jump to the next Part (rotate)
      */
-    void NextPart();
+    void NextPart(void);
 
     /**
      * jump to the previous Part (rotate)
      */
-    void PreviousPart();
+    void PreviousPart(void);
 
     /**
      * jump to the next PG
      */
-    void NextPG();
+    void NextPG(void);
 
     /**
      * jump to the previous PG
      */
-    void PreviousPG();
+    void PreviousPG(void);
 
     int  GetCurrentNavSubpStream(void) const ;
     int  GetCurrentNavSubpStreamIdx(void) const ;
@@ -360,7 +360,7 @@ public:
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
     int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
-    void GetAudioLangCode(const char ** audiolang_str) const ;
+    void GetAudioLangCode(const char **Audiolang) const ;
 
     void selectUpButton(void);
     void selectDownButton(void);

@@ -2158,149 +2158,162 @@ void cDvdPlayer::Goto(int Seconds, bool Still)
       Play();
 }
 
-int cDvdPlayer::GotoAngle(int angle)
+int cDvdPlayer::GotoAngle(int Angle)
 {
-      int num_angle = -1, cur_angle = -1;
+    int angleNumber = -1;
+    int angleNumbers = -1;
 
-      if(!DVDActiveAndRunning()) return -1;
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
+    if (!DVDActiveAndRunning())
+        return -1;
+    LOCK_THREAD;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
 
-      dvdnav_get_angle_info(nav, &cur_angle, &num_angle);
+    dvdnav_get_angle_info(nav, &angleNumber, &angleNumbers);
 
-      if(angle>num_angle) angle=1;
-      if(angle<=0) angle=num_angle;
+    if (Angle > angleNumbers)
+        Angle = 1;
+    if (Angle <= 0)
+        Angle = angleNumbers;
 
-      if (stillTimer == 0)
-	      dvdnav_angle_change(nav, angle);
+    if (stillTimer == 0)
+        dvdnav_angle_change(nav, Angle);
 
-      Play();
+    Play();
 
-      return angle;
+    return Angle;
 }
 
-void cDvdPlayer::NextAngle()
+void cDvdPlayer::NextAngle(void)
 {
-      int num_angle = -1, cur_angle = -1;
+    int angleNumber = -1;
+    int angleNumbers = -1;
 
-      if(!DVDActiveAndRunning()) return;
-      dvdnav_get_angle_info(nav, &cur_angle, &num_angle);
-      (void) GotoAngle(++cur_angle);
+    if (!DVDActiveAndRunning())
+        return;
+    dvdnav_get_angle_info(nav, &angleNumber, &angleNumbers);
+    GotoAngle(++angleNumber);
 }
 
-int cDvdPlayer::GotoTitle(int title)
+int cDvdPlayer::GotoTitle(int Title)
 {
-      int titleNumber;
-      if(!DVDActiveAndRunning()) return -1;
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
+    int titleNumbers;
+    if (!DVDActiveAndRunning())
+        return -1;
+    LOCK_THREAD;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
 
-      dvdnav_get_number_of_titles(nav, &titleNumber);
+    dvdnav_get_number_of_titles(nav, &titleNumbers);
 
-      if(title>titleNumber) title=1;
-      if(title<=0) title=titleNumber;
+    if (Title > titleNumbers)
+        Title = 1;
+    if (Title <= 0)
+        Title = titleNumbers;
 
-      if (stillTimer == 0)
-      {
-	      dvdnav_part_play(nav, title, 1);
-	      // dvdnav_title_play(nav, title);
-      }
+    if (stillTimer == 0) {
+        dvdnav_part_play(nav, Title, 1);
+        // dvdnav_title_play(nav, Title);
+    }
 
-      Play();
+    Play();
 
-      return title;
+    return Title;
 }
 
-void cDvdPlayer::NextTitle()
+void cDvdPlayer::NextTitle(void)
 {
-      int titleNo, chapterNo;
-
-      if(!DVDActiveAndRunning()) return ;
-      dvdnav_current_title_info(nav, &titleNo, &chapterNo);
-      (void) GotoTitle(++titleNo);
+    int titleNumber, chapterNumber;
+    if (!DVDActiveAndRunning())
+        return;
+    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    GotoTitle(++titleNumber);
 }
 
 void cDvdPlayer::PreviousTitle()
 {
-      int titleNo, chapterNo;
-
-      if(!DVDActiveAndRunning()) return;
-      dvdnav_current_title_info(nav, &titleNo, &chapterNo);
-      (void) GotoTitle(--titleNo);
+    int titleNumber, chapterNumber;
+    if (!DVDActiveAndRunning())
+        return;
+    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    GotoTitle(--titleNumber);
 }
 
-int cDvdPlayer::GotoPart(int part)
+int cDvdPlayer::GotoPart(int Part)
 {
-      int titleNo, chapterNumber, chapterNo;
-      if(!DVDActiveAndRunning()) return -1;
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
+    int titleNumber;
+    int chapterNumber;
+    int chapterNumbers;
+    if (!DVDActiveAndRunning())
+        return -1;
+    LOCK_THREAD;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
 
-      dvdnav_current_title_info(nav, &titleNo, &chapterNo);
-      dvdnav_get_number_of_parts(nav, titleNo, &chapterNumber);
+    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    dvdnav_get_number_of_parts(nav, titleNumber, &chapterNumbers);
 
-      if(part>chapterNumber) part=1;
-      if(part<=0) part=chapterNumber;
+    if (Part > chapterNumbers)
+        Part = 1;
+    if (Part <= 0)
+        Part = chapterNumbers;
 
-      if (stillTimer == 0)
-	      dvdnav_part_play(nav, titleNo, part);
-
-      Play();
-
-      return part;
+    if (stillTimer == 0)
+        dvdnav_part_play(nav, titleNumber, Part);
+    Play();
+    return Part;
 }
 
-void cDvdPlayer::NextPart()
+void cDvdPlayer::NextPart(void)
 {
-      int titleNo, chapterNo;
-
-      if(!DVDActiveAndRunning()) return;
-      dvdnav_current_title_info(nav, &titleNo, &chapterNo);
-      (void) GotoPart(++chapterNo);
+    int titleNumber, chapterNumber;
+    if (!DVDActiveAndRunning())
+        return;
+    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    GotoPart(++chapterNumber);
 }
 
-void cDvdPlayer::PreviousPart()
+void cDvdPlayer::PreviousPart(void)
 {
-      int titleNo, chapterNo;
-
-      if(!DVDActiveAndRunning()) return;
-      dvdnav_current_title_info(nav, &titleNo, &chapterNo);
-      (void) GotoPart(--chapterNo);
+    int titleNumber, chapterNumber;
+    if (!DVDActiveAndRunning())
+        return;
+    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    GotoPart(--chapterNumber);
 }
 
-void cDvdPlayer::NextPG()
+void cDvdPlayer::NextPG(void)
 {
-      if(!DVDActiveAndRunning()) return;
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
-      if (stillTimer == 0)
-	      dvdnav_next_pg_search(nav);
-      Play();
+    if (!DVDActiveAndRunning())
+        return;
+    LOCK_THREAD;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
+    if (stillTimer == 0)
+        dvdnav_next_pg_search(nav);
+    Play();
 }
 
-void cDvdPlayer::PreviousPG()
+void cDvdPlayer::PreviousPG(void)
 {
-      if(!DVDActiveAndRunning()) return;
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
-      dvdnav_prev_pg_search(nav);
-      Play();
+    if (!DVDActiveAndRunning())
+        return;
+    LOCK_THREAD;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
+    dvdnav_prev_pg_search(nav);
+    Play();
 }
 
 void cDvdPlayer::clearSeenSubpStream( )
 {
     LOCK_THREAD;
 
-	navSubpStreamSeen.Clear();
-	currentNavSubpStream = -1;
+    navSubpStreamSeen.Clear();
+    currentNavSubpStream = -1;
     currentNavSubpStreamLangCode = 0xFFFF;
-	notifySeenSubpStream(-1); // no subp ..
-	DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: seen subp cleared\n");
+    notifySeenSubpStream(-1); // no subp ..
+    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: seen subp cleared\n");
     SetCurrentNavSubpStreamUsrLocked(false);
 }
 
@@ -2404,9 +2417,8 @@ int cDvdPlayer::SetSubpStream(int id)
 
     int i = SearchSubpStream(id);
 
-    if(i < 0) {
+    if(i < 0)
 	    id = ((IntegerListObject *)navSubpStreamSeen.Get(0))->getValue();
-    }
 
     currentNavSubpStream = id;
     currentNavSubpStreamLangCode = GetNavSubpStreamLangCode(currentNavSubpStream);
@@ -2456,7 +2468,7 @@ void cDvdPlayer::GetSubpLangCode(const char ** subplang_str) const
     static char buffer[100];
 
     if(!DVDActiveAndRunning() || GetNavSubpStreamNumber() == 0) {
-        *subplang_str="n.a.";
+        *subplang_str = "n.a.";
         return;
     }
 
@@ -2492,7 +2504,7 @@ void cDvdPlayer::setAllAudioTracks(void)
 
 int cDvdPlayer::SearchAudioStream(int AudioStreamId) const {
     int i = navAudioTracksSeen.Count() - 1;
-    while ( i >= 0) {
+    while (i >= 0) {
         if (AudioStreamId == ((IntegerListObject *)navAudioTracksSeen.Get(i))->getValue())
             break; // found
         i--;
@@ -2681,13 +2693,13 @@ void cDvdPlayer::SetTitleInfoString()
     return;
 }
 
-void cDvdPlayer::GetAudioLangCode(const char **audiolang_str) const
+void cDvdPlayer::GetAudioLangCode(const char **Audiolang) const
 {
 	static char buffer[100];
 	char *audioTypeDescr = NULL;
 
     if (!DVDActiveAndRunning()) {
-        *audiolang_str = "n.a.";
+        *Audiolang = "n.a.";
         return;
     }
 
@@ -2714,7 +2726,7 @@ void cDvdPlayer::GetAudioLangCode(const char **audiolang_str) const
     else
         sprintf(buffer,"%s %s", currentNavAudioTrackLangCode != 0xFFFF ? (char *)&currentNavAudioTrackLangCode : "", audioTypeDescr);
 
-    *audiolang_str = buffer;
+    *Audiolang = buffer;
 }
 
 char *cDvdPlayer::GetAspectString() const
