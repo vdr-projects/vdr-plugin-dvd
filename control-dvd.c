@@ -83,7 +83,7 @@ bool cDvdPlayerControl::Active(void)
 
 void cDvdPlayerControl::Stop(void)
 {
-    if(player)
+    if (player)
         player->Stop();
 }
 
@@ -396,7 +396,6 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char * msg, int & val)
             inputActive = NoneInput;
             break;
     }
-
     if (inputActive == NoneInput) {
         if (inputHide)
             Hide();
@@ -525,43 +524,40 @@ bool cDvdPlayerControl::DvdNavigation(eKeys Key)
         player->DrawSPU();
 
     switch (Key) {
-    case kUp:
-    case k2:
-        player->selectUpButton();
-        break;
-    case kDown:
-    case k8:
-        player->selectDownButton();
-        break;
-    case kLeft:
-    case k4:
-        player->selectLeftButton();
-        break;
-    case kRight:
-    case k6:
-        player->selectRightButton();
-        break;
-
-    case kOk:
-    case k5:
-        player->activateButton();
-        break;
-
-    case k1:
-        player->callRootMenu();
-        break;
-    case k3:
-        player->callTitleMenu();
-        break;
-    case k7:
-        player->callSubpMenu();
-        break;
-    case k9:
-        player->callAudioMenu();
-        break;
-
-    default:
-        return false;
+        case kUp:
+        case k2:
+            player->selectUpButton();
+            break;
+        case kDown:
+        case k8:
+            player->selectDownButton();
+            break;
+        case kLeft:
+        case k4:
+            player->selectLeftButton();
+            break;
+        case kRight:
+        case k6:
+            player->selectRightButton();
+            break;
+        case kOk:
+        case k5:
+            player->activateButton();
+            break;
+        case k1:
+            player->callRootMenu();
+            break;
+        case k3:
+            player->callTitleMenu();
+            break;
+        case k7:
+            player->callSubpMenu();
+            break;
+        case k9:
+            player->callAudioMenu();
+            break;
+        default:
+            return false;
     }
     return true;
 }
@@ -582,7 +578,7 @@ void cDvdPlayerControl::updateShow(bool force)
         else
             shown = ShowProgress(!shown) || shown;
     } else {
-        const char * title_buffer=NULL;
+        const char *title_buffer = NULL;
         static char last_title_buffer[256];
 
         if (player) {
