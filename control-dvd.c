@@ -647,57 +647,66 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 
   state = osContinue;
 
-  if ((player && player->IsInMenuDomain()) || forceDvdNavigation) {
+    if ((player && player->IsInMenuDomain()) || forceDvdNavigation) {
 
-      switch (Key) {
-          case kRed: forceDvdNavigation=false; break;
-	  case kGreen|k_Repeat:
-	  case kGreen:   player->PreviousTitle(); break;
-	  case kYellow|k_Repeat:
-	  case kYellow:  player->NextTitle(); break;
-
-	  case kUp:
-	  case kDown:
-	  case kLeft:
-	  case kRight:
-	  case kOk:
-	  case k0 ... k9:
-	      DoShowMode = false;
-	      displayFrames = DisplayedFrames;
-	      if (DvdNavigation(Key)) {
-		      break;
-	      }
-	  default:
-          state = osUnknown;
-	      break;
-      }
-  } else {
-      switch (Key) {
-	  // Positioning:
-	  case kPlay:
-	  case kUp:      Play(); break;
-
-	  case kPause:
-	  case kDown:    Pause(); break;
-
-	  case kFastRew|k_Release:
-	  case kLeft|k_Release:
-	      if (Setup.MultiSpeedMode) break;
-	  case kFastRew:
-	  case kLeft:    Backward(); break;
-
-	  case kFastFwd|k_Release:
-	  case kRight|k_Release:
-	      if (Setup.MultiSpeedMode) break;
-	  case kFastFwd:
-	  case kRight:   Forward(); break;
-
-	  default:
-              state = osUnknown;
-	      break;
-      }
-  }
-
+        switch (Key) {
+            case kRed:
+                forceDvdNavigation = false;
+                break;
+            case kGreen|k_Repeat:
+            case kGreen:
+                player->PreviousTitle();
+                break;
+            case kYellow|k_Repeat:
+            case kYellow:
+                player->NextTitle();
+                break;
+            case kUp:
+            case kDown:
+            case kLeft:
+            case kRight:
+            case kOk:
+            case k0 ... k9:
+                DoShowMode = false;
+                displayFrames = DisplayedFrames;
+                if (DvdNavigation(Key))
+                    break;
+            default:
+                state = osUnknown;
+                break;
+        }
+    } else {
+        switch (Key) {
+	        // Positioning:
+            case kPlay:
+            case kUp:
+                Play();
+                break;
+            case kPause:
+            case kDown:
+                Pause();
+                break;
+            case kFastRew|k_Release:
+            case kLeft|k_Release:
+                if (Setup.MultiSpeedMode)
+                    break;
+            case kFastRew:
+            case kLeft:
+                Backward();
+                break;
+            case kFastFwd|k_Release:
+            case kRight|k_Release:
+                if (Setup.MultiSpeedMode)
+                    break;
+            case kFastFwd:
+            case kRight:
+                Forward();
+                break;
+            default:
+                state = osUnknown;
+                break;
+            }
+    }
 
     if (state == osUnknown) {
         state = osContinue;
