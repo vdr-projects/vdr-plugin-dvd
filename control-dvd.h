@@ -24,7 +24,7 @@ private:
   int lastCurrent, lastTotal;
   bool lastPlay, lastForward;
   int lastSpeed;
-  cSkinDisplayReplay* displayReplay;
+  cSkinDisplayReplay *displayReplay;
 
   enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
 
@@ -35,7 +35,7 @@ private:
   int timeSearchTime, timeSearchPos;
 
   int inputIntVal;
-  const char * inputIntMsg;
+  const char *inputIntMsg;
 
   void TimeSearchDisplay(void);
   void TimeSearchProcess(eKeys Key);
@@ -48,7 +48,7 @@ private:
   void OsdOpen(void);
   void OsdClose();
   void ShowTimed(int Seconds = 0);
-  void updateShow(bool force=false);
+  void UpdateShow(bool force = false);
 
   void ShowMode(void);
   bool ShowProgress(bool Initial);
@@ -66,7 +66,7 @@ public:
   bool OsdTaken(void *me);
   bool TakeOsd(void *obj);
   static bool DVDActive() { return dvd_active; };
-  const char * GetDisplayHeaderLine();
+  const char *GetDisplayHeaderLine();
 
 protected:
   void HideOwnOsd(void);
@@ -111,4 +111,3 @@ public:
   };
 
 #endif // __CONTROL_DVD_H
-
