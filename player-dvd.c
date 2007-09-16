@@ -1991,79 +1991,72 @@ void cDvdPlayer::Backward(void)
        }
 }
 
-inline int cDvdPlayer::GetProgramNumber() const
+inline int cDvdPlayer::GetProgramNumber(void) const
 {
-	return lastCellEventInfo.pgN;
+    return lastCellEventInfo.pgN;
 }
 
-inline int cDvdPlayer::GetCellNumber() const
+inline int cDvdPlayer::GetCellNumber(void) const
 {
-	return lastCellEventInfo.cellN;
+    return lastCellEventInfo.cellN;
 }
 
-inline int64_t cDvdPlayer::GetPGLengthInTicks()
+inline int64_t cDvdPlayer::GetPGLengthInTicks(void)
 {
-	return lastCellEventInfo.pg_length;
+    return lastCellEventInfo.pg_length;
 }
 
-inline int64_t cDvdPlayer::GetPGCLengthInTicks()
+inline int64_t cDvdPlayer::GetPGCLengthInTicks(void)
 {
-	return lastCellEventInfo.pgc_length;
+    return lastCellEventInfo.pgc_length;
 }
 
-void cDvdPlayer::BlocksToPGCTicks( uint32_t BlockNum, int64_t & Ticks, int64_t & TotalTicks )
+void cDvdPlayer::BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks)
 {
-  TotalTicks = GetPGCLengthInTicks();
-  if(pgcTotalBlockNum>0)
-	  Ticks = BlockNum * (TotalTicks / pgcTotalBlockNum) ;
-  else
-	  Ticks = 0;
+    TotalTicks = GetPGCLengthInTicks();
+    if (pgcTotalBlockNum > 0)
+         Ticks = BlockNum * (TotalTicks / pgcTotalBlockNum) ;
+    else
+        Ticks = 0;
 }
-
 
 void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum)
 {
-    int64_t TotalTicks = GetPGCLengthInTicks();
-
+    int64_t totalTicks = GetPGCLengthInTicks();
     TotalBlockNum = pgcTotalBlockNum;
-    BlockNum = TotalTicks>0 ? (Ticks * TotalBlockNum / TotalTicks) : 0;
+    BlockNum = totalTicks > 0 ? (Ticks * TotalBlockNum / totalTicks) : 0;
 }
-
 
 bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
 {
-    int64_t CurrentTicks, TotalTicks;
+    int64_t currentTicks;
+    int64_t totalTicks;
     LOCK_THREAD; // save UpdateBlockInfo()
-    BlocksToPGCTicks( pgcCurrentBlockNum, CurrentTicks, TotalTicks );
+    BlocksToPGCTicks(pgcCurrentBlockNum, currentTicks, totalTicks);
 
-    CurrentFrame = (int) (( CurrentTicks / 90000L ) * FRAMESPERSEC) ;
-    TotalFrame   = (int) (( TotalTicks   / 90000L ) * FRAMESPERSEC) ;
+    CurrentFrame = (int)((currentTicks / 90000L) * FRAMESPERSEC);
+    TotalFrame   = (int)((totalTicks   / 90000L) * FRAMESPERSEC);
 
     //workaround for lcdproc-crashing
     if (CurrentFrame == TotalFrame) {
-        CurrentFrame=0;
-        TotalFrame=1;
+        CurrentFrame = 0;
+        TotalFrame = 1;
     }
     return true;
 }
 
 bool cDvdPlayer::UpdateBlockInfo()
 {
-    dvdnav_status_t res;
-
-    if(nav) {
-	    dvdnav_set_PGC_positioning_flag ( nav, 1);
-	    res = dvdnav_get_position ( nav, &pgcCurrentBlockNum, &pgcTotalBlockNum);
-	    if(res!=DVDNAV_STATUS_OK)
-	    {
-		DEBUG_CONTROL("dvd get pos in title failed (no pos) ..\n");
-		return false;
+    if (nav) {
+        dvdnav_set_PGC_positioning_flag (nav, 1);
+        if(dvdnav_get_position (nav, &pgcCurrentBlockNum, &pgcTotalBlockNum) != DVDNAV_STATUS_OK) {
+            DEBUG_CONTROL("dvd get pos in title failed (no pos) ..\n");
+            return false;
 	    }
     } else {
-	DEBUG_CONTROL("dvd get pos in title failed (no nav) ..\n");
-	return false;
+        DEBUG_CONTROL("dvd get pos in title failed (no nav) ..\n");
+        return false;
     }
-
     return true;
 }
 
@@ -2086,76 +2079,78 @@ void cDvdPlayer::UpdateVTSInfo()
 
 int cDvdPlayer::SkipFrames(int Frames)
 {
-        if(!DVDActiveAndRunning()) return -1;
-	SkipSeconds(Frames*FRAMESPERSEC);
-	return Frames;
+    if (!DVDActiveAndRunning())
+        return -1;
+    SkipSeconds(Frames*FRAMESPERSEC);
+    return Frames;
 }
 
 void cDvdPlayer::SkipSeconds(int Seconds)
 {
-  if(!DVDActiveAndRunning()) return;
-  if (Seconds) {
-      int64_t DiffTicks = Seconds * 90000;
-      uint32_t DiffBlockNum;
-      uint32_t CurrentBlockNum=pgcCurrentBlockNum;
+    if (!DVDActiveAndRunning())
+        return;
+    if (Seconds) {
+        int64_t diffTicks = Seconds * 90000;
+        uint32_t diffBlockNum;
+        uint32_t currentBlockNumber = pgcCurrentBlockNum;
+        PGCTicksToBlocks(diffTicks, diffBlockNum, pgcTotalBlockNum);
 
-      PGCTicksToBlocks( DiffTicks, DiffBlockNum, pgcTotalBlockNum);
+        currentBlockNumber += diffBlockNum;
 
-      CurrentBlockNum += DiffBlockNum;
+        LOCK_THREAD;
+        DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+        Empty();
 
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
-
-      if ( dvdnav_sector_search( nav, CurrentBlockNum, SEEK_SET) !=
-	   DVDNAV_STATUS_OK )
-	printf("dvd error dvdnav_sector_search: %s\n",
-		dvdnav_err_to_string(nav));
-
-      Play();
-  }
+        if (dvdnav_sector_search(nav, currentBlockNumber, SEEK_SET) != DVDNAV_STATUS_OK)
+            printf("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
+        Play();
+    }
 }
 
 bool cDvdPlayer::GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec)
 {
-      int64_t CurrentTicks=0, TotalTicks=0;
+    int64_t currentTicks = 0;
+    int64_t totalTicks = 0;
 
-      if(!DVDActiveAndRunning()) { CurrentSec=-1; TotalSec=-1; return false; }
+    if (!DVDActiveAndRunning()) {
+        CurrentSec = -1;
+        TotalSec = -1;
+        return false;
+    }
 
-      if( ! GetPositionInTicks(CurrentTicks, TotalTicks) ) return false;
+    if (!GetPositionInTicks(currentTicks, totalTicks))
+        return false;
 
-      CurrentSec = PTSTicksToSec(CurrentTicks);
-      TotalSec   = PTSTicksToSec(TotalTicks);
-
-      return true;
+    CurrentSec = PTSTicksToSec(currentTicks);
+    TotalSec   = PTSTicksToSec(totalTicks);
+    return true;
 }
 
 bool cDvdPlayer::GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks)
 {
-      BlocksToPGCTicks( pgcCurrentBlockNum, CurrentTicks, TotalTicks );
-
-      return true;
+    BlocksToPGCTicks(pgcCurrentBlockNum, CurrentTicks, TotalTicks );
+    return true;
 }
 
 void cDvdPlayer::Goto(int Seconds, bool Still)
 {
-      int64_t CurrentTicks = Seconds * 90000;
-      uint32_t CurrentBlockNum, TotalBlockNum;
+    int64_t currentTicks = Seconds * 90000;
+    uint32_t currentBlockNumber;
+    uint32_t totalBlockNumber;
 
-      if(!DVDActiveAndRunning()) return;
+    if (!DVDActiveAndRunning())
+        return;
 
-      PGCTicksToBlocks( CurrentTicks, CurrentBlockNum, TotalBlockNum);
+    PGCTicksToBlocks(currentTicks, currentBlockNumber, totalBlockNumber);
 
-      LOCK_THREAD;
-      DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-      Empty();
+    LOCK_THREAD;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
 
-      if ( dvdnav_sector_search( nav, CurrentBlockNum, SEEK_SET) !=
-	   DVDNAV_STATUS_OK )
-	printf("dvd error dvdnav_sector_search: %s\n",
-		dvdnav_err_to_string(nav));
+    if (dvdnav_sector_search(nav, currentBlockNumber, SEEK_SET) != DVDNAV_STATUS_OK)
+        printf("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
 
-      Play();
+    Play();
 }
 
 int cDvdPlayer::GotoAngle(int Angle)

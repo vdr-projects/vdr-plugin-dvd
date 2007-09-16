@@ -237,26 +237,26 @@ public:
      * these getter returns a new allocated memory area ..
      * must be freed by callee ..
      */
-    char * GetTitleString( void ) const ;
-    char * GetTitleInfoString( void ) const ;
-    char * GetAspectString( void ) const ;
+    char *GetTitleString(void) const ;
+    char *GetTitleInfoString(void) const ;
+    char *GetAspectString(void) const ;
 
-    int GetProgramNumber() const ;
-    int GetCellNumber() const ;
+    int GetProgramNumber(void) const ;
+    int GetCellNumber(void) const ;
 
     /**
      * returns the PG (e.g. chapter) lenght in ticks
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    int64_t GetPGLengthInTicks() ;
+    int64_t GetPGLengthInTicks(void) ;
 
     /**
      * returns the PGC (e.g. whole title) lenght in ticks
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    int64_t GetPGCLengthInTicks() ;
+    int64_t GetPGCLengthInTicks(void) ;
 
     /**
      * returns the Ticks and TotalTicks according to the given
@@ -266,7 +266,7 @@ public:
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void BlocksToPGCTicks( uint32_t BlockNum, int64_t & Ticks, int64_t & TotalTicks ) ;
+    void BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks) ;
 
     /**
      * returns the CurrentBlockNum and TotalBlockNum according to the given
@@ -276,7 +276,7 @@ public:
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum) ;
+    void PGCTicksToBlocks(int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum) ;
 
     bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) ;
     bool GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) ;
