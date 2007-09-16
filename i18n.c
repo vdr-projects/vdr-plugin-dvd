@@ -43,6 +43,7 @@ const char *ISO639code[] = {
 #endif
 };
 
+#if VDRVERSNUM < 10507
 const tI18nPhrase DvdPhrases[] = {
     {
     "Plugin.DVD$DVD",                                       // English
@@ -410,3 +411,4 @@ const tI18nPhrase DvdPhrases[] = {
     },
     { NULL }
 };
+#endif
