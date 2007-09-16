@@ -141,13 +141,13 @@ void cDvdPlayerControl::OsdOpen(void)
 {
     if (visible) {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: allready visible\n");
-	    return;
+        return;
     }
 
     if (OsdTaken(this)) {
-        if(player) {
+        if (player) {
             DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> HideSPU ... \n");
-		    player->HideSPU();
+            player->HideSPU();
         }
     }
     if (!TakeOsd((void *)this)) {
@@ -360,8 +360,8 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val)
                 case TimeSearchInput:
                     break;
                 case TrackSearchInput:
-                    if(player)
-	                    player->GotoTitle(val);
+                    if (player)
+                        player->GotoTitle(val);
                     break;
                 default:
                     break;
@@ -388,7 +388,7 @@ void cDvdPlayerControl::TrackSearch(void)
     inputHide = false;
     Show();
     if (visible)
-	    inputHide = true;
+        inputHide = true;
     else
         return;
     timeoutShow = 0;
@@ -556,9 +556,9 @@ void cDvdPlayerControl::UpdateShow(bool force)
         const char *title_buffer = NULL;
         static char last_title_buffer[256];
         if (player) {
-	        title_buffer = GetDisplayHeaderLine();
+            title_buffer = GetDisplayHeaderLine();
             if (strcmp(title_buffer, last_title_buffer)) {
- 	            strcpy(last_title_buffer, title_buffer);
+                strcpy(last_title_buffer, title_buffer);
                 cStatus::MsgReplaying(this, title_buffer, NULL, true);
             }
         }
@@ -574,7 +574,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
     if (state != osUnknown) {
         Hide();
         DEBUG_KEY("cDvdPlayerControl::ProcessKey key: %d 0x%X, state=%d 0x%X FIN!\n",
-	        Key, Key, state, state);
+            Key, Key, state, state);
         DEBUG_KEY("DVD-Ctrl: ProcessKey END\n");
         return state;
     }
@@ -682,25 +682,25 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
         state = osContinue;
 
         switch (Key) {
-	        // Positioning:
-	        case kRed:
+            // Positioning:
+            case kRed:
                 TimeSearch();
                 break;
-	        case kGreen | k_Repeat:
-	        case kGreen:
+            case kGreen | k_Repeat:
+            case kGreen:
                 SkipSeconds(-60);
                 break;
-	        case kYellow | k_Repeat:
-	        case kYellow:
+            case kYellow | k_Repeat:
+            case kYellow:
                 SkipSeconds(60);
                 break;
-	        case kBlue:
+            case kBlue:
                 TrackSearch();
                 break;
             default: {
-	            DoShowMode = false;
-	            displayFrames = DisplayedFrames;
-	            switch (Key) {
+                DoShowMode = false;
+                displayFrames = DisplayedFrames;
+                switch (Key) {
                     // Menu control:
                     case kOk:
                         if (visible && !modeOnly) {
@@ -713,7 +713,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                     case kBack:
                         Hide();
                         Stop();
-	                    state = osEnd;
+                        state = osEnd;
                         break;
                     case k2:
                         if (player) {

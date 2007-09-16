@@ -1826,18 +1826,17 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
 int cDvdPlayer::Resume(void)
 {
-  return -1;
+    return -1;
 }
 
 bool cDvdPlayer::Save(void)
 {
-  return false;
+    return false;
 }
 
 void cDvdPlayer::Activate(bool On)
 {
     DEBUGDVD("cDvdPlayer::Activate %d->%d\n", active, On);
-
     if (On) {
         Start();
     } else if (active) {
@@ -1853,142 +1852,137 @@ void cDvdPlayer::Activate(bool On)
 
 void cDvdPlayer::Pause(void)
 {
-  if(!DVDActiveAndRunning()) return;
-  if (playMode == pmPause || playMode == pmStill) {
-     Play();
-  } else {
-     LOCK_THREAD;
-     if (playMode == pmFast || (playMode == pmSlow && playDir == pdBackward))
-     {
-	DEBUG_NAV("%s:%d: empty\n", __FILE__, __LINE__);
-        Empty();
-     }
-     // DeviceFreeze();
-     DeviceClear();
-     playMode = pmPause;
-  }
+    if (!DVDActiveAndRunning())
+        return;
+    if (playMode == pmPause || playMode == pmStill)
+        Play();
+    else {
+        LOCK_THREAD;
+        if (playMode == pmFast || (playMode == pmSlow && playDir == pdBackward)) {
+            DEBUG_NAV("%s:%d: empty\n", __FILE__, __LINE__);
+            Empty();
+        }
+        // DeviceFreeze();
+        DeviceClear();
+        playMode = pmPause;
+    }
 }
 
 void cDvdPlayer::Stop(void)
 {
-    if(!DVDActiveAndRunning()) return;
+    if (!DVDActiveAndRunning())
+        return;
 
-    if( running && nav ) {
-	    dvdnav_stop(nav);
-    }
+    if (running && nav)
+        dvdnav_stop(nav);
 }
 
 void cDvdPlayer::Play(void)
 {
-  if(!DVDActiveAndRunning()) return;
-  if (playMode != pmPlay) {
-     LOCK_THREAD;
-     if (playMode == pmStill || playMode == pmFast || (playMode == pmSlow && playDir == pdBackward))
-     {
-     	if(DVDSetup.ReadAHead>0)
-		dvdnav_set_readahead_flag(nav, DVDSetup.ReadAHead);
-        DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-        Empty();
-     }
-     DevicePlay();
-     playMode = pmPlay;
-     playDir = pdForward;
+    if (!DVDActiveAndRunning())
+        return;
+    if (playMode != pmPlay) {
+        LOCK_THREAD;
+        if (playMode == pmStill || playMode == pmFast || (playMode == pmSlow && playDir == pdBackward)) {
+            if (DVDSetup.ReadAHead > 0)
+                dvdnav_set_readahead_flag(nav, DVDSetup.ReadAHead);
+            DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+            Empty();
+        }
+        DevicePlay();
+        playMode = pmPlay;
+        playDir = pdForward;
     }
 }
 
 void cDvdPlayer::Forward(void)
 {
-     if(!DVDActiveAndRunning()) return;
-     LOCK_THREAD;
-     switch (playMode) {
-       case pmFast:
+    if (!DVDActiveAndRunning())
+        return;
+    LOCK_THREAD;
+    switch (playMode) {
+        case pmFast:
             if (Setup.MultiSpeedMode) {
-               TrickSpeed(playDir == pdForward ? 1 : -1);
-               break;
-               }
-            else if (playDir == pdForward) {
-               Play();
-               break;
-               }
+                TrickSpeed(playDir == pdForward ? 1 : -1);
+                break;
+            } else if (playDir == pdForward) {
+                Play();
+                break;
+            }
             // run into pmPlay
-       case pmPlay: {
-	    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+        case pmPlay:
+            DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
             DeviceMute();
             playMode = pmFast;
             playDir = pdForward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? 1 : MAX_SPEEDS);
-            }
             break;
-       case pmSlow:
+        case pmSlow:
             if (Setup.MultiSpeedMode) {
-               TrickSpeed(playDir == pdForward ? -1 : 1);
-               break;
-               }
-            else if (playDir == pdForward) {
-               Pause();
-               break;
-               }
+                TrickSpeed(playDir == pdForward ? -1 : 1);
+                break;
+            } else if (playDir == pdForward) {
+                Pause();
+                break;
+            }
             // run into pmPause
-       case pmStill:
-       case pmPause:
+        case pmStill:
+        case pmPause:
             DeviceMute();
             playMode = pmSlow;
             playDir = pdForward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? -1 : -MAX_SPEEDS);
             break;
-       }
+    }
 }
 
 void cDvdPlayer::Backward(void)
 {
-     if(!DVDActiveAndRunning()) return;
-     LOCK_THREAD;
-     switch (playMode) {
-       case pmFast:
+    if (!DVDActiveAndRunning())
+        return;
+    LOCK_THREAD;
+    switch (playMode) {
+        case pmFast:
             if (Setup.MultiSpeedMode) {
                TrickSpeed(playDir == pdBackward ? 1 : -1);
                break;
-               }
-            else if (playDir == pdBackward) {
+            } else if (playDir == pdBackward) {
                Play();
                break;
-               }
+            }
             // run into pmPlay
-       case pmPlay: {
-	    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+        case pmPlay:
+            DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
             DeviceMute();
             playMode = pmFast;
             playDir = pdBackward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? 1 : MAX_SPEEDS);
-            }
             break;
-       case pmSlow:
+        case pmSlow:
             if (Setup.MultiSpeedMode) {
                TrickSpeed(playDir == pdBackward ? -1 : 1);
                break;
-               }
-            else if (playDir == pdBackward) {
+            } else if (playDir == pdBackward) {
                Pause();
                break;
-               }
+            }
             // run into pmPause
-       case pmStill:
-       case pmPause: {
-	    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+        case pmStill:
+        case pmPause:
+	        DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
             DeviceMute();
             playMode = pmSlow;
             playDir = pdBackward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? -1 : -MAX_SPEEDS);
-            }
             break;
-       }
+    }
 }
 
 inline int cDvdPlayer::GetProgramNumber(void) const
