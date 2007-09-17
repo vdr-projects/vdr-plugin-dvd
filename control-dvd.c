@@ -272,8 +272,8 @@ const char *cDvdPlayerControl::GetDisplayHeaderLine()
     title_str = player->GetTitleString();
     aspect_str = player->GetAspectString();
 
-    player->GetAudioLangCode(&audiolang_str);
-    player->GetSubpLangCode(&spulang_str);
+    player->GetAudioLanguageStr(&audiolang_str);
+    player->GetSubtitleLanguageStr(&spulang_str);
 
     snprintf(title_buffer, sizeof(title_buffer), "%s, %s, %s, %s, %s    ", titleinfo_str, audiolang_str, spulang_str, aspect_str, title_str);
 

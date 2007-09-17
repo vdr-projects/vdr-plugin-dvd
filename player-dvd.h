@@ -97,7 +97,6 @@ class cDvdPlayer : public cPlayer, cThread {
     uint32_t cntAudBlocksPlayed;
 
     int currentNavSubpStream;
-    uint16_t currentNavSubpStreamLangCode;
     bool currentNavSubpStreamUsrLocked;
     bool changeNavSubpStreamOnceInSameCell;
 
@@ -106,7 +105,6 @@ class cDvdPlayer : public cPlayer, cThread {
     void setAllSubpStreams(void);
     int SearchSubpStream(int SubpStreamId) const;
     void notifySeenSubpStream( int navSubpStream );
-    uint16_t GetNavSubpStreamLangCode(int channel) const;
     int  SetSubpStream(int id);
     bool GetCurrentNavSubpStreamUsrLocked(void) const ;
     void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
@@ -141,7 +139,6 @@ class cDvdPlayer : public cPlayer, cThread {
     void setAllAudioTracks(void);
     int notifySeenAudioTrack(int navAudioTrack);
     int SearchAudioStream(int AudioStreamId) const;
-    uint16_t GetNavAudioTrackLangCode(int channel) const;
     bool SetCurrentNavAudioTrackType(int atype);
 
     static int Speeds[];
@@ -183,6 +180,8 @@ class cDvdPlayer : public cPlayer, cThread {
     int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
     void playSPU(int spuId, unsigned char *data, int datalen);
 
+    uint16_t GetAudioTrackLanguageCode(int channel) const;
+    uint16_t GetSubtitleLanguageCode(int Channel) const;
 protected: //Player
     virtual void Activate(bool On);
     virtual void Action(void);
@@ -217,8 +216,10 @@ public:
     cDvdPlayer(void);
     virtual ~cDvdPlayer();
     bool Active(void) const { return active ; }
-    bool DVDActiveAndRunning(void) const { return active && nav!=NULL && running; }
+    bool DVDActiveAndRunning(void) const { return active && nav != NULL && running; }
     bool DVDRemoveable(void) const { return !active && !running; }
+    void GetAudioLanguageStr(const char **AudioLanguageStr) const ;
+    void GetSubtitleLanguageStr( const char **SubtitleLanguageStr ) const ;
 
     // -- control stuff --
     void setController (cDvdPlayerControl *ctrl );
@@ -349,10 +350,8 @@ public:
 
     int  GetCurrentNavSubpStream(void) const ;
     int  GetCurrentNavSubpStreamIdx(void) const ;
-    uint16_t GetCurrentNavSubpStreamLangCode(void) const;
     int  GetNavSubpStreamNumber (void) const ;
     int  NextSubpStream();
-    void GetSubpLangCode( const char ** subplang_str ) const ;
 
     bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
@@ -360,7 +359,7 @@ public:
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
     int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
-    void GetAudioLangCode(const char **Audiolang) const ;
+
 
     void selectUpButton(void);
     void selectDownButton(void);
@@ -472,4 +471,3 @@ inline void cDvdPlayer::selectRightButton(void)
 }
 
 #endif //__PLAYER_DVD_H
-
