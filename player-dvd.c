@@ -2376,7 +2376,7 @@ int cDvdPlayer::GetCurrentNavSubpStreamIdx(void) const
     return SearchSubpStream(currentNavSubpStream);
 }
 
-int cDvdPlayer::GetNavSubpStreamNumber (void) const
+int cDvdPlayer::GetSubtitleStreamNumbers(void) const
 {
     return navSubpStreamSeen.Count();
 }
@@ -2525,7 +2525,7 @@ int  cDvdPlayer::GetCurrentNavAudioTrackType(void) const
     return  currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
 }
 
-int cDvdPlayer::GetNavAudioTrackNumber (void) const
+int cDvdPlayer::GetAudioStreamNumbers(void) const
 {
     return navAudioTracksSeen.Count();
 }
@@ -2643,11 +2643,14 @@ void cDvdPlayer::SetTitleInfoString()
 
     if (titleNumber >= 1) {
         /* no menu here */
-  	    /* Reflect angle info if appropriate */
+        /* Reflect angle info if appropriate */
         dvdnav_get_angle_info(nav, &angleNumber, &angleNumbers);
     }
 
-    if (angleNumbers > 1)
+    //Menu's has no titleNumbers and chapterNumbers (see dvdnav.h)
+    if (titleNumber == 0)
+        asprintf(&titleinfo_str, "%d/%d %d", titleNumber, titleNumbers,  chapterNumber);
+    else if (angleNumbers > 1)
         asprintf(&titleinfo_str, "%d/%d %d/%d %d/%d", titleNumber, titleNumbers, chapterNumber, chapterNumbers, angleNumber, angleNumbers);
     else
         asprintf(&titleinfo_str, "%d/%d %d/%d", titleNumber, titleNumbers,  chapterNumber, chapterNumbers);
@@ -2684,11 +2687,10 @@ void cDvdPlayer::GetAudioLanguageStr(const char **AudioLanguageStr) const
 
     uint16_t audioStreamLanguageCode = GetAudioTrackLanguageCode(currentNavAudioTrack);
     char audioLanguageStr[3] = {audioStreamLanguageCode, audioStreamLanguageCode >> 8, 0};
-    if (GetNavAudioTrackNumber() > 1)
-        sprintf(buffer,"%s %d/%d %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", GetCurrentNavAudioTrackIdx() + 1, GetNavAudioTrackNumber(), audioTypeDescr);
+    if (GetAudioStreamNumbers() > 1)
+        sprintf(buffer,"%s %d/%d %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", GetCurrentNavAudioTrackIdx() + 1, GetAudioStreamNumbers() - 1, audioTypeDescr);
     else
         sprintf(buffer,"%s %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", audioTypeDescr);
-
     *AudioLanguageStr = buffer;
 }
 
@@ -2696,7 +2698,7 @@ void cDvdPlayer::GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const
 {
     static char buffer[100];
 
-    if (!DVDActiveAndRunning() || GetNavSubpStreamNumber() == 0) {
+    if (!DVDActiveAndRunning() || GetSubtitleStreamNumbers() == 0) {
         *SubtitleLanguageStr = "n.a.";
         return;
     }
@@ -2704,10 +2706,10 @@ void cDvdPlayer::GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const
     int subtitleStreamLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
     char subtitleLanguageStr[3] = {subtitleStreamLanguageCode, subtitleStreamLanguageCode >> 8, 0};
 
-    if(GetNavSubpStreamNumber() > 2)
-        sprintf(buffer,"%s %d/%d", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "", GetCurrentNavSubpStreamIdx(), GetNavSubpStreamNumber() - 1);
-    else if(GetNavSubpStreamNumber() > 1)
-        sprintf(buffer,"%s", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "n.a.");
+    if(GetSubtitleStreamNumbers() > 2)
+        sprintf(buffer,"%s %d/%d", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "", GetCurrentNavSubpStreamIdx(), GetSubtitleStreamNumbers() - 1);
+    else if(GetSubtitleStreamNumbers() > 1)
+        sprintf(buffer,"%s", subtitleStreamLanguageCode != 0xFFFF ? subtitleLanguageStr : "n.a.");
     *SubtitleLanguageStr = buffer;
 }
 

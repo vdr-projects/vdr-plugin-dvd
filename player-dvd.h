@@ -181,7 +181,9 @@ class cDvdPlayer : public cPlayer, cThread {
     void playSPU(int spuId, unsigned char *data, int datalen);
 
     uint16_t GetAudioTrackLanguageCode(int channel) const;
+    int  GetAudioStreamNumbers(void) const ;
     uint16_t GetSubtitleLanguageCode(int Channel) const;
+    int  GetSubtitleStreamNumbers(void) const ;
 protected: //Player
     virtual void Activate(bool On);
     virtual void Action(void);
@@ -350,12 +352,10 @@ public:
 
     int  GetCurrentNavSubpStream(void) const ;
     int  GetCurrentNavSubpStreamIdx(void) const ;
-    int  GetNavSubpStreamNumber (void) const ;
     int  NextSubpStream();
 
     bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
-    int  GetNavAudioTrackNumber(void) const ;
     int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
     int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
