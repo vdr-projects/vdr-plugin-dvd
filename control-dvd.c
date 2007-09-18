@@ -113,12 +113,7 @@ int cDvdPlayerControl::SkipFrames(int Frames)
 
 bool cDvdPlayerControl::GetIndex(int &Current, int &Total, bool SnapToIFrame)
 {
-    if (player) {
-        player->GetIndex(Current, Total, SnapToIFrame);
-        return true;
-    }
-    Current = Total = -1;
-    return false;
+    return player ? player->GetIndex(Current, Total, SnapToIFrame) : false;
 }
 
 bool cDvdPlayerControl::GetReplayMode(bool &Play, bool &Forward, int &Speed)
