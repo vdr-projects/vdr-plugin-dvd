@@ -314,6 +314,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     SetTitleInfoString();
     SetTitleString();
     SetAspectString();
+    memset(&lastCellEventInfo, 0, sizeof(dvdnav_cell_change_event_t));
 }
 
 cDvdPlayer::~cDvdPlayer()
@@ -1116,7 +1117,7 @@ void cDvdPlayer::Action(void) {
 	      /**
 	       * update information
 	       */
-              memcpy(&lastCellEventInfo, cache_ptr, sizeof(dvdnav_cell_change_event_t));
+          memcpy(&lastCellEventInfo, cache_ptr, sizeof(dvdnav_cell_change_event_t));
 	      UpdateBlockInfo(); // TEST
           UpdateVTSInfo(); // TEST
 	      BlocksToPGCTicks( 1, pgcTicksPerBlock, pgcTotalTicks);
@@ -2022,20 +2023,17 @@ void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &
 
 bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
 {
-    int64_t currentTicks;
-    int64_t totalTicks;
-    LOCK_THREAD; // save UpdateBlockInfo()
-    BlocksToPGCTicks(pgcCurrentBlockNum, currentTicks, totalTicks);
-
-    CurrentFrame = (int)((currentTicks / 90000L) * FRAMESPERSEC);
-    TotalFrame   = (int)((totalTicks   / 90000L) * FRAMESPERSEC);
-
-    //workaround for lcdproc-crashing
-    if (CurrentFrame == TotalFrame) {
-        CurrentFrame = 0;
-        TotalFrame = 1;
+    if (nav) {
+        uint32_t currentBlock;
+        uint32_t totalBlock;
+        dvdnav_set_PGC_positioning_flag(nav, 1);
+        if (dvdnav_get_position(nav, &currentBlock, &totalBlock) == DVDNAV_STATUS_OK) {
+            CurrentFrame = (int)(currentBlock * GetPGCLengthInTicks() / totalBlock / 90000L) * FRAMESPERSEC;
+            TotalFrame   = (int)(GetPGCLengthInTicks() / 90000L) * FRAMESPERSEC;
+            return true;
+        }
     }
-    return true;
+    return false;
 }
 
 bool cDvdPlayer::UpdateBlockInfo()
@@ -2309,7 +2307,7 @@ void cDvdPlayer::setAllSubpStreams(void)
     clearSeenSubpStream();
 
     for (int i = 0; nav != NULL && i < MaxSubpStreams; i++) {
-        if (GetSubtitleLanguageCode(i) != 0xffff)
+        if (GetSubtitleLanguageCode(i) != 0xFFFF)
             notifySeenSubpStream(i);
     }
 }
@@ -2321,7 +2319,7 @@ int cDvdPlayer::SearchSubpStream(int SubpStreamId) const {
     if (SubpStreamId != -1)
         SubpStreamId &= SubpStreamMask;
     int i = navSubpStreamSeen.Count() - 1;
-    while ( i >= 0) {
+    while (i >= 0) {
         int streamId = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
         if (streamId != -1)
             streamId &= SubpStreamMask;
@@ -2387,7 +2385,7 @@ int cDvdPlayer::SetSubpStream(int id)
 
     int i = SearchSubpStream(id);
 
-    if(i < 0)
+    if (i < 0)
 	    id = ((IntegerListObject *)navSubpStreamSeen.Get(0))->getValue();
 
     currentNavSubpStream = id;
