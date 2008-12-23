@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+    - change i18n to gettext
     - fix GetIndex return value, remove lcdproc workaround
     - fix possible segfault's (thanks to Ioannis Petroglou)
     - add Turkish translation (thanks to Oktay Yolgeçen)
