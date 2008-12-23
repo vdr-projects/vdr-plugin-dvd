@@ -38,7 +38,6 @@
 #endif
 
 #include "dvddev.h"
-#include "mpegtypes.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"
 #include "player-dvd.h"
