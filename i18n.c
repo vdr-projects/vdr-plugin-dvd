@@ -43,6 +43,32 @@ const char *ISO639code[] = {
 #endif
 };
 
+const char *DvdLanguageCode[][2] = {
+  // Language ISO 639 codes for DVD
+    {"en", "English"},
+    {"de", "Deutsch"},
+    {"sl", "Slovenski"},
+    {"it", "Italiano"},
+    {"nl", "Nederlands"},
+    {"pt", "Português"},
+    {"fr", "Français"},
+    {"no", "Norsk"},
+    {"fi", "suomi"},
+    {"pl", "Polski"},
+    {"es", "Español"},
+    {"el", "ÅëëçíéêÜ"},
+    {"se", "Svenska"},
+    {"ro", "Romaneste"},
+    {"hu", "Magyar"},
+    {"ca", "Català"},
+    {"ru", "ÀãááÚØÙ"},
+    {"hr", "Hrvatski"},
+    {"et", "Eesti"},
+    {"da", "Dansk"},
+    {"cs", "Czech"},
+    {"tr", "Türkçe"}
+};
+
 #if VDRVERSNUM < 10507
 const tI18nPhrase DvdPhrases[] = {
     {

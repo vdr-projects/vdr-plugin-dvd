@@ -1580,9 +1580,15 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             int audioTrackIndex = notifySeenAudioTrack(audioId);
 
             uint16_t audioLanguageCode = GetAudioTrackLanguageCode(audioId);
+            const char *audioLanguageStr = NULL;
+            for (int i = 0; i < 22; i++) {
+                if (!memcmp(&audioLanguageCode, DvdLanguageCode[i][0], 2)) {
+                    audioLanguageStr = DvdLanguageCode[i][1];
+                    break;
+                }
+            }
 
-
-            DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageCode!=0xFFFF ? (char *)&audioLanguageCode : NULL);
+            DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageStr);
 	        (void) audioTrackIndex;
 
             // no sound in trick mode
@@ -1657,21 +1663,28 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             }
 
 	        // data now points to the beginning of the payload
-	        int audioVal  = ((int)*data);
-	        int audioType = audioVal & 0xF8;
+	        int subStreamId  = ((int)*data);
+            int audioType = subStreamId & 0xF8;
 
-	        if(audioType == aAC3 || audioType == aDTS || audioType == aLPCM) {
-                int audioId = audioVal & AC3AudioTrackMask;
-		        ptype = 'A';
+	        if (audioType == aAC3 || audioType == aDTS || audioType == aLPCM) {
+                int audioId = subStreamId & AC3AudioTrackMask;
+                ptype = 'A';
 
                 int audioTrackIndex = notifySeenAudioTrack(audioId);
                 uint16_t audioLanguageCode = GetAudioTrackLanguageCode(audioId);
 
+                const char *audioLanguageStr = NULL;
+                for (int i = 0; i < 22; i++) {
+                    if (!memcmp(&audioLanguageCode, DvdLanguageCode[i][0], 2)) {
+                        audioLanguageStr = DvdLanguageCode[i][1];
+                        break;
+                    }
+                }
 
                 if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
-                	DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageCode != 0xFFFF ? (char *)&audioLanguageCode : NULL);
+                    DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageStr);
                 else
-                	DeviceSetAvailableTrack(ttDolby, audioId, audioVal, audioLanguageCode != 0xFFFF ? (char *)&audioLanguageCode : NULL);
+                    DeviceSetAvailableTrack(ttDolby, audioId, subStreamId, audioLanguageStr);
 				(void)audioTrackIndex;
 
 		        if (ptsFlag) {
@@ -1766,11 +1779,19 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 			                seenAPTS(pktpts);
 		            }
 		        }
-	        }
-	        else if ( ((int)*data & 0xE0) == 0x20 ) {
-	            int spuId = (int)(*data) & SubpStreamMask;
-                notifySeenSubpStream(spuId);
-		        ptype = 'S';
+            } else if ((subStreamId & 0xE0) == 0x20) {
+                int subtitleIndex = subStreamId & SubpStreamMask;
+                notifySeenSubpStream(subtitleIndex);
+                uint16_t subtitleLanguageCode = GetSubtitleLanguageCode(subtitleIndex);
+                const char *subtitleLanguageStr = NULL;
+                for (int i = 0; i < 22; i++) {
+                    if (!memcmp(&subtitleLanguageCode, DvdLanguageCode[i][0], 2)) {
+                        subtitleLanguageStr = DvdLanguageCode[i][1];
+                        break;
+                    }
+                }
+                DeviceSetAvailableTrack(ttSubtitle, subtitleIndex, subStreamId, subtitleLanguageStr);
+
 		        if (OsdInUse()) {
 		            /**
 		             * somebody uses the osd ..
@@ -1779,21 +1800,22 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                     break;
 		        }
 
-		        data++;
-		        datalen -= 10; // 3 (mandatory header) + 6 (PS header)
+                data++;
+                datalen -= 10; // 3 (mandatory header) + 6 (PS header)
+
 
                 /**
                  * !!! currentNavSubpStream is used for Bit 7 from libdvdnav, it controls 'forced subs'
                  */
-                if (currentNavSubpStream != -1 && spuId == (currentNavSubpStream & SubpStreamMask)) {
-		            SPUassembler.Put(data, datalen, pktpts);
+                if (currentNavSubpStream != -1 && subtitleIndex == (currentNavSubpStream & SubpStreamMask)) {
+                    SPUassembler.Put(data, datalen, pktpts);
                     if (SPUdecoder && SPUassembler.ready())
                         playSPU(currentNavSubpStream, data, datalen);
                 }
-	        } else {
+            } else {
                 DEBUGDVD("PRIVATE_STREAM2 unhandled (a)id: %d 0x%X\n",
                     (int)(*data), (int)(*data));
-	        }
+            }
             break;
         } /* PRIVATE_STREAM2 */
         case PADDING_STREAM:
@@ -1805,9 +1827,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
         default: {
             lastFrameType = 0xff;
             esyslog("ERROR: dvd-plugin don't know what to do - packetType: %x",
-		    cPStream::packetType(sector));
+            cPStream::packetType(sector));
             DEBUGDVD("don't know what to do - packetType: %x",
-		    cPStream::packetType(sector));
+            cPStream::packetType(sector));
             return playedPacket;
         }
     }

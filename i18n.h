@@ -14,7 +14,7 @@
 #include <vdr/i18n.h>
 
 extern const char *ISO639code[];
-extern const tI18nPhrase DvdPhrases[];
+extern const char *DvdLanguageCode[][2];
 
 #endif // __DVD_I18N_H
 
