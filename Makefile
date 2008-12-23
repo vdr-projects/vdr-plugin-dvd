@@ -69,6 +69,10 @@ endif
 OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o     \
 	           ca52.o i18n.o setup-dvd.o 
 
+### The main target:
+
+all: libvdr-$(PLUGIN).so i18n
+
 ### Implicit rules:
 
 %.o: %.c
@@ -83,13 +87,36 @@ $(DEPFILE): Makefile
 
 -include $(DEPFILE)
 
-### Targets:
+### Internationalization (I18N):
 
-all: libvdr-$(PLUGIN).so
+PODIR     = po
+LOCALEDIR = $(VDRDIR)/locale
+I18Npo    = $(wildcard $(PODIR)/*.po)
+I18Nmsgs  = $(addprefix $(LOCALEDIR)/, $(addsuffix /LC_MESSAGES/vdr-$(PLUGIN).mo, $(notdir $(foreach file, $(I18Npo), $(basename $(file))))))
+I18Npot   = $(PODIR)/$(PLUGIN).pot
+
+%.mo: %.po
+	msgfmt -c -o $@ $<
+
+$(I18Npot): $(wildcard *.c)
+	xgettext -C -cTRANSLATORS --no-wrap --no-location -k -ktr -ktrNOOP --msgid-bugs-address='<marco@lordzodiac.de>' -o $@ $^
+
+%.po: $(I18Npot)
+	msgmerge -U --no-wrap --no-location --backup=none -q $@ $<
+	@touch $@
+
+$(I18Nmsgs): $(LOCALEDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
+	@mkdir -p $(dir $@)
+	cp $< $@
+
+.PHONY: i18n
+i18n: $(I18Nmsgs) $(I18Npot)
+
+### Targets:
 
 libvdr-$(PLUGIN).so: $(OBJS) retain-sym
 	$(CXX) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
-	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
+	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
@@ -97,11 +124,9 @@ dist: clean
 	@cp -a * $(TMPDIR)/$(ARCHIVE)
 	@tar czf $(PACKAGE).tgz -C $(TMPDIR) --exclude SCCS $(ARCHIVE)
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
-	@echo Distribution archive created as $(PACKAGE).tgz
-
-
+	@echo Distribution package created as $(PACKAGE).tgz
 retain-sym:
 	echo "VDRPluginCreator" > retain-sym
 
 clean:
-	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* retain-sym *~
+	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* retain-sym *~ $(PODIR)/*.mo $(PODIR)/*.pot
