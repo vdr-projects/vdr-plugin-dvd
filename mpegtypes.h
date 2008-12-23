@@ -35,9 +35,11 @@
 #define QUANT_MATRIX_EXTENSION       0x03
 #define PICTURE_DISPLAY_EXTENSION    0x07
 
+#if VDRVERSNUM < 10701
 #define I_FRAME 0x01
 #define P_FRAME 0x02
 #define B_FRAME 0x03
+#endif
 
 #define aAC3   0x80
 #define aDTS   0x88
