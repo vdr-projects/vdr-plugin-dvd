@@ -30,15 +30,15 @@ See the file COPYING for license information.
 Requirements:
 -------------
 
-vdr >= 1.4.0		http://cadsoft.de/vdr/, ftp://ftp.cadsoft.de/vdr/Developer/
+vdr >= 1.6.0		http://cadsoft.de/vdr/, ftp://ftp.cadsoft.de/vdr/Developer/
 libdvdcss >= 20030724	http://www.videolan.org/libdvdcss/download.html
-libdvdnav >= 0.1.10	http://dvd.sf.net
+libdvdnav >= 4.1.2	http://www.mplayerhq.hu/MPlayer/releases/dvdnav/
 a52dec >= 0.7.4		http://liba52.sourceforge.net/
 
 The plugin has been tested with the following versions:
 
 libdvdcss:	20030724 (cvs)
-libdvdnav:	0.1.10
+libdvdnav:	4.1.2
 liba52:		0.7.4
 
 +++
