@@ -394,7 +394,7 @@ void cDvdPlayerControl::TrackSearch(void)
 void cDvdPlayerControl::TimeSearchDisplay(void)
 {
     char buf[64];
-    strcpy(buf, tr("Jump: "));
+    strcpy(buf, trVDR("Jump: "));
     int len = strlen(buf);
     char h10 = '0' + (timeSearchTime >> 24);
     char h1  = '0' + ((timeSearchTime & 0x00FF0000) >> 16);
