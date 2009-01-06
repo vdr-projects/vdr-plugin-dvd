@@ -412,8 +412,13 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
 {
     #define STAY_SECONDS_OFF_END 10
     int Seconds = (timeSearchTime >> 24) * 36000 + ((timeSearchTime & 0x00FF0000) >> 16) * 3600 + ((timeSearchTime & 0x0000FF00) >> 8) * 600 + (timeSearchTime & 0x000000FF) * 60;
+#if VDRVERSNUM >= 10703
+    int Current = int(lastCurrent / FramesPerSecond());
+    int Total = int(lastTotal / FramesPerSecond());
+#else
     int Current = (lastCurrent / FRAMESPERSEC);
     int Total = (lastTotal / FRAMESPERSEC);
+#endif
     switch (Key) {
         case k0 ... k9:
             if (timeSearchPos < 4) {

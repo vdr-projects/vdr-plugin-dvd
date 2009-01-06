@@ -2050,8 +2050,13 @@ bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
         uint32_t totalBlock;
         dvdnav_set_PGC_positioning_flag(nav, 1);
         if (dvdnav_get_position(nav, &currentBlock, &totalBlock) == DVDNAV_STATUS_OK) {
+#if VDRVERSNUM >= 10703
+            CurrentFrame = (int)(currentBlock * GetPGCLengthInTicks() / totalBlock / 90000L * FramesPerSecond());
+            TotalFrame   = (int)(GetPGCLengthInTicks() / 90000L * FramesPerSecond());
+#else
             CurrentFrame = (int)(currentBlock * GetPGCLengthInTicks() / totalBlock / 90000L) * FRAMESPERSEC;
             TotalFrame   = (int)(GetPGCLengthInTicks() / 90000L) * FRAMESPERSEC;
+#endif
             return true;
         }
     }
@@ -2094,7 +2099,11 @@ int cDvdPlayer::SkipFrames(int Frames)
 {
     if (!DVDActiveAndRunning())
         return -1;
+#if VDRVERSNUM >= 10703
+    SkipSeconds(int(Frames * FramesPerSecond()));
+#else
     SkipSeconds(Frames*FRAMESPERSEC);
+#endif
     return Frames;
 }
 
