@@ -1782,15 +1782,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             } else if ((subStreamId & 0xE0) == 0x20) {
                 int subtitleIndex = subStreamId & SubpStreamMask;
                 notifySeenSubpStream(subtitleIndex);
-                uint16_t subtitleLanguageCode = GetSubtitleLanguageCode(subtitleIndex);
-                const char *subtitleLanguageStr = NULL;
-                for (int i = 0; i < 22; i++) {
-                    if (!memcmp(&subtitleLanguageCode, DvdLanguageCode[i][0], 2)) {
-                        subtitleLanguageStr = DvdLanguageCode[i][1];
-                        break;
-                    }
-                }
-                DeviceSetAvailableTrack(ttSubtitle, subtitleIndex, subStreamId, subtitleLanguageStr);
+                ptype = 'S';
 
 		        if (OsdInUse()) {
 		            /**
