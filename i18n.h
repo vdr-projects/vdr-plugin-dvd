@@ -15,6 +15,9 @@
 
 extern const char *ISO639code[];
 extern const char *DvdLanguageCode[][2];
+#if VDRVERSNUM < 10507
+extern const tI18nPhrase DvdPhrases[];
+#endif
 
 #endif // __DVD_I18N_H
 
