@@ -139,14 +139,14 @@ void cDvdPlayerControl::OsdOpen(void)
         return;
     }
 
-    if (OsdTaken(this)) {
+    if (OsdTaken((void*)this)) {
         if (player) {
             DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> HideSPU ... \n");
             player->HideSPU();
         }
     }
     if (!TakeOsd((void *)this)) {
-        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> !visible, osdTaken=%d\n", OsdTaken(this));
+        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> !visible, osdTaken\n");
         visible = false;
     } else {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: visible\n");
@@ -197,12 +197,12 @@ void cDvdPlayerControl::HideOwnOsd(void)
 
 bool cDvdPlayerControl::TakeOsd(void * owner)
 {
-    if (owner == (void *)-1 || !OsdTaken(owner)) {
+    if (owner == (void *)-1 || !OsdTaken(owner) || osdTaker == (void *)-1) {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
         osdTaker = owner; // not taken by other: new owner
         return true;
     } else {
-        DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken!\n", owner);
+        DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken! %p \n", owner,osdTaker);
     }
     return false;
 }
@@ -718,7 +718,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                     case k2:
                         if (player) {
                             if (player->NextSubpStream() == -1)
-                                Skins.Message(mtError, tr("Error.DVD$Current subp stream not seen!"));
+                                Skins.QueueMessage(mtError, tr("Error.DVD$Current subp stream not seen!"));
                             if (player->GetCurrentNavSubpStream() == -1) {
                                 Hide();
                                 Show();

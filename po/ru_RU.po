@@ -10,47 +10,47 @@ msgstr ""
 "POT-Creation-Date: 2013-01-02 05:14+1100\n"
 "PO-Revision-Date: 2007-08-12 23:15+0200\n"
 "Last-Translator: Marco Schluessler <marco@lordzodiac.de>\n"
-"Language-Team: German\n"
-"Language: de\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-15\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Error.DVD$Current subp stream not seen!"
-msgstr "Der ausgew�hlte Untertitel ist nicht vorhanden!"
+msgstr "Поток не найден!"
 
 msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
-msgstr "verwandelt VDR in einen (fast) vollst�ndigen DVD Spieler"
+msgstr "Проигрыватель DVD"
 
 msgid "Plugin.DVD$DVD"
 msgstr "DVD"
 
 msgid "Error.DVD$Error opening DVD!"
-msgstr "Fehler beim �ffnen der DVD!"
+msgstr "Ошибка открытия DVD!"
 
 msgid "Error.DVD$Error fetching data from DVD!"
-msgstr "Fehler beim lesen von der DVD!"
+msgstr "Ошибка получения данных с DVD!"
 
 msgid "Setup.DVD$Preferred menu language"
-msgstr "Bevorzugte Spache f�r Men�s"
+msgstr "Предпочтительный язык меню"
 
 msgid "Setup.DVD$Preferred audio language"
-msgstr "Bevorzugte Sprache f�r Dialog"
+msgstr "Предпочтительный язык звука"
 
 msgid "Setup.DVD$Preferred subtitle language"
-msgstr "Bevorzugte Spache f�r Untertitel"
+msgstr "Предпочтииельный язык субтитров"
 
 msgid "Setup.DVD$Player region code"
-msgstr "Regionalkode f�r DVD Spieler"
+msgstr "Код региона"
 
 msgid "Setup.DVD$Display subtitles"
-msgstr "Untertitel anzeigen"
+msgstr "Показывать субтитры"
 
 msgid "Setup.DVD$Hide Mainmenu Entry"
-msgstr "Hauptmen�eintrag verstecken"
+msgstr "Скрыть основное меню"
 
 msgid "Setup.DVD$ReadAHead"
 msgstr "ReadAHead"
 
 msgid "Setup.DVD$Gain (analog)"
-msgstr "Verst�rkung (analog)"
+msgstr "Усиление (аналог)"
