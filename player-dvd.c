@@ -128,7 +128,7 @@
 #endif
 
 #ifndef POLLTIMEOUTS_BEFORE_DEVICECLEAR
-#define POLLTIMEOUTS_BEFORE_DEVICECLEAR 3
+#define POLLTIMEOUTS_BEFORE_DEVICECLEAR 6
 #else
 #warning using patched POLLTIMEOUTS_BEFORE_DEVICECLEAR
 #endif
@@ -253,9 +253,6 @@ bool cDvdPlayer::HasBitStreamOut = false;
 bool cDvdPlayer::HasSoftDeviceOut = false;
 bool cDvdPlayer::SoftDeviceOutActive = false;
 bool cDvdPlayer::HasReelbox = false;
-
-#define AC3_HEADER_SIZE 7
-#define DTS_HEADER_SIZE 20
 
 const int cDvdPlayer::MaxAudioTracks    = 0x20;
 const int cDvdPlayer::AudioTrackMask    = 0x1F;
@@ -674,7 +671,7 @@ void cDvdPlayer::Action(void) {
 	            if(sleept_trial>sleept) sleept=sleept_trial;
 	        }
         }
- */
+*/
 /**
         DEBUG_CONTROL("dvd: menu=%d, v:%u, a:%u, p:%d, stc:%8ums, blk_size=%3d, skipPlayV=%d, IframeCnt=%d, stillTimer=%8ums\n",
             IsInMenuDomain(), cntVidBlocksPlayed, cntAudBlocksPlayed, playedPacket,
