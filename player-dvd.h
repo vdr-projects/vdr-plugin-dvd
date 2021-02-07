@@ -11,8 +11,10 @@
 #ifndef __PLAYER_DVD_H
 #define __PLAYER_DVD_H
 
+#define this _this
 #include <dvdnav/dvdnav.h>
 #include <dvdnav/dvdnav_events.h>
+#undef this
 
 #include <vdr/device.h>
 #include <vdr/player.h>
@@ -55,6 +57,7 @@ class cIframeAssembler;
 
 class cDvdPlayer : public cPlayer, cThread {
  private:
+
     enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
     enum ePlayDirs { pdForward, pdBackward };
     enum ePacketType { pktNone=0, pktVideo=1, pktAudio=2, pktIFrame=4, pktSpu=8 };
@@ -168,6 +171,7 @@ class cDvdPlayer : public cPlayer, cThread {
     static bool HasBitStreamOut;
     static bool SoftDeviceOutActive; // currently used to switch for xine
     static bool HasSoftDeviceOut;    // currently used to switch for xine
+    static bool HasReelbox;
 
     //dvd stuff
     int currButtonN;

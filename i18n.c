@@ -61,7 +61,7 @@ const char *DvdLanguageCode[][2] = {
     {"ro", "Romaneste"},
     {"hu", "Magyar"},
     {"ca", "Català"},
-    {"ru", "ÀãááÚØÙ"},
+    {"ru", "Ğ ÑƒÑÑĞºĞ¸Ğ¹"},
     {"hr", "Hrvatski"},
     {"et", "Eesti"},
     {"da", "Dansk"},
