@@ -62,6 +62,10 @@ CXXFLAGS += -O3
 LDFLAGS  += -O3 -Wl,--retain-symbols-file,retain-sym
 endif
 
+ifdef RESUMEDIR
+  DEFINES += -DRESUMEDIR=\"$(RESUMEDIR)\"
+endif
+
 ### The object files (add further files here):
 
 OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o     \

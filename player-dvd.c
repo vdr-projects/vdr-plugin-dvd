@@ -21,6 +21,8 @@
 #include <vdr/thread.h>
 #include <vdr/device.h>
 #include <vdr/plugin.h>
+// for VideoDirectory variable
+#include <vdr/videodir.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -231,6 +233,220 @@ void cIframeAssembler::Put(unsigned char *Data, int Length) {
 }
 
 
+// --- cResumeEntry ------------------------------------------------------------
+
+// borrowed from the mplayer plugin code and adapted to the dvd resume requirements
+class cResumeEntry : public cListObject {
+public:
+  char *key;
+  int title;
+  int chapter;
+  int64_t second;
+  //
+  cResumeEntry(void);
+  ~cResumeEntry();
+  };
+
+cResumeEntry::cResumeEntry(void)
+{
+  key=0;
+}
+
+cResumeEntry::~cResumeEntry()
+{
+  free(key);
+}
+
+// --- cDVDPlayerResume ----------------------------------------------------------
+
+// store resume database to this file ...
+#define RESUME_FILE "dvdplayer.resume"
+
+// ... in this directory (default: /video)
+#ifndef RESUMEDIR
+#if APIVERSNUM > 20101
+#define RESUMEDIR cVideoDirectory::Name()
+#else
+#define RESUMEDIR VideoDirectory
+#endif
+#endif
+
+
+// borrowed from the mplayer plugin code and adapted to the dvd resume requirements
+class cDVDPlayerResume : public cList<cResumeEntry> {
+private:
+  char* resfile; // the full pathname of resume file
+  bool modified; // flag to indicate that memory database was modified and needs to be saved
+  /**
+   * LoadResume():
+   * reads in the resume database file from resfile.
+   */
+  void LoadResume();
+  /**
+   * SaveResume():
+   * saves the resume database to the file resfile.
+   * returns true on successful save.
+   */
+  bool SaveResume(void);
+  /**
+   * search the (loaded) resume database for the given key.
+   * returns the cResumeEntry* if the key was found
+   * or NULL if no resume entry was found for the given key.
+   */
+  cResumeEntry *FindResume(const char* key);
+public:
+  cDVDPlayerResume(void);
+  ~cDVDPlayerResume();
+  /**
+   * SetResume():
+   * set the given resume values for the given key into the resume database.
+   * the resume database is loaded from file if not yet loaded.
+   */
+  void SetResume(const char* key, int title, int chapter, int64_t second);
+  /**
+   * GetResume():
+   * tries looking up the given key into the resume database.
+   * the resume database is loaded from file if not yet loaded.
+   * returns true if resume data could be found. In this case
+   * the givven arguments are filled with the resume data. Otherwise
+   * the arguments are not modified!
+   */
+  bool GetResume(const char* key, int& title, int& chapter, int64_t& second);
+  };
+
+cDVDPlayerResume::cDVDPlayerResume(void)
+{
+  // initialize the resume filename string.
+  asprintf(&resfile, "%s/%s", RESUMEDIR, RESUME_FILE);
+}
+
+cDVDPlayerResume::~cDVDPlayerResume()
+{
+  // save resume data to disc before self-destruction.
+  SaveResume();
+  // free the resume filename string, allocated in C'tor by asprintf
+  free(resfile);
+}
+
+void cDVDPlayerResume::SetResume(const char* key, int title, int chapter, int64_t second)
+{
+  // (re)load resume data from file to be actual
+  LoadResume();
+  cResumeEntry* re = FindResume(key);
+  if (re) {
+    // found a resume entry, so we can update it.
+    DEBUGDVD("resume: setting resume %d:%d:%lld (update)", title, chapter, second);
+  } else {
+    // no resume entry found yet, creating a new one
+    re = new cResumeEntry;
+    re->key = strdup(key);
+    Add(re);
+    DEBUGDVD("resume: setting resume %d:%d:%lld (new)", title, chapter, second);
+  }
+  // set the new resume data for the found/created entry
+  re->title = title;
+  re->chapter = chapter;
+  re->second = second;
+  // and mark memory database as modified to be saved.
+  modified = true;
+  // save it now (sync!)
+  SaveResume();
+}
+
+bool cDVDPlayerResume::GetResume(const char* key, int& title, int& chapter, int64_t& second)
+{
+  // (re)load the resume file to have actual values
+  LoadResume();
+  cResumeEntry* re = FindResume(key);
+  if (re) {
+    // found a resume entry, copy values
+    title = re->title;
+    chapter = re->chapter;
+    second = re->second;
+    // indicate successful search
+    return true;
+  }
+  // no resume entry found in database
+  return false;
+}
+
+void cDVDPlayerResume::LoadResume()
+{
+  // we will load the file for sure and add all entries, clear all old entries.
+  Clear();
+  // no entries == no modifications
+  modified = false;
+  DEBUGDVD("resume: resume file is \"%s\"\n",resfile);
+  FILE *f = fopen(resfile,"r");
+  if (f) {
+    DEBUGDVD("resume: successfully opened resume file\n");
+    char line[768];
+    // read file line by line
+    while(fgets(line,sizeof(line),f)) {
+      char key[512];
+      int t, c;
+      int64_t s;
+      // parse line as "title:chapter:second:key"
+      if(sscanf(line,"%d:%d:%lld:%511[^\n]",&t,&c,&s,key) == 4) {
+        // successful parse, save in resume entry
+        cResumeEntry *re = new cResumeEntry;
+        re->key = strdup(key);
+        re->title = t;
+        re->chapter = c;
+        re->second = s;
+        // and add it to memory database
+        Add(re);
+      }
+    }
+    // don't forget to close what you have opened!
+    fclose(f);
+  }
+  // unsuccessful open leads to empty database as the file does not exists
+}
+
+bool cDVDPlayerResume::SaveResume(void)
+{
+  if(modified) {
+    // modification indicated, save the database to the resume file
+    DEBUGDVD("resume: saving resume file\n");
+    cSafeFile f(resfile);
+    if(f.Open()) {
+      // forall resume entries in the memory database
+      for (cResumeEntry *re=First(); re; re=Next(re)) {
+        // save the as one line in the format "title:chapter:second:key"
+        fprintf(f, "%d:%d:%lld:%s\n", re->title, re->chapter, re->second, re->key);
+      }
+      // don't forget to close what you have opened!
+      f.Close();
+      // signal successful save
+      return true;
+    } else {
+      DEBUGDVD("resume: failed to save resume file\n");
+      // saving did not succeed!!!!
+      return false;
+    }
+  } else {
+    // no modifications -> successful "save" :-)
+    return true;
+  }
+}
+
+cResumeEntry *cDVDPlayerResume::FindResume(const char* key)
+{
+  DEBUGDVD("resume: searching resume  position for \"%s\"\n", key);
+  // iterate over all entries in the memory database
+  for(cResumeEntry *re=First(); re; re=Next(re)) {
+    if (!strcasecmp(re->key, key)) {
+      // return the entry iff the keys match
+      DEBUGDVD("resume: found resume position %d:%d:%lld\n",re->title, re->chapter, re->second);
+      return re;
+    }
+  }
+  DEBUGDVD("resume: no resume position found\n");
+  return NULL;
+}
+
+
 // --- cDvdPlayer ------------------------------------------------------------
 
 //XXX+ also used in recorder.c - find a better place???
@@ -288,6 +504,9 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     skipPlayVideo=false;
     fastWindFactor=1;
 
+    // resume
+    resume = new cDVDPlayerResume;
+
     clearSeenSubpStream();
     clearSeenAudioTrack();
 
@@ -334,6 +553,8 @@ cDvdPlayer::~cDvdPlayer()
 
     if(aspect_str)
 		free(aspect_str);
+
+    delete resume;
 }
 
 void cDvdPlayer::setController (cDvdPlayerControl *ctrl )
@@ -570,6 +791,100 @@ uint64_t cDvdPlayer::delay_ticks(uint64_t ticks)
 #endif
 }
 
+char* cDvdPlayer::GetDVDResumeKey() const {
+  // first we fetch the total number of titles of the current dvd
+  int totalTitles;
+  if (dvdnav_get_number_of_titles(nav, &totalTitles)) {
+    // then we sum up the numbers of chapters for each title
+    int totalChapters = 0;
+    for (int t = 1; t <= totalTitles; t++) {
+      int curChapters;
+      dvdnav_get_number_of_parts(nav, t, &curChapters);
+      totalChapters += curChapters;
+      DEBUGDVD("resume: cDvdPlayer::Action() Title %d has %d chapters.\n", t, curChapters);
+    }
+    DEBUGDVD("resume: cDvdPlayer::Action() Titles: %d with %d chapters all together, Title: \"%s\"\n",
+             totalTitles, totalChapters, title_str);
+    // finally the key is build as "DVDName_TotalTitles_OverallChapters"
+    char* key;
+    asprintf(&key, "%s_%d_%d", title_str, totalTitles, totalChapters);
+    // note: this is not completly unique. Maybe some other informations are more suitable, like:
+    // - the "serial number" of the dvd as displayed in the libdvdnav debug output, but:
+    //   it is not available through the current libdvdnav api
+    // - the total bytes of the dvd (quiet unique!!!), but:
+    //   also not available through the libdvdnav api and no idea how to get it for a media not mounted.
+    // - any other ideas???
+    return key;
+  } else {
+    // if we cannot fetch the total number of titles of the current disc, there must be something wrong!
+    // Who needs a key for resuming then?
+    return NULL;
+  }
+}
+
+void cDvdPlayer::SaveResume() {
+  // make sure resume database is allocated (might be a possibility to completly disable resuming!)
+  if (resume) {
+    // fetch the current title and chapter number via libdvdnav api
+    int currentTitle, currentChapter;
+    if (dvdnav_current_title_info(nav, &currentTitle, &currentChapter) &&
+        (0 != currentTitle)) {
+      // fetch current time position through own class api
+      int64_t currentSec, totalSec;
+      GetPositionInSec(currentSec, totalSec);
+      // compute the resume key for the current dvd
+      char* key = GetDVDResumeKey();
+      if (key) {
+        // store computed/fetched resume data in database
+        DEBUGDVD("resume->SetResume(\"%s\", %d, %d, %lld)\n", key, currentTitle, currentChapter, currentSec);
+        resume->SetResume(key, currentTitle, currentChapter, currentSec);
+        // free the key string memory allocated by GetDVDResumeKey()
+        free(key);
+      } else {
+        DEBUGDVD("resume: ERROR computing resume key for this dvd!\n");
+      }
+    } else {
+      // in a menu title and chapter seams to be always 0 -> no way to resume there!
+      DEBUGDVD("resume: ERROR fetching current title and chapter (maybe in menus?).\n");
+    }
+  }
+}
+
+bool cDvdPlayer::LoadResume(int& title, int& chapter, int64_t& second) {
+  // helper variable for the return value
+  bool retval = false;
+  // make sure resume database is allocated (might be a possibility to completly disable resuming!)
+  if(resume) {
+    // compute the resume key for the current dvd
+    char* key = GetDVDResumeKey();
+    if (key) {
+      DEBUGDVD("resume->GetResume(\"%s\", ...): ", key);
+      // try loading the resume data for the computed key into the given arguments
+      if (resume->GetResume(key, title, chapter, second)) {
+        DEBUGDVD("%d:%d:%lld\n", title, chapter, second);
+        // continuing at the very same position might be inappropriate (vdr's recordings also rewind some seconds)
+        int ResumeRewind = 30; // rewind 30s if possible
+        // note: I used a variable here to show up, that this value might be made
+        //       possible to configure (in the setup dialog). Doing so myself was
+        //       not yet nesseccary and is so left to the plugin maintainers.
+        // make sure we do not rewind before the beginning
+        if (second > ResumeRewind) {
+          second -= ResumeRewind;
+        }
+        retval = true;
+      } else {
+        DEBUGDVD("<none>\n");
+        retval = false;
+      }
+      // free the key string memory allocated by GetDVDResumeKey()
+      free(key);
+    } else {
+      DEBUGDVD("resume: ERROR computing resume key for this dvd.\n");
+    }
+  }
+  return retval;
+}
+
 void cDvdPlayer::Action(void) {
     memset(event_buf, 0, sizeof(uint8_t)*4096);
 
@@ -640,6 +955,13 @@ void cDvdPlayer::Action(void) {
     eFrameType frameType = ftUnknown;
 
     bool firstClear = true;
+
+    // we need to know the very first VTS change to hook inthe resume call
+    bool first_vts_change = true;
+    // we cannot directly resume to the exact time, so we hook on the next cell change when resuming
+    bool next_cell_change = false;
+    // and seek the the exact time stored here
+    int64_t resSecond = 0;
 
     while(running && nav) {
 
@@ -1119,6 +1441,22 @@ void cDvdPlayer::Action(void) {
 	      SetTitleInfoString();
 	      SetTitleString();
 	      SetAspectString();
+              if (first_vts_change) {
+                first_vts_change = false;
+
+                // now all data for computing the resume key is available, so trying to resume
+                int resTitle, resChapter;
+                if (LoadResume(resTitle, resChapter, resSecond)) {
+                  // if resume data could be found seek to the found title and chapter NOW
+                  GotoTitle(resTitle, resChapter);
+                  // and wait for the next cell change (= title and chapter reached)
+                  // to seek to the exact time
+                  next_cell_change = true;
+                  // note: seeking to the exact time HERE leads to an error on the libdvdnav console:
+                  //       "dvd error dvdnav_sector_search: New position not yet determined." and is
+                  //       slightly ignored :-( .
+                }
+              }
 	      break;
 	  case DVDNAV_CELL_CHANGE: {
 	      DEBUG_NAV("%s:%d:NAV CELL CHANGE\n", __FILE__, __LINE__);
@@ -1139,6 +1477,11 @@ void cDvdPlayer::Action(void) {
 	      // cell change .. game over ..
 	      changeNavSubpStreamOnceInSameCell=false;
     	  SetTitleInfoString();
+	      if (next_cell_change) {
+	        next_cell_change = false;
+	        // we are resuming the current dvd. NOW its time to seek to the correct second.
+	        Goto(resSecond);
+	      }
 	      break;
 	  }
 	  case DVDNAV_NAV_PACKET: {
@@ -1902,8 +2245,18 @@ void cDvdPlayer::Stop(void)
     if (!DVDActiveAndRunning())
         return;
 
-    if (running && nav)
+    if (running && nav) {
+        // we will stop replay now. Its time to save the current possition
+        // for later resuming.
+        SaveResume();
+
         dvdnav_stop(nav);
+
+        // don't know why Stop() is called twice, but this prevents from
+        // twice save resume data and calling dvdnav_stop() twice.
+        // Comments from maintainers are welcome.
+        running = false;
+    }
 }
 
 void cDvdPlayer::Play(void)
@@ -2219,24 +2572,41 @@ void cDvdPlayer::NextAngle(void)
     GotoAngle(++angleNumber);
 }
 
-int cDvdPlayer::GotoTitle(int Title)
+// GotoTitle now optionally takes a chapter to seek to in the given title.
+int cDvdPlayer::GotoTitle(int Title, int Chapter /*= 1*/)
 {
     int titleNumbers;
+    int targetTitle = Title;
+    int chapterNumber;
     if (!DVDActiveAndRunning())
         return -1;
     LOCK_THREAD;
     DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
     Empty();
 
+    // check if the given title is in the title range of this dvd
     dvdnav_get_number_of_titles(nav, &titleNumbers);
 
     if (Title > titleNumbers)
-        Title = 1;
+        targetTitle = 1;
     if (Title <= 0)
-        Title = titleNumbers;
+        targetTitle = titleNumbers;
+
+    // if given title is in the bounds of this dvd's title range
+    if (Title == targetTitle) {
+        // check if the chapter is in the title's chapter range
+        dvdnav_get_number_of_parts(nav, Title, &chapterNumber);
+        if (Chapter > chapterNumber)
+            Chapter = 1;
+        if (Chapter <= 0)
+            Chapter = chapterNumber;
+    } else {
+        // otherwise reset it to the first chapter.
+        Chapter = 1;
+    }
 
     if (stillTimer == 0) {
-        dvdnav_part_play(nav, Title, 1);
+        dvdnav_part_play(nav, Title, Chapter);
         // dvdnav_title_play(nav, Title);
     }
 
