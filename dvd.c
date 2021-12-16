@@ -73,7 +73,7 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 #endif
         switch (c) {
             case 'C':
-                fprintf(stderr, "arg: %s\n", optarg);
+                // fprintf(stderr, "arg: %s\n", optarg);
                 cDVD::SetDeviceName(optarg);
                 if (!cDVD::DriveExists()) {
                     esyslog("vdr: DVD drive not found: %s", optarg);
