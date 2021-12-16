@@ -125,7 +125,7 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
     "Setup.DVD$Preferred menu language",                    // English
-        "Bevorzugte Spache für Menüs",                      // Deutsch
+        "Bevorzugte Sprache für Menüs",                     // Deutsch
         "Prednostni jezik za menije",                       // Slovenski
         "menu - linguaggio preferito",                      // Italiano
         "Taalkeuze voor menu",                              // Nederlands
@@ -177,7 +177,7 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
     "Setup.DVD$Preferred subtitle language",                // English
-        "Bevorzugte Spache für Untertitel",                 // Deutsch
+        "Bevorzugte Sprache für Untertitel",                // Deutsch
         "Prednostni jezik za podnapise",                    // Slovenski
         "sottotitoli - linguaggio preferito",               // Italiano
         "Taalkeuze voor ondertitels",                       // Nederlands
@@ -333,7 +333,7 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
     "Error.DVD$Error opening DVD!",                         // English
-        "Fehler beim öffnen der DVD!",                      // Deutsch
+        "Fehler beim Öffnen der DVD!",                      // Deutsch
         "Napaka pri odpiranju DVD-ja!",                     // Slovenski
         "",                                                 // Italiano
         "Fout bij het openen van de DVD!",                  // Nederlands
@@ -359,7 +359,7 @@ const tI18nPhrase DvdPhrases[] = {
     },
     {
     "Error.DVD$Error fetching data from DVD!",              // English
-        "Fehler beim lesen von der DVD!",                   // Deutsch
+        "Fehler beim Lesen von der DVD!",                   // Deutsch
         "Napaka pri branju podatkov iz DVD-ja!",            // Slovenski
         "",                                                 // Italiano
         "Error bij het verkrijgen van data van de DVD!",    // Nederlands
