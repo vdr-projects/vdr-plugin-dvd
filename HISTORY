@@ -1,6 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2021-12-17 Version 0.3.7
     - change i18n to gettext
     - fix GetIndex return value, remove lcdproc workaround
     - fix possible segfault's (thanks to Ioannis Petroglou)
