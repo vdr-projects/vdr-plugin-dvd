@@ -54,6 +54,7 @@ class IntegerListObject : public cListObject {
 
 class cDvdPlayerControl ;
 class cIframeAssembler;
+class cDVDPlayerResume;
 
 class cDvdPlayer : public cPlayer, cThread {
  private:
@@ -188,6 +189,32 @@ class cDvdPlayer : public cPlayer, cThread {
     int  GetAudioStreamNumbers(void) const ;
     uint16_t GetSubtitleLanguageCode(int Channel) const;
     int  GetSubtitleStreamNumbers(void) const ;
+
+    //resuming
+    /**
+     * the resume database
+     */
+    cDVDPlayerResume* resume;
+    /**
+     * GetDVDResumeKey():
+     * computes a (hopefully) unique id for storing the resume data of the current disc.
+     *
+     * this get returns a new allocated memory area ..
+     * must be freed by callee ..
+     */
+    char* GetDVDResumeKey() const;
+    /**
+     * SaveResume():
+     * handles everything to save the current position on the disc for later resuming.
+     */
+    void SaveResume();
+    /**
+     * LoadResume():
+     * loads the resume data for the current disc and stores it in the given arguments.
+     * returns false if no resume data for the disc can be found or and error occured while loading.
+     */
+    bool LoadResume(int& title, int& chapter, int64_t& second);
+
 protected: //Player
     virtual void Activate(bool On);
     virtual void Action(void);
@@ -320,7 +347,8 @@ public:
      *
      * return set title ..
      */
-    int GotoTitle(int Title);
+    // GotoTitle now optionally takes a chapter to seek to in the given title
+    int GotoTitle(int Title, int Chapter = 1);
 
     /**
      * jump to the previous Title (rotate)

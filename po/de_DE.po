@@ -26,19 +26,19 @@ msgid "Plugin.DVD$DVD"
 msgstr "DVD"
 
 msgid "Error.DVD$Error opening DVD!"
-msgstr "Fehler beim öffnen der DVD!"
+msgstr "Fehler beim Öffnen der DVD!"
 
 msgid "Error.DVD$Error fetching data from DVD!"
-msgstr "Fehler beim lesen von der DVD!"
+msgstr "Fehler beim Lesen von der DVD!"
 
 msgid "Setup.DVD$Preferred menu language"
-msgstr "Bevorzugte Spache für Menüs"
+msgstr "Bevorzugte Sprache für Menüs"
 
 msgid "Setup.DVD$Preferred audio language"
 msgstr "Bevorzugte Sprache für Dialog"
 
 msgid "Setup.DVD$Preferred subtitle language"
-msgstr "Bevorzugte Spache für Untertitel"
+msgstr "Bevorzugte Sprache für Untertitel"
 
 msgid "Setup.DVD$Player region code"
 msgstr "Regionalkode für DVD Spieler"
