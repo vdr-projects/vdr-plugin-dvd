@@ -2441,16 +2441,23 @@ bool cDvdPlayer::UpdateBlockInfo()
 void cDvdPlayer::UpdateVTSInfo()
 {
     if(nav) {
-	    dvd_aspect = dvdnav_get_video_aspect(nav);
-	    dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
+        dvd_aspect = dvdnav_get_video_aspect(nav);
+        dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
         isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
-	    isInFeature    = dvdnav_is_domain_vts(nav);
+        isInFeature    = dvdnav_is_domain_vts(nav);
+
+#if VDRVERSNUM >= 20801
+        uint32_t dvd_width, dvd_height;
+        dvdnav_get_video_resolution(nav, &dvd_width, &dvd_height);
+        if (SPUdecoder)
+            SPUdecoder->setResolution(dvd_width, dvd_height);
+#endif
 
         eVideoDisplayFormat videoDisplayformat = vdfCenterCutOut;
         if (!(dvd_scaleperm & 1))
-           videoDisplayformat = vdfLetterBox;
+            videoDisplayformat = vdfLetterBox;
         else if (!(dvd_scaleperm & 2))
-           videoDisplayformat = vdfPanAndScan;
+            videoDisplayformat = vdfPanAndScan;
         DeviceSetVideoDisplayFormat(videoDisplayformat);
     }
 }
