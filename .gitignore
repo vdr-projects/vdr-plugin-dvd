@@ -1,0 +1,24 @@
+# directories
+/.settings/
+
+# supplemental files
+.cproject
+.dependencies
+.project
+apply-patches.sh
+retain-sym
+*~
+*.bak
+*.new
+*.old
+*.orig
+*.rej
+*.sav
+*.tmp
+
+# compilation results
+*.a
+*.mo
+*.o
+*.pot
+*.so

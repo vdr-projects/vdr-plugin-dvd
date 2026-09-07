@@ -1050,7 +1050,7 @@ void cDvdPlayer::Action(void) {
                     // we played an IFrame with DeviceStillPicture, or else -> reset !
                     DEBUG_CONTROL("clearing device because of IframeCnt < 0 && VideoFrame\n");
                     IframeCnt = 0;
-                    while (!DeviceFlush(100));
+                    while (!DeviceDrain());
 	  		        if (!firstClear) DeviceReset();
 		        }
 
@@ -1117,7 +1117,7 @@ void cDvdPlayer::Action(void) {
 	        if (cntVidBlocksPlayed > 0) {
 		        DEBUG_CONTROL("clearing device because of IframeCnt > 0, vid %d, aud %d\n",
 		    	    cntVidBlocksPlayed, cntAudBlocksPlayed);
-                while (!DeviceFlush(100));
+                    while (!DeviceDrain());
 	            DeviceReset();
 	        }
             int iframeSize;
@@ -1138,7 +1138,7 @@ void cDvdPlayer::Action(void) {
 	    	    DeviceStillPicture(iframe, iframeSize);
 
                 DEBUG_IFRAME("SEND; ");
-                while (!DeviceFlush(100));
+                while (!DeviceDrain());
                 DEBUG_IFRAME("FLUSH!\n");
 	        }
             iframeAssembler->Clear();
@@ -1415,10 +1415,14 @@ void cDvdPlayer::Action(void) {
 	        if(!currentNavAudioTrackUsrLocked) {
 		        int id = dvdnav_get_active_audio_stream(nav);
                 DEBUG_AUDIO_ID("dvd->SetCurrentAudioTrack DOLBY %02X\n", ttDolby + id);
+#if APIVERSNUM > 30013
+   				DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
+#else
   		        if (Setup.UseDolbyDigital)
    					DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
    				else
    					DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
+#endif
                 currentNavAudioTrack = id;
 
 		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%02X, phys=%d, 0x%X\n",
@@ -2035,7 +2039,11 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                     }
                 }
 
-                if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
+#if APIVERSNUM > 30013
+            if (audioType == aLPCM)
+#else
+            if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
+#endif
                     DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageStr);
                 else
                     DeviceSetAvailableTrack(ttDolby, audioId, subStreamId, audioLanguageStr);
@@ -2109,7 +2117,12 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		rframe = new cFrame(sector, r, ftDolby);
 		if (ptsFlag)
 		    seenAPTS(pktpts);
-	    } else if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) { // else 2 pcm's -> 1 device
+	    } else 
+#if APIVERSNUM > 30013
+            if (audioType == aLPCM && !SoftDeviceOutActive) { // else 2 pcm's -> 1 device
+#else
+            if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) { // else 2 pcm's -> 1 device
+#endif
                         rframe = new cFrame(sector, r, ftDolby);
 			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
                             IsInMenuDomain(),
