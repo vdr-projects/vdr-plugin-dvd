@@ -619,7 +619,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
 
     if ((player && player->IsInMenuDomain()) || forceDvdNavigation) {
 
-        switch (Key) {
+        switch (int(Key)) {
             case kRed:
                 forceDvdNavigation = false;
                 break;
@@ -646,7 +646,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                 break;
         }
     } else {
-        switch (Key) {
+        switch (int(Key)) {
             // Positioning:
             case kPlay:
             case kUp:
@@ -681,7 +681,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
     if (state == osUnknown) {
         state = osContinue;
 
-        switch (Key) {
+        switch (int(Key)) {
             // Positioning:
             case kRed:
                 TimeSearch();
@@ -700,7 +700,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
             default: {
                 DoShowMode = false;
                 displayFrames = DisplayedFrames;
-                switch (Key) {
+                switch (int(Key)) {
                     // Menu control:
                     case kOk:
                         if (visible && !modeOnly) {

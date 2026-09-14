@@ -387,7 +387,7 @@ void cDVDPlayerResume::LoadResume()
       int t, c;
       int64_t s;
       // parse line as "title:chapter:second:key"
-      if(sscanf(line,"%d:%d:%lld:%511[^\n]",&t,&c,&s,key) == 4) {
+      if(sscanf(line,"%d:%d:%ld:%511[^\n]",&t,&c,&s,key) == 4) {
         // successful parse, save in resume entry
         cResumeEntry *re = new cResumeEntry;
         re->key = strdup(key);
@@ -414,7 +414,7 @@ bool cDVDPlayerResume::SaveResume(void)
       // forall resume entries in the memory database
       for (cResumeEntry *re=First(); re; re=Next(re)) {
         // save the as one line in the format "title:chapter:second:key"
-        fprintf(f, "%d:%d:%lld:%s\n", re->title, re->chapter, re->second, re->key);
+        fprintf(f, "%d:%d:%ld:%s\n", re->title, re->chapter, re->second, re->key);
       }
       // don't forget to close what you have opened!
       f.Close();
@@ -1050,9 +1050,13 @@ void cDvdPlayer::Action(void) {
                     // we played an IFrame with DeviceStillPicture, or else -> reset !
                     DEBUG_CONTROL("clearing device because of IframeCnt < 0 && VideoFrame\n");
                     IframeCnt = 0;
+#if APIVERSNUM > 30013
                     while (!DeviceDrain());
-	  		        if (!firstClear) DeviceReset();
-		        }
+#else
+                    while (!DeviceFlush(100));
+#endif
+                    if (!firstClear) DeviceReset();
+                }
 
                 /** !! Skip Stillpicture **/
                 res = (IframeCnt > 0 && frameType == ftVideo) ? blk_size : PlayPes(write_blk, blk_size);
@@ -1117,7 +1121,11 @@ void cDvdPlayer::Action(void) {
 	        if (cntVidBlocksPlayed > 0) {
 		        DEBUG_CONTROL("clearing device because of IframeCnt > 0, vid %d, aud %d\n",
 		    	    cntVidBlocksPlayed, cntAudBlocksPlayed);
-                    while (!DeviceDrain());
+#if APIVERSNUM > 30013
+	            while (!DeviceDrain());
+#else
+	            while (!DeviceFlush(100));
+#endif
 	            DeviceReset();
 	        }
             int iframeSize;
@@ -1138,7 +1146,11 @@ void cDvdPlayer::Action(void) {
 	    	    DeviceStillPicture(iframe, iframeSize);
 
                 DEBUG_IFRAME("SEND; ");
+#if APIVERSNUM > 30013
                 while (!DeviceDrain());
+#else
+                while (!DeviceFlush(100));
+#endif
                 DEBUG_IFRAME("FLUSH!\n");
 	        }
             iframeAssembler->Clear();
@@ -3112,7 +3124,7 @@ void cDvdPlayer::GetAudioLanguageStr(const char **AudioLanguageStr) const
     }
 
     uint16_t audioStreamLanguageCode = GetAudioTrackLanguageCode(currentNavAudioTrack);
-    char audioLanguageStr[3] = {audioStreamLanguageCode, audioStreamLanguageCode >> 8, 0};
+    char audioLanguageStr[3] = {(char)audioStreamLanguageCode, (char)(audioStreamLanguageCode >> 8), 0};
     if (GetAudioStreamNumbers() > 1)
         sprintf(buffer,"%s %d/%d %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", GetCurrentNavAudioTrackIdx() + 1, GetAudioStreamNumbers() - 1, audioTypeDescr);
     else
@@ -3130,7 +3142,7 @@ void cDvdPlayer::GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const
     }
 
     int subtitleStreamLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
-    char subtitleLanguageStr[3] = {subtitleStreamLanguageCode, subtitleStreamLanguageCode >> 8, 0};
+    char subtitleLanguageStr[3] = {(char)subtitleStreamLanguageCode, (char)(subtitleStreamLanguageCode >> 8), 0};
 
     if(GetSubtitleStreamNumbers() > 2)
         sprintf(buffer,"%s %d/%d", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "", GetCurrentNavSubpStreamIdx(), GetSubtitleStreamNumbers() - 1);
@@ -3220,3 +3232,4 @@ int cDvdPlayer::callAudioMenu(void)
     SetCurrentNavAudioTrackUsrLocked(false);
     return nav ? dvdnav_menu_call(nav, DVD_MENU_Audio) : 0;
 }
+
