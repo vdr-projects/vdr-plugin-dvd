@@ -5,7 +5,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: VDR dvd-plugin 0.3.6b03\n"
+"Project-Id-Version: VDR dvd-plugin 0.3.8\n"
 "Report-Msgid-Bugs-To: <marco@lordzodiac.de>\n"
 "POT-Creation-Date: 2013-01-02 05:14+1100\n"
 "PO-Revision-Date: 2007-08-12 23:15+0200\n"
