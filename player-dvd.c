@@ -3107,19 +3107,19 @@ void cDvdPlayer::GetAudioLanguageStr(const char **AudioLanguageStr) const
 
     switch (currentNavAudioTrackType) {
         case aAC3:
-            audioTypeDescr = "ac3";
+            audioTypeDescr = const_cast<char*>("ac3");
             break;
         case aDTS:
-            audioTypeDescr = "dts";
+            audioTypeDescr = const_cast<char*>("dts");
             break;
         case aLPCM:
-            audioTypeDescr = "pcm";
+            audioTypeDescr = const_cast<char*>("pcm");
             break;
         case aMPEG:
-            audioTypeDescr = "mp2";
+            audioTypeDescr = const_cast<char*>("mp2");
             break;
         default:
-            audioTypeDescr = "non";
+            audioTypeDescr = const_cast<char*>("non");
             break;
     }
 

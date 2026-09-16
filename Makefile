@@ -32,7 +32,6 @@ export CXXFLAGS = $(call PKGCFG,cxxflags)
 # Avoid plugin-specific compiler warnings
 override CXXFLAGS += -Wno-unused-result
 override CXXFLAGS += -Wno-unused-but-set-variable
-override CXXFLAGS += -Wno-write-strings
 
 ### Allow user defined options to overwrite defaults:
 
