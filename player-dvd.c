@@ -3148,7 +3148,7 @@ void cDvdPlayer::GetAudioLanguageStr(const char **AudioLanguageStr) const
     uint16_t audioStreamLanguageCode = GetAudioTrackLanguageCode(currentNavAudioTrack);
     char audioLanguageStr[3] = {(char)audioStreamLanguageCode, (char)(audioStreamLanguageCode >> 8), 0};
     if (GetAudioStreamNumbers() > 1)
-        sprintf(buffer,"%s %d/%d %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", GetCurrentNavAudioTrackIdx() + 1, GetAudioStreamNumbers() - 1, audioTypeDescr);
+        sprintf(buffer,"%s %d/%d %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", GetCurrentNavAudioTrackIdx() + 1, GetAudioStreamNumbers(), audioTypeDescr);
     else
         sprintf(buffer,"%s %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", audioTypeDescr);
     *AudioLanguageStr = buffer;
@@ -3170,6 +3170,8 @@ void cDvdPlayer::GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const
         sprintf(buffer,"%s %d/%d", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "", GetCurrentNavSubpStreamIdx(), GetSubtitleStreamNumbers() - 1);
     else if(GetSubtitleStreamNumbers() > 1)
         sprintf(buffer,"%s", subtitleStreamLanguageCode != 0xFFFF ? subtitleLanguageStr : "n.a.");
+    else
+        strcpy(buffer, "n.a."); // only the "no subtitles" entry
     *SubtitleLanguageStr = buffer;
 }
 
