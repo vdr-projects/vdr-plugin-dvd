@@ -1518,9 +1518,10 @@ void cDvdPlayer::Action(void) {
                     uint16_t format = logical >= 0 ? dvdnav_audio_stream_format(nav, logical) : DVD_AUDIO_FORMAT_AC3;
                     bool dolby = format == DVD_AUDIO_FORMAT_AC3 || format == DVD_AUDIO_FORMAT_DTS;
                     DEBUG_AUDIO_ID("dvd->SetCurrentAudioTrack %s %02X\n", dolby ? "DOLBY" : "AUDIO", id);
-                    if (UseDolbyDigital() && dolby)
-                        DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
-                    else
+                    if (UseDolbyDigital() && dolby) {
+                        int subStreamId = (format == DVD_AUDIO_FORMAT_DTS ? aDTS : aAC3) | id;
+                        DeviceSetCurrentAudioTrack(eTrackType(ttDolby + DolbyTrackIndex(subStreamId)));
+                    } else
                         DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
                 }
                 currentNavAudioTrack = id;
@@ -1912,8 +1913,9 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
 {
     // DVDs give a track's language as an ISO 639-1 code. That is the track's
     // language, which only holds a few bytes and is what VDR's audio menu
-    // shows; the language's name goes into the description.
-    uint16_t languageCode = GetAudioTrackLanguageCode(Index);
+    // shows; the language's name goes into the description. The stream's
+    // number is the low bits of its id, also where Index is a DTS track's.
+    uint16_t languageCode = GetAudioTrackLanguageCode(Id & AC3AudioTrackMask);
     // This runs for every audio packet, and VDR's audio menu reads a track's
     // language and description without a lock: write them only once.
     eTrackType track = eTrackType(Type + Index);
@@ -2250,7 +2252,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 if ((!UseDolbyDigital() && audioType == aAC3) || audioType == aLPCM)
                     SetAvailableAudioTrack(ttAudio, audioId, aLPCM | audioId);
                 else
-                    SetAvailableAudioTrack(ttDolby, audioId, subStreamId);
+                    SetAvailableAudioTrack(ttDolby, DolbyTrackIndex(subStreamId), subStreamId);
 				(void)audioTrackIndex;
 
 		        if (ptsFlag) {
@@ -3195,6 +3197,15 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: SWITCHED !\n");
     }
     UpdateTrackInfo();
+}
+
+int cDvdPlayer::DolbyTrackIndex(int SubStreamId)
+{
+    // VDR registers the AC-3 and DTS tracks of the packets it plays itself,
+    // numbered by the substream id's low five bits: DTS streams 0x88-0x8f
+    // are its Dolby tracks 8-15. With any other number a track is listed
+    // twice, once without its language.
+    return SubStreamId & AudioTrackMask;
 }
 
 int cDvdPlayer::LogicalAudioStream(int Physical) const

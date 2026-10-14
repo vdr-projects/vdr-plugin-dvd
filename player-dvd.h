@@ -208,6 +208,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int announcedLanguageCode[ttMaxTrackTypes]; // per track, -1 = not announced
     void playSPU(int spuId, unsigned char *data, int datalen);
 
+    static int DolbyTrackIndex(int SubStreamId);
     int  LogicalAudioStream(int Physical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
     int  GetAudioStreamNumbers(void) const ;
