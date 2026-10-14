@@ -513,8 +513,13 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     clearSeenAudioTrack();
 
     currentNavSubpStream = -1;
+    changeNavSubpStreamOnceInSameCell = false;
 
+    currentNavAudioTrack = -1; // until libdvdnav announces the active stream
+    currentNavAudioTrackLangCode = 0xFFFF;
     currentNavAudioTrackType = -1;
+    hsize = vsize = vaspect = 0;
+    cntVidBlocksPlayed = cntAudBlocksPlayed = 0;
     lastNavAudioTrackType = -1;
 
     pgcCurrentBlockNum=1;

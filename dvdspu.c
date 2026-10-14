@@ -197,7 +197,7 @@ int simpleFIFO::Release(int Count)
 
 // ---------- cSPUassembler -----------------------------------
 
-cSPUassembler::cSPUassembler(): simpleFIFO(SPU_BUFFER_SIZE) { };
+cSPUassembler::cSPUassembler(): simpleFIFO(SPU_BUFFER_SIZE) { pts = 0; };
 
 int cSPUassembler::Put(const uint8_t *Data, int Count, uint64_t Pts)
 {
