@@ -183,6 +183,7 @@ class cDvdPlayer : public cPlayer, cThread {
     void SendIframe(bool doSend);
 
     int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
+    void SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id);
     void playSPU(int spuId, unsigned char *data, int datalen);
 
     int  LogicalAudioStream(int Physical) const;

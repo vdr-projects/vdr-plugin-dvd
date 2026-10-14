@@ -16,6 +16,7 @@
 #endif
 #endif
 
+#include <ctype.h>
 #include <sys/time.h>
 #include <vdr/i18n.h>
 #include <vdr/thread.h>
@@ -1816,6 +1817,27 @@ void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
     if(IsInMenuDomain()) seenVPTS(pktpts); // else should be seen later ..
 }
 
+void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
+{
+    // DVDs give a track's language as an ISO 639-1 code. That is the track's
+    // language, which only holds a few bytes and is what VDR's audio menu
+    // shows; the language's name goes into the description.
+    uint16_t languageCode = GetAudioTrackLanguageCode(Index);
+    char language[3] = { char(languageCode & 0xFF), char(languageCode >> 8), 0 };
+    const char *languageName = NULL;
+    if (languageCode == 0xFFFF || !isalpha((unsigned char)language[0]) || !isalpha((unsigned char)language[1]))
+        language[0] = 0;
+    else {
+        for (int i = 0; i < 22; i++) {
+            if (!strcasecmp(language, DvdLanguageCode[i][0])) {
+                languageName = DvdLanguageCode[i][1];
+                break;
+            }
+        }
+    }
+    DeviceSetAvailableTrack(Type, Index, Id, language[0] ? language : NULL, languageName);
+}
+
 int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio)
 {
     int playedPacket = pktNone;
@@ -1992,16 +2014,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        int audioId  = audioVal & AudioTrackMask;
             int audioTrackIndex = notifySeenAudioTrack(audioId);
 
-            uint16_t audioLanguageCode = GetAudioTrackLanguageCode(audioId);
-            const char *audioLanguageStr = NULL;
-            for (int i = 0; i < 22; i++) {
-                if (!memcmp(&audioLanguageCode, DvdLanguageCode[i][0], 2)) {
-                    audioLanguageStr = DvdLanguageCode[i][1];
-                    break;
-                }
-            }
-
-            DeviceSetAvailableTrack(ttAudio, audioId, audioVal, audioLanguageStr);
+            SetAvailableAudioTrack(ttAudio, audioId, audioVal);
 	        (void) audioTrackIndex;
 
             // no sound in trick mode
@@ -2086,20 +2099,11 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 ptype = 'A';
 
                 int audioTrackIndex = notifySeenAudioTrack(audioId);
-                uint16_t audioLanguageCode = GetAudioTrackLanguageCode(audioId);
-
-                const char *audioLanguageStr = NULL;
-                for (int i = 0; i < 22; i++) {
-                    if (!memcmp(&audioLanguageCode, DvdLanguageCode[i][0], 2)) {
-                        audioLanguageStr = DvdLanguageCode[i][1];
-                        break;
-                    }
-                }
 
                 if ((!UseDolbyDigital() && audioType == aAC3) || audioType == aLPCM)
-                    DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageStr);
+                    SetAvailableAudioTrack(ttAudio, audioId, aLPCM | audioId);
                 else
-                    DeviceSetAvailableTrack(ttDolby, audioId, subStreamId, audioLanguageStr);
+                    SetAvailableAudioTrack(ttDolby, audioId, subStreamId);
 				(void)audioTrackIndex;
 
 		        if (ptsFlag) {
