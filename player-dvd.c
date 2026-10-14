@@ -2897,7 +2897,7 @@ void cDvdPlayer::setAllAudioTracks(void)
 
     for (int i = 0; nav != NULL && i < MaxAudioTracks; i++) {
         if (GetAudioTrackLanguageCode(i) != 0xFFFF) {
-            notifySeenAudioTrack(dvdnav_get_audio_logical_stream(nav, i));
+            notifySeenAudioTrack(i);
         }
     }
 }
@@ -3031,9 +3031,11 @@ int cDvdPlayer::LogicalAudioStream(int Physical) const
 uint16_t cDvdPlayer::GetAudioTrackLanguageCode(int Channel) const
 {
     uint16_t audioStreamLanguageCode = 0xFFFF;
-    if (nav) {
-        int logchan = dvdnav_get_audio_logical_stream(nav, Channel);
-        audioStreamLanguageCode = dvdnav_audio_stream_to_lang(nav, logchan >= 0 ? logchan : Channel);
+    // libdvdnav indexes its table of the 8 logical streams' attributes with
+    // whatever number it gets, so only ask for a logical stream that exists.
+    int logical = LogicalAudioStream(Channel);
+    if (logical >= 0) {
+        audioStreamLanguageCode = dvdnav_audio_stream_to_lang(nav, logical);
         audioStreamLanguageCode = audioStreamLanguageCode >> 8 | (audioStreamLanguageCode & 0xFF) << 8;
     }
     return audioStreamLanguageCode;
