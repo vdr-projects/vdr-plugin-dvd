@@ -16,6 +16,7 @@
 #include <dvdnav/dvdnav_events.h>
 #undef this
 
+#include <atomic>
 #include <vdr/device.h>
 #include <vdr/player.h>
 #include <vdr/ringbuffer.h>
@@ -146,8 +147,8 @@ class cDvdPlayer : public cPlayer, cThread {
     bool SetCurrentNavAudioTrackType(int atype);
 
     static int Speeds[];
-    bool running;
-    bool active;
+    std::atomic<bool> running;
+    std::atomic<bool> active;
     ePlayModes playMode;
     ePlayDirs playDir;
     int trickSpeed;
@@ -160,6 +161,19 @@ class cDvdPlayer : public cPlayer, cThread {
     void SetTitleString( void ) ;
     void SetTitleInfoString( void );
     void SetAspectString( void );
+
+    // What the control shows, kept up to date by the player thread: the
+    // control polls it from VDR's main loop, which must not wait for the
+    // thread's lock while the thread reads the disc or drains the device.
+    mutable cMutex infoMutex;
+    bool infoPositionValid;
+    uint32_t infoCurrentBlock, infoTotalBlock;
+    int64_t infoPgcLength;
+    char infoAudio[100];
+    char infoSubtitle[100];
+    std::atomic<bool> menuButtons; // IsInMenuDomain()
+    void ReplaceInfoString(char *&Str, char *New);
+    void UpdateTrackInfo(void);
 
     //player stuff
     void StillSkip(void);
@@ -438,7 +452,9 @@ public:
 inline bool cDvdPlayer::IsInMenuDomain() const
 {
 //    return isInMenuDomain;
-    return (current_pci && current_pci->hli.hl_gi.hli_ss);
+    // current_pci->hli.hl_gi.hli_ss as of the last NAV packet; current_pci
+    // points into nav, which the player thread closes when it ends
+    return menuButtons;
 }
 
 inline bool cDvdPlayer::IsInStillFrame() const
@@ -476,6 +492,7 @@ inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
 inline void cDvdPlayer::selectUpButton(void)
 {
     DEBUGDVD("selectUpButton\n");
+    LOCK_THREAD;
     if (nav && current_pci) {
         dvdnav_upper_button_select(nav, current_pci);
     }
@@ -484,6 +501,7 @@ inline void cDvdPlayer::selectUpButton(void)
 inline void cDvdPlayer::selectDownButton(void)
 {
     DEBUGDVD("selectDownButton\n");
+    LOCK_THREAD;
     if (nav && current_pci) {
         dvdnav_lower_button_select(nav, current_pci);
     }
@@ -492,6 +510,7 @@ inline void cDvdPlayer::selectDownButton(void)
 inline void cDvdPlayer::selectLeftButton(void)
 {
     DEBUGDVD("selectLeftButton\n");
+    LOCK_THREAD;
     if (nav && current_pci) {
         dvdnav_left_button_select(nav, current_pci);
     }
@@ -500,6 +519,7 @@ inline void cDvdPlayer::selectLeftButton(void)
 inline void cDvdPlayer::selectRightButton(void)
 {
     DEBUGDVD("selectRightButton\n");
+    LOCK_THREAD;
     if (nav && current_pci) {
         dvdnav_right_button_select(nav, current_pci);
     }
