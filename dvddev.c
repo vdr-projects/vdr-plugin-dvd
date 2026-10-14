@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <string>
 
 #ifdef HAVE_CONFIG_H 
 #include "config.h"
@@ -49,14 +50,19 @@ cDVD *cDVD::dvdInstance = NULL;
 
 cDVD *cDVD::getDVD(void)
 {
-  if (!dvdInstance)
-     new cDVD;
+  // static, not new: the plugin keeps it until it is unloaded, and
+  // LeakSanitizer then reports an object nobody deleted
+  static cDVD dvd;
   return dvdInstance;
 }
 
 cDVD::cDVD(void)
 {
   dvdInstance = this;
+}
+
+cDVD::~cDVD()
+{
 }
 
 int cDVD::Command(int Cmd)
@@ -72,7 +78,9 @@ int cDVD::Command(int Cmd)
 
 void cDVD::SetDeviceName(const char *DeviceName)
 {
-  deviceName = strdup(DeviceName);
+  static std::string name; // see getDVD()
+  name = DeviceName;
+  deviceName = name.c_str();
 }
 
 const char *cDVD::DeviceName(void)
