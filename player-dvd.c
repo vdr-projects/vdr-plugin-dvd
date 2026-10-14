@@ -1475,10 +1475,9 @@ void cDvdPlayer::Action(void) {
                 int resTitle, resChapter;
                 if (LoadResume(resTitle, resChapter, resSecond)) {
                   // if resume data could be found seek to the found title and chapter NOW
-                  GotoTitle(resTitle, resChapter);
                   // and wait for the next cell change (= title and chapter reached)
                   // to seek to the exact time
-                  next_cell_change = true;
+                  next_cell_change = GotoTitle(resTitle, resChapter) > 0;
                   // note: seeking to the exact time HERE leads to an error on the libdvdnav console:
                   //       "dvd error dvdnav_sector_search: New position not yet determined." and is
                   //       slightly ignored :-( .
@@ -2620,34 +2619,26 @@ void cDvdPlayer::NextAngle(void)
 int cDvdPlayer::GotoTitle(int Title, int Chapter /*= 1*/)
 {
     int titleNumbers;
-    int targetTitle = Title;
     int chapterNumber;
     if (!DVDActiveAndRunning())
         return -1;
     LOCK_THREAD;
+
+    // A title this dvd doesn't have - a typo in the title search, a resume
+    // entry of another disc - is ignored; NextTitle() and PreviousTitle()
+    // wrap around themselves.
+    if (dvdnav_get_number_of_titles(nav, &titleNumbers) != DVDNAV_STATUS_OK || Title < 1 || Title > titleNumbers)
+        return -1;
+
     DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
     Empty();
 
-    // check if the given title is in the title range of this dvd
-    dvdnav_get_number_of_titles(nav, &titleNumbers);
-
-    if (Title > titleNumbers)
-        targetTitle = 1;
-    if (Title <= 0)
-        targetTitle = titleNumbers;
-
-    // if given title is in the bounds of this dvd's title range
-    if (Title == targetTitle) {
-        // check if the chapter is in the title's chapter range
-        dvdnav_get_number_of_parts(nav, Title, &chapterNumber);
-        if (Chapter > chapterNumber)
-            Chapter = 1;
-        if (Chapter <= 0)
-            Chapter = chapterNumber;
-    } else {
-        // otherwise reset it to the first chapter.
+    // check if the chapter is in the title's chapter range
+    dvdnav_get_number_of_parts(nav, Title, &chapterNumber);
+    if (Chapter > chapterNumber)
         Chapter = 1;
-    }
+    if (Chapter <= 0)
+        Chapter = chapterNumber;
 
     if (stillTimer == 0) {
         dvdnav_part_play(nav, Title, Chapter);
@@ -2661,20 +2652,22 @@ int cDvdPlayer::GotoTitle(int Title, int Chapter /*= 1*/)
 
 void cDvdPlayer::NextTitle(void)
 {
-    int titleNumber, chapterNumber;
+    int titleNumber, chapterNumber, titleNumbers;
     if (!DVDActiveAndRunning())
         return;
     dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
-    GotoTitle(++titleNumber);
+    dvdnav_get_number_of_titles(nav, &titleNumbers);
+    GotoTitle(titleNumber < titleNumbers ? titleNumber + 1 : 1);
 }
 
 void cDvdPlayer::PreviousTitle()
 {
-    int titleNumber, chapterNumber;
+    int titleNumber, chapterNumber, titleNumbers;
     if (!DVDActiveAndRunning())
         return;
     dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
-    GotoTitle(--titleNumber);
+    dvdnav_get_number_of_titles(nav, &titleNumbers);
+    GotoTitle(titleNumber > 1 ? titleNumber - 1 : titleNumbers);
 }
 
 int cDvdPlayer::GotoPart(int Part)
