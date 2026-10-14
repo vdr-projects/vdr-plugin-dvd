@@ -11,8 +11,10 @@
 #ifndef __PLAYER_DVD_H
 #define __PLAYER_DVD_H
 
+#include <stdarg.h>
 #define this _this
 #include <dvdnav/dvdnav.h>
+#include <dvdnav/version.h>
 #include <dvdnav/dvdnav_events.h>
 #undef this
 
@@ -149,6 +151,10 @@ class cDvdPlayer : public cPlayer, cThread {
     static int Speeds[];
     std::atomic<bool> running;
     std::atomic<bool> active;
+    std::atomic<bool> navFailed; // see NavLog()
+#if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
+    static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args);
+#endif
     std::atomic<ePlayModes> playMode; // the thread's loop checks it without the lock
     ePlayDirs playDir;
     int trickSpeed;

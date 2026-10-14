@@ -519,6 +519,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
 
     // resume
     resume = new cDVDPlayerResume;
+    navFailed = false;
 
     clearSeenSubpStream();
     clearSeenAudioTrack();
@@ -962,7 +963,12 @@ void cDvdPlayer::Action(void) {
     }
     dsyslog("dvd-plugin: SoftDeviceOutActive=%d, HasSoftDeviceOut=%d", SoftDeviceOutActive, HasSoftDeviceOut);
 
+#if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
+    static const dvdnav_logger_cb navLogger = { NavLog };
+    if (dvdnav_open2(&nav, this, &navLogger, cDVD::getDVD()->DeviceName()) != DVDNAV_STATUS_OK) {
+#else
     if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) != DVDNAV_STATUS_OK) {
+#endif
         Skins.QueueMessage(mtError, tr("Error.DVD$Error opening DVD!"));
         esyslog("ERROR: dvd-plugin cannot open dvdnav device %s -> input thread ended (pid=%d) !", const_cast<char *>(cDVD::getDVD()->DeviceName()), getpid());
         active = running = false;
@@ -1088,6 +1094,8 @@ void cDvdPlayer::Action(void) {
         PollTimeouts = 0;
 
         LOCK_THREAD;
+        if (!running)
+            continue; // a key handler found libdvdnav broken, see NavLog()
 
         // Under the lock: Empty(), called by the control's key handlers,
         // clears the ring buffer and so deletes the frame taken from it.
@@ -1370,7 +1378,14 @@ void cDvdPlayer::Action(void) {
       // from here on, continue is not allowed,
       // as it would bypass dvdnav_free_cache_block
 
-      if (dvdnav_get_next_cache_block(nav, &cache_ptr, &event, &len) != DVDNAV_STATUS_OK) {
+      dvdnav_status_t navStatus = dvdnav_get_next_cache_block(nav, &cache_ptr, &event, &len);
+      if (navFailed) {
+          // the event comes from a VM that can't be asked anything anymore
+          if (navStatus == DVDNAV_STATUS_OK && cache_ptr != 0 && cache_ptr != event_buf)
+              dvdnav_free_cache_block(nav, cache_ptr);
+          break;
+      }
+      if (navStatus != DVDNAV_STATUS_OK) {
           esyslog("ERROR: dvd-plugin %s", dvdnav_err_to_string(nav));
           if (ReadErrors++ == 0)
               Skins.QueueMessage(mtError, tr("Error.DVD$Error fetching data from DVD!"));
@@ -1632,6 +1647,8 @@ void cDvdPlayer::Action(void) {
 
   DEBUG_NAV("%s:%d: empty\n", __FILE__, __LINE__);
 
+  if (navFailed)
+      Skins.QueueMessage(mtError, tr("Error.DVD$Error fetching data from DVD!"));
   Empty();
   fflush(NULL);
 
@@ -1656,6 +1673,38 @@ void cDvdPlayer::Action(void) {
   // Last: DVDRemoveable() now tells the control to end the replay.
   active = false;
 }
+
+#if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
+void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args)
+{
+    char msg[256];
+    vsnprintf(msg, sizeof(msg), Format, Args);
+    switch (Level) {
+        case DVDNAV_LOGGER_LEVEL_ERROR:
+            esyslog("ERROR: dvd-plugin libdvdnav: %s", msg);
+            break;
+        case DVDNAV_LOGGER_LEVEL_WARN:
+            isyslog("dvd-plugin libdvdnav: %s", msg);
+            break;
+        case DVDNAV_LOGGER_LEVEL_INFO:
+            dsyslog("dvd-plugin libdvdnav: %s", msg);
+            break;
+        default:
+            break;
+    }
+    // libdvdnav reports a title set it fails to open (unreadable IFO file)
+    // only here. It has switched to the title domain and freed the previous
+    // title set by then, so any further call reads freed memory or a NULL
+    // pointer: stop asking it anything, before the call that logged this
+    // even returns.
+    if (Level == DVDNAV_LOGGER_LEVEL_ERROR &&
+        (startswith(msg, "ifoOpenVTSI failed") || (startswith(msg, "ifoRead_") && strstr(msg, " failed")))) {
+        cDvdPlayer *player = static_cast<cDvdPlayer *>(Player);
+        player->navFailed = true;
+        player->running = false;
+    }
+}
+#endif
 
 void cDvdPlayer::ClearButtonHighlight(void)
 {
