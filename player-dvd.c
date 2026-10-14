@@ -316,6 +316,8 @@ public:
 
 cDVDPlayerResume::cDVDPlayerResume(void)
 {
+  // nothing loaded, nothing to save
+  modified = false;
   // initialize the resume filename string.
   asprintf(&resfile, "%s/%s", RESUMEDIR, RESUME_FILE);
 }
@@ -387,7 +389,7 @@ void cDVDPlayerResume::LoadResume()
       int t, c;
       int64_t s;
       // parse line as "title:chapter:second:key"
-      if(sscanf(line,"%d:%d:%ld:%511[^\n]",&t,&c,&s,key) == 4) {
+      if(sscanf(line,"%d:%d:%" SCNd64 ":%511[^\n]",&t,&c,&s,key) == 4) {
         // successful parse, save in resume entry
         cResumeEntry *re = new cResumeEntry;
         re->key = strdup(key);
@@ -414,7 +416,7 @@ bool cDVDPlayerResume::SaveResume(void)
       // forall resume entries in the memory database
       for (cResumeEntry *re=First(); re; re=Next(re)) {
         // save the as one line in the format "title:chapter:second:key"
-        fprintf(f, "%d:%d:%ld:%s\n", re->title, re->chapter, re->second, re->key);
+        fprintf(f, "%d:%d:%" PRId64 ":%s\n", re->title, re->chapter, re->second, re->key);
       }
       // don't forget to close what you have opened!
       f.Close();
