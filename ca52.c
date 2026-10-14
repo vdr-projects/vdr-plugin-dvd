@@ -70,6 +70,8 @@ A52decoder::A52decoder(cDvdPlayer &ThePlayer): player(ThePlayer)
 
 A52decoder::~A52decoder()
 {
+  if (state)
+    a52_free(state);
   if (blk_buf)
     free(blk_buf);
   blk_buf=NULL;
