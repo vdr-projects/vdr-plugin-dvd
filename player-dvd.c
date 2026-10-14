@@ -1021,15 +1021,6 @@ void cDvdPlayer::Action(void) {
     // it came while dvdnav_open() was still spinning up the disc.
     while(Running() && running && nav) {
 
-        if (!pframe) {
-            pframe = ringBuffer->Get();
-            if (pframe) {
-                write_blk=pframe->Data();
-                blk_size=pframe->Count();
-                frameType=pframe->Type();
-            }
-        }
-
 /*
         // clip PTS values ..
         if ( pktptsAudio<pktptsLastAudio )
@@ -1086,7 +1077,10 @@ void cDvdPlayer::Action(void) {
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
                 DEBUG_CONTROL("clearing device because of consecutive poll timeouts %d\n",
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
-	            DeviceReset();
+	            {
+	                LOCK_THREAD;
+	                DeviceReset();
+	            }
                 PollTimeouts = 0;
 	        }
       	    continue;
@@ -1094,6 +1088,17 @@ void cDvdPlayer::Action(void) {
         PollTimeouts = 0;
 
         LOCK_THREAD;
+
+        // Under the lock: Empty(), called by the control's key handlers,
+        // clears the ring buffer and so deletes the frame taken from it.
+        if (!pframe) {
+            pframe = ringBuffer->Get();
+            if (pframe) {
+                write_blk=pframe->Data();
+                blk_size=pframe->Count();
+                frameType=pframe->Type();
+            }
+        }
 
         trickMode = playMode == pmFast || (playMode == pmSlow && playDir == pdBackward) ;
 

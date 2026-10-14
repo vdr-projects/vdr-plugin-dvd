@@ -149,7 +149,7 @@ class cDvdPlayer : public cPlayer, cThread {
     static int Speeds[];
     std::atomic<bool> running;
     std::atomic<bool> active;
-    ePlayModes playMode;
+    std::atomic<ePlayModes> playMode; // the thread's loop checks it without the lock
     ePlayDirs playDir;
     int trickSpeed;
 
