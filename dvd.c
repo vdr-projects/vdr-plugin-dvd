@@ -51,7 +51,7 @@ const char *cPluginDvd::Version(void) {
 const char *cPluginDvd::CommandLineHelp(void)
 {
     // Return a string that describes all known command line options.
-    return   "  -C DEV,   --dvd=DEV      use DEV as the DVD device (default: /dev/dvd)\n";
+    return   "  -C DEV,   --dvd=DEV      use DEV as the DVD device (default: /dev/cdrom)\n";
 }
 
 bool cPluginDvd::ProcessArgs(int argc, char *argv[])
@@ -75,10 +75,10 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
             case 'C':
                 // fprintf(stderr, "arg: %s\n", optarg);
                 cDVD::SetDeviceName(optarg);
-                if (!cDVD::DriveExists()) {
-                    esyslog("vdr: DVD drive not found: %s", optarg);
-                    return false;
-                }
+                // A USB drive may be plugged in later, and returning false
+                // here would keep VDR from starting at all.
+                if (!cDVD::DriveExists())
+                    isyslog("dvd: DVD drive %s not found (yet)", optarg);
                 break;
             default:
                 fprintf(stderr, "arg char: %c\n", c);

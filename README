@@ -63,9 +63,9 @@ require.
 Note that the user id under which VDR runs needs to have write access to
 the DVD device in order to replay CSS protected DVDs.
 
-By default VDR expects the DVD drive to be located at /dev/dvd (which
-typically is a symbolic link to the actual device, for instance /dev/hdc).
-You can use the '-C' option to overwrite this, as in
+By default the plugin expects the DVD drive to be located at /dev/cdrom,
+the symbolic link udev creates for the first drive (/dev/sr0). You can use
+the '-C' option to overwrite this, as in
 
   vdr -P"dvd -C/media/dvd"
 

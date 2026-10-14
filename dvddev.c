@@ -43,7 +43,8 @@
 
 // --- cDVD ------------------------------------------------------------------
 
-const char *cDVD::deviceName = "/dev/dvd";
+// udev only creates /dev/cdrom (for sr0), no /dev/dvd
+const char *cDVD::deviceName = "/dev/cdrom";
 
 cDVD *cDVD::dvdInstance = NULL;
 
