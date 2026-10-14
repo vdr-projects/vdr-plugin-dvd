@@ -2978,8 +2978,18 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
             channel, channel, (char *)&subpStreamLanguageCode, channel_active, channel_active);
 #endif*/
         // only set possible subpstreams
-        if ((nav && dvdnav_get_spu_logical_stream(nav, navSubpStream) >= 0) || navSubpStream == -1)
-	        navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
+        if ((nav && dvdnav_get_spu_logical_stream(nav, navSubpStream) >= 0) || navSubpStream == -1) {
+            // The subtitle key steps through this list: keep it in stream
+            // order, "off" (-1) first, not in the order the first packets of
+            // the streams turned up, which made the key start anywhere.
+            IntegerListObject *before = navSubpStreamSeen.First();
+            while (before && before->getValue() < navSubpStream)
+                before = navSubpStreamSeen.Next(before);
+            if (before)
+                navSubpStreamSeen.Ins(new IntegerListObject(navSubpStream), before);
+            else
+                navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
+        }
     }
 }
 
