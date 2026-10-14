@@ -641,6 +641,29 @@ void cDvdPlayer::DevicePlay(void)
     cPlayer::DevicePlay();
 }
 
+// How long WaitDeviceDrained() waits at most for the device to play out.
+#define DRAINTIMEOUTMS 3000
+
+void cDvdPlayer::WaitDeviceDrained(void)
+{
+    // Called with the thread lock held, so it must not wait forever: VDR's
+    // default DrainDevice() never reports success for a device that doesn't
+    // implement it, and no device gets empty while it is frozen.
+    cTimeMs Timeout(DRAINTIMEOUTMS);
+#if APIVERSNUM > 30013
+    while (!DeviceDrain()) {
+        if (Timeout.TimedOut()) {
+            dsyslog("dvd-plugin: device not drained after %d ms", DRAINTIMEOUTMS);
+            break;
+        }
+        cCondWait::SleepMs(10);
+    }
+#else
+    while (!DeviceFlush(100) && !Timeout.TimedOut())
+        ;
+#endif
+}
+
 void cDvdPlayer::DrawSPU()
 {
     if (SPUdecoder && !SPUdecoder->IsVisible() && TakeOsd()) {
@@ -1050,11 +1073,7 @@ void cDvdPlayer::Action(void) {
                     // we played an IFrame with DeviceStillPicture, or else -> reset !
                     DEBUG_CONTROL("clearing device because of IframeCnt < 0 && VideoFrame\n");
                     IframeCnt = 0;
-#if APIVERSNUM > 30013
-                    while (!DeviceDrain());
-#else
-                    while (!DeviceFlush(100));
-#endif
+                    WaitDeviceDrained();
                     if (!firstClear) DeviceReset();
                 }
 
@@ -1121,11 +1140,7 @@ void cDvdPlayer::Action(void) {
 	        if (cntVidBlocksPlayed > 0) {
 		        DEBUG_CONTROL("clearing device because of IframeCnt > 0, vid %d, aud %d\n",
 		    	    cntVidBlocksPlayed, cntAudBlocksPlayed);
-#if APIVERSNUM > 30013
-	            while (!DeviceDrain());
-#else
-	            while (!DeviceFlush(100));
-#endif
+	            WaitDeviceDrained();
 	            DeviceReset();
 	        }
             int iframeSize;
@@ -1146,11 +1161,7 @@ void cDvdPlayer::Action(void) {
 	    	    DeviceStillPicture(iframe, iframeSize);
 
                 DEBUG_IFRAME("SEND; ");
-#if APIVERSNUM > 30013
-                while (!DeviceDrain());
-#else
-                while (!DeviceFlush(100));
-#endif
+                WaitDeviceDrained();
                 DEBUG_IFRAME("FLUSH!\n");
 	        }
             iframeAssembler->Clear();

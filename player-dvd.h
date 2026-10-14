@@ -221,6 +221,7 @@ protected: //Player
     void DeviceReset(void);
     void DeviceClear(void);
     void DevicePlay(void);
+    void WaitDeviceDrained(void);
 
 public:
     /**
