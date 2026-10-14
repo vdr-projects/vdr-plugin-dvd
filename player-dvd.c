@@ -670,8 +670,10 @@ void cDvdPlayer::DevicePlay(void)
 // Consecutive read errors after which the player gives up.
 #define MAXREADERRORS 5
 
-// How long WaitDeviceDrained() waits at most for the device to play out.
-#define DRAINTIMEOUTMS 3000
+// How long WaitDeviceDrained() waits at most for the device to play out:
+// vaapivideo takes up to about four seconds of a DVD's video before it
+// stops accepting more.
+#define DRAINTIMEOUTMS 6000
 
 void cDvdPlayer::WaitDeviceDrained(void)
 {
