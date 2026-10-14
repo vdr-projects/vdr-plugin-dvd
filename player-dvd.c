@@ -3179,7 +3179,11 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
     if(!DVDActiveAndRunning() || !TrackId)
         return;
 
-    int id = TrackId->id & (IS_DOLBY_TRACK(Type) ? AC3AudioTrackMask : AudioTrackMask);
+    // The stream is in the track's number: VDR selects a track before the
+    // first packet registers it, with its id still 0, when libdvdnav
+    // switches streams at the start of a title. Taken from the id, that was
+    // stream 0, which the player passed on while VDR waited for the other.
+    int id = (Type - (IS_DOLBY_TRACK(Type) ? ttDolbyFirst : ttAudioFirst)) & AC3AudioTrackMask;
 
     DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: dd=%d, index=%d, id=0x%2X\n", IS_DOLBY_TRACK(Type), Type, id);
 
