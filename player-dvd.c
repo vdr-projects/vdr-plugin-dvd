@@ -1906,6 +1906,16 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
     // language, which only holds a few bytes and is what VDR's audio menu
     // shows; the language's name goes into the description.
     uint16_t languageCode = GetAudioTrackLanguageCode(Index);
+    // This runs for every audio packet, and VDR's audio menu reads a track's
+    // language and description without a lock: write them only once.
+    eTrackType track = eTrackType(Type + Index);
+    if (track > ttNone && track < ttMaxTrackTypes) {
+        if (announcedLanguageCode[track] == languageCode) {
+            DeviceSetAvailableTrack(Type, Index, Id);
+            return;
+        }
+        announcedLanguageCode[track] = languageCode;
+    }
     char language[3] = { char(languageCode & 0xFF), char(languageCode >> 8), 0 };
     const char *languageName = NULL;
     if (languageCode == 0xFFFF || !isalpha((unsigned char)language[0]) || !isalpha((unsigned char)language[1]))
@@ -3003,6 +3013,8 @@ void cDvdPlayer::clearSeenAudioTrack( )
     DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: seen audio cleared\n");
     SetCurrentNavAudioTrackUsrLocked(false);
     DeviceClrAvailableTracks();
+    for (int i = 0; i < ttMaxTrackTypes; i++)
+        announcedLanguageCode[i] = -1;
 }
 
 void cDvdPlayer::setAllAudioTracks(void)
