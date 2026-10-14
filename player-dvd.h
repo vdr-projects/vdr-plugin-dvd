@@ -99,6 +99,7 @@ class cDvdPlayer : public cPlayer, cThread {
     void UpdateVTSInfo(void);
 
     bool skipPlayVideo;
+    uchar videoPictureType; // of the last picture header, 0 = none since Empty()
     int fastWindFactor;
     uint32_t cntVidBlocksPlayed;
     uint32_t cntAudBlocksPlayed;

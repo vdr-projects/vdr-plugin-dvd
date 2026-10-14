@@ -515,6 +515,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     DEBUG_SUBP_ID("SPU showSubs=%d\n", DVDSetup.ShowSubtitles);
 
     skipPlayVideo=false;
+    videoPictureType=0;
     fastWindFactor=1;
 
     // resume
@@ -758,6 +759,7 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
     pictureFlip=false;
 
     skipPlayVideo=false;
+    videoPictureType=0;
 
     if(emptyDeviceToo) {
 	    DeviceClear();
@@ -1990,6 +1992,16 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             //skip mandatory header bytes
             data += 3;
 
+	        // Trick modes play I-frames only, from their start: not the rest of
+	        // a picture that was under way when the trick mode began.
+	        if (trickMode && videoPictureType != I_FRAME)
+	            skipPlayVideo = true;
+	        uchar *payload = sector + 9 + cPStream::PESHeaderLength(sector);
+	        uchar *firstHeader = NULL; // of the picture that starts in this packet
+	        // Bytes to blank in the copy that is played (the block itself is
+	        // in libdvdnav's read cache), as offsets into the packet.
+	        int blankFrom = 0, blankTo = 0;
+
 	        uint8_t currentFrameType = 0;
 	        bool do_copy = (lastFrameType == I_FRAME) &&  !(data[0] == 0 && data[1] == 0 && data[2] == 1);
 	        bool havePictureHeader = false;
@@ -1998,6 +2010,18 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        while (datalen > 6) {
 	            if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
 	                int  ptype2 = cPStream::packetType(data);
+	                if (!firstHeader && (ptype2 == SEQUENCE_HEADER || ptype2 == GOP_START || ptype2 == SC_PICTURE))
+	                    firstHeader = data;
+	                if (ptype2 == SEQUENCE_HEADER && trickMode && skipPlayVideo) {
+	                    // A DVD has a sequence header in front of every GOP,
+	                    // which starts with an I-frame: play from that header on,
+	                    // after a clear the decoder can't decode the I-frame
+	                    // without it.
+	                    blankFrom = payload - sector;
+	                    blankTo = data - sector;
+	                    skipPlayVideo = false;
+	                    videoPictureType = I_FRAME;
+	                }
 		            if (ptype2 == SC_PICTURE) {
 		                uchar foundFrameType = (uchar)(data[5] >> 3) & 0x07;
                         if (foundFrameType < I_FRAME || B_FRAME < foundFrameType) {
@@ -2008,11 +2032,31 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                         havePictureHeader = true;
                         VideoPts += 3600;
                         lastFrameType = foundFrameType;
+                        videoPictureType = foundFrameType;
 		                if (!currentFrameType)
 		                    currentFrameType = lastFrameType;
 		                //
 		                // in trickMode, only play assembled .. I-Frames ..
-		                skipPlayVideo= lastFrameType > I_FRAME && trickMode;
+		                bool skip = lastFrameType > I_FRAME && trickMode;
+		                if (skip && !skipPlayVideo) {
+		                    // The I-frame being played ends in this packet, its
+		                    // last slices before this picture: play them, blank
+		                    // the rest (zero bytes are stuffing before a start
+		                    // code); the next packet is skipped. Skipping this
+		                    // one cut the bottom rows off every I-frame.
+		                    // The rest ends with the packet: datalen counts from
+		                    // 6 bytes before the payload, it overshoots that.
+		                    blankFrom = data - sector;
+		                    blankTo = cPStream::packetLength(sector);
+		                    break;
+		                }
+		                if (!skip && skipPlayVideo && firstHeader > payload) {
+		                    // The next I-frame starts after the end of a
+		                    // skipped picture, which the decoder can't use.
+		                    blankFrom = payload - sector;
+		                    blankTo = firstHeader - sector;
+		                }
+		                skipPlayVideo = skip;
 
 		                data += 5;
 		                datalen -= 5;
@@ -2101,6 +2145,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             }
 
             rframe = new cFrame(sector, r, ftVideo);
+            if (blankTo > blankFrom && blankTo <= r)
+                memset(rframe->Data() + blankFrom, 0, blankTo - blankFrom);
 
             playedPacket |= pktVideo;
             if ( !IsInMenuDomain() ) seenVPTS(VideoPts);
