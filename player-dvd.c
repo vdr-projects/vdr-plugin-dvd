@@ -130,7 +130,8 @@
 #endif
 
 #ifndef POLLTIMEOUTS_BEFORE_DEVICECLEAR
-#define POLLTIMEOUTS_BEFORE_DEVICECLEAR 6
+// 100 ms each: a device that takes no data for 10 seconds in normal play.
+#define POLLTIMEOUTS_BEFORE_DEVICECLEAR 100
 #else
 #warning using patched POLLTIMEOUTS_BEFORE_DEVICECLEAR
 #endif
@@ -1049,8 +1050,10 @@ void cDvdPlayer::Action(void) {
 
         cPoller Poller;
         if (!DevicePoll(Poller, 100)) {
-            PollTimeouts++;
-            if (PollTimeouts == POLLTIMEOUTS_BEFORE_DEVICECLEAR) {
+            // Only in normal play: in slow motion a device takes data at a
+            // fraction of the normal rate, and after a jump or a trick mode
+            // it may not take any while it plays out what it holds.
+            if (playMode == pmPlay && ++PollTimeouts == POLLTIMEOUTS_BEFORE_DEVICECLEAR) {
 	            dsyslog("dvd-plugin: clearing device because of consecutive poll timeouts %d",
 		            POLLTIMEOUTS_BEFORE_DEVICECLEAR);
                 DEBUG_CONTROL("clearing device because of consecutive poll timeouts %d\n",
