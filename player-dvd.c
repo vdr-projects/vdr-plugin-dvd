@@ -641,6 +641,9 @@ void cDvdPlayer::DevicePlay(void)
     cPlayer::DevicePlay();
 }
 
+// Consecutive read errors after which the player gives up.
+#define MAXREADERRORS 5
+
 // How long WaitDeviceDrained() waits at most for the device to play out.
 #define DRAINTIMEOUTMS 3000
 
@@ -967,6 +970,7 @@ void cDvdPlayer::Action(void) {
     bool trickMode = false;
     bool noAudio   = false;
     int PollTimeouts = 0;
+    int ReadErrors = 0;
     int playedPacket = pktNone;
 
     uint32_t cntVidBlocksSkipped  = 0;
@@ -1331,12 +1335,22 @@ void cDvdPlayer::Action(void) {
       // as it would bypass dvdnav_free_cache_block
 
       if (dvdnav_get_next_cache_block(nav, &cache_ptr, &event, &len) != DVDNAV_STATUS_OK) {
-          Skins.QueueMessage(mtError, tr("Error.DVD$Error fetching data from DVD!"));
-          dvdnav_reset(nav);
-//	  running = false;
-//	  break;
+          esyslog("ERROR: dvd-plugin %s", dvdnav_err_to_string(nav));
+          if (ReadErrors++ == 0)
+              Skins.QueueMessage(mtError, tr("Error.DVD$Error fetching data from DVD!"));
+          // The reset starts over at the beginning of the disc. If even
+          // that can't be read (the disc has been taken out), stop.
+          if (ReadErrors >= MAXREADERRORS) {
+              esyslog("ERROR: dvd-plugin giving up after %d consecutive read errors", ReadErrors);
+              running = false;
+          } else
+              dvdnav_reset(nav);
           continue;
       }
+      // Only data read from the disc counts as recovered: after a reset
+      // libdvdnav reports the new title set and cell from the IFO files.
+      if (event == DVDNAV_BLOCK_OK || event == DVDNAV_NAV_PACKET)
+          ReadErrors = 0;
       noAudio   = playMode != pmPlay ;
 
       switch (event) {
@@ -1585,6 +1599,9 @@ void cDvdPlayer::Action(void) {
 
   DEBUGDVD("%s:%d: input thread ended (pid=%d)\n", __FILE__, __LINE__, getpid());
   fflush(NULL);
+
+  // Last: DVDRemoveable() now tells the control to end the replay.
+  active = false;
 }
 
 void cDvdPlayer::ClearButtonHighlight(void)
