@@ -963,18 +963,24 @@ void cDvdPlayer::Action(void) {
     }
     dsyslog("dvd-plugin: SoftDeviceOutActive=%d, HasSoftDeviceOut=%d", SoftDeviceOutActive, HasSoftDeviceOut);
 
+    // libdvdnav writes the handle while it opens the disc, which takes
+    // seconds; the control's thread reads nav under the thread lock.
+    dvdnav_t *opened = NULL;
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
     static const dvdnav_logger_cb navLogger = { NavLog };
-    if (dvdnav_open2(&nav, this, &navLogger, cDVD::getDVD()->DeviceName()) != DVDNAV_STATUS_OK) {
+    if (dvdnav_open2(&opened, this, &navLogger, cDVD::getDVD()->DeviceName()) != DVDNAV_STATUS_OK) {
 #else
-    if (dvdnav_open(&nav, const_cast<char *>(cDVD::getDVD()->DeviceName())) != DVDNAV_STATUS_OK) {
+    if (dvdnav_open(&opened, const_cast<char *>(cDVD::getDVD()->DeviceName())) != DVDNAV_STATUS_OK) {
 #endif
         Skins.QueueMessage(mtError, tr("Error.DVD$Error opening DVD!"));
         esyslog("ERROR: dvd-plugin cannot open dvdnav device %s -> input thread ended (pid=%d) !", const_cast<char *>(cDVD::getDVD()->DeviceName()), getpid());
         active = running = false;
-        nav=NULL;
         fflush(NULL);
         return;
+    }
+    {
+        LOCK_THREAD;
+        nav = opened;
     }
     dvdnav_set_readahead_flag(nav, DVDSetup.ReadAHead);
     if (DVDSetup.PlayerRCE != 0)
@@ -2624,6 +2630,7 @@ void cDvdPlayer::UpdateVTSInfo()
 
 int cDvdPlayer::SkipFrames(int Frames)
 {
+    LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return -1;
 #if VDRVERSNUM >= 10703
