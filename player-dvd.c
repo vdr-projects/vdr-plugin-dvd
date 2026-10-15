@@ -517,6 +517,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     skipPlayVideo=false;
     videoPictureType=0;
     subtitleTrackSync=false;
+    subpMenuChoice=false;
     fastWindFactor=1;
 
     // resume
@@ -1764,6 +1765,7 @@ void cDvdPlayer::activateButton(void)
 
       }
       dvdnav_button_select_and_activate(nav, current_pci, buttonN);
+      subpMenuChoice = true;
     }
 }
 
@@ -1914,7 +1916,7 @@ void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
     /**
      * !(spuId & 0x80) controls subpictures from dvd-menu
      */
-    bool allowedShow = currentNavSubpStreamUsrLocked || IsDvdNavigationForced() || (DVDSetup.ShowSubtitles && !(spuId & 0x80));
+    bool allowedShow = IsDvdNavigationForced() || SubtitlesShown(spuId);
 
     DEBUG_SUBP_ID("playSPU: SPU proc, spu_size:%d, menuDomain=%d, pts: %12lld\n",
         spuSize, IsInMenuDomain(), SPUassembler.getPts());
@@ -1974,13 +1976,27 @@ void cDvdPlayer::AnnounceSubtitleTrack(int Stream)
     subtitleTrackSync = false;
 }
 
+bool cDvdPlayer::SubtitlesShown(int Stream) const
+{
+    // Whether all of Stream's subtitles are shown, not just the forced ones:
+    // the viewer chose it with key 2 or VDR's menu, or the disc shows it (bit
+    // 7 clear) and that may count. "Display subtitles: no" hides what a disc
+    // switches on by itself - not what the viewer chose in the disc's menu,
+    // where the disc shows the selected stream the same way.
+    if (Stream < 0)
+        return false;
+    if (currentNavSubpStreamUsrLocked)
+        return true;
+    return !(Stream & 0x80) && (DVDSetup.ShowSubtitles || subpMenuChoice);
+}
+
 void cDvdPlayer::ReportSubtitleTrack(void)
 {
     // As a manual choice, so that VDR doesn't pick a track of its own when
-    // one is announced: the disc or the user chose this one. Hidden streams
-    // (bit 7) show forced subtitles only, which VDR's menu calls "none".
+    // one is announced: the disc or the user chose this one. A stream that
+    // shows forced subtitles only is what VDR's menu calls "none".
     int stream = currentNavSubpStream;
-    eTrackType type = stream < 0 || (stream & 0x80) ? ttNone : eTrackType(ttSubtitleFirst + (stream & SubpStreamMask));
+    eTrackType type = SubtitlesShown(stream) ? eTrackType(ttSubtitleFirst + (stream & SubpStreamMask)) : ttNone;
     subtitleTrackSync = true;
     cDevice::PrimaryDevice()->SetCurrentSubtitleTrack(type, true);
     subtitleTrackSync = false;

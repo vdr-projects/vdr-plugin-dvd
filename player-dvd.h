@@ -213,6 +213,8 @@ class cDvdPlayer : public cPlayer, cThread {
     bool subtitleTrackSync; // the player announces or reports a subtitle track to VDR
     void AnnounceSubtitleTrack(int Stream);
     void ReportSubtitleTrack(void);
+    bool subpMenuChoice; // the viewer used a button of the disc's menus
+    bool SubtitlesShown(int Stream) const;
     int  LogicalAudioStream(int Physical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
     int  GetAudioStreamNumbers(void) const ;
