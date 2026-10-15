@@ -1523,11 +1523,19 @@ void cDvdPlayer::Action(void) {
                     uint16_t format = logical >= 0 ? dvdnav_audio_stream_format(nav, logical) : DVD_AUDIO_FORMAT_AC3;
                     bool dolby = format == DVD_AUDIO_FORMAT_AC3 || format == DVD_AUDIO_FORMAT_DTS;
                     DEBUG_AUDIO_ID("dvd->SetCurrentAudioTrack %s %02X\n", dolby ? "DOLBY" : "AUDIO", id);
+                    eTrackType track;
                     if (UseDolbyDigital() && dolby) {
                         int subStreamId = (format == DVD_AUDIO_FORMAT_DTS ? aDTS : aAC3) | id;
-                        DeviceSetCurrentAudioTrack(eTrackType(ttDolby + DolbyTrackIndex(subStreamId)));
+                        track = eTrackType(ttDolby + DolbyTrackIndex(subStreamId));
                     } else
-                        DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
+                        track = eTrackType(ttAudio + id);
+                    // libdvdnav announces the active stream at every cell.
+                    // VDR switches to a Dolby track again even if it is the
+                    // current one, and the device can only reset its audio
+                    // for that: with several Dolby tracks it can't tell
+                    // which one comes, so every cell cut a second of sound.
+                    if (track != currentAudioTrack)
+                        DeviceSetCurrentAudioTrack(track);
                 }
                 currentNavAudioTrack = id;
 
@@ -3131,6 +3139,7 @@ void cDvdPlayer::clearSeenAudioTrack( )
     DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: seen audio cleared\n");
     SetCurrentNavAudioTrackUsrLocked(false);
     DeviceClrAvailableTracks();
+    currentAudioTrack = ttNone; // VDR's clear resets it
     for (int i = 0; i < ttMaxTrackTypes; i++)
         announcedLanguageCode[i] = -1;
 }
@@ -3227,6 +3236,7 @@ int cDvdPlayer::GetAudioStreamNumbers(void) const
 void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 {
     LOCK_THREAD;
+    currentAudioTrack = Type;
     if(!DVDActiveAndRunning() || !TrackId)
         return;
 
