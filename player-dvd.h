@@ -265,7 +265,8 @@ protected: //Player
     void DeviceReset(void);
     void DeviceClear(void);
     void DevicePlay(void);
-    void WaitDeviceDrained(void);
+    bool WaitDeviceDrained(void);
+    int emptyCount; // Empty() calls, for WaitDeviceDrained()
 
 public:
     /**

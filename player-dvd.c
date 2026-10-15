@@ -521,6 +521,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     vobuHistoryCount=0;
     vobuHistoryNext=0;
     replayFromPictureOnPlay=false;
+    emptyCount=0;
     fastWindFactor=1;
 
     // resume
@@ -673,29 +674,51 @@ void cDvdPlayer::DevicePlay(void)
 // Consecutive read errors after which the player gives up.
 #define MAXREADERRORS 5
 
-// How long WaitDeviceDrained() waits at most for the device to play out:
-// vaapivideo takes up to about four seconds of a DVD's video before it
-// stops accepting more.
-#define DRAINTIMEOUTMS 6000
-
-void cDvdPlayer::WaitDeviceDrained(void)
-{
-    // Called with the thread lock held, so it must not wait forever: VDR's
-    // default DrainDevice() never reports success for a device that doesn't
-    // implement it, and no device gets empty while it is frozen.
-    cTimeMs Timeout(DRAINTIMEOUTMS);
 #if APIVERSNUM > 30013
+// How long the picture may stand still in normal play before
+// WaitDeviceDrained() stops waiting: the device holds no more than that
+// picture then, or it can't tell that it has played out - VDR's default
+// DrainDevice() never does.
+#define DRAINSTALLMS 1000
+#else
+// How long WaitDeviceDrained() waits at most for the device to play out.
+#define DRAINTIMEOUTMS 6000
+#endif
+
+bool cDvdPlayer::WaitDeviceDrained(void)
+{
+    // Called with the thread lock held, which is released while the device
+    // plays out: that takes as long as the device buffers, with vaapivideo
+    // up to nine seconds of a clip without audio, and the control's keys
+    // must not wait for it. Returns false if one of them emptied the player
+    // or stopped it meanwhile: what the caller held is gone.
+    // A fixed limit cut such a clip short.
+    int emptied = emptyCount;
+#if APIVERSNUM > 30013
+    uint64_t stc = DeviceGetSTC();
+    cTimeMs stcMoved;
     while (!DeviceDrain()) {
-        if (Timeout.TimedOut()) {
-            dsyslog("dvd-plugin: device not drained after %d ms", DRAINTIMEOUTMS);
+        uint64_t now = DeviceGetSTC();
+        // A frozen device plays nothing out until it runs again.
+        if (now != stc || playMode != pmPlay) {
+            stc = now;
+            stcMoved.Set();
+        } else if (stcMoved.Elapsed() > DRAINSTALLMS) {
+            dsyslog("dvd-plugin: device not drained, its picture stands still");
             break;
         }
+        Unlock();
         cCondWait::SleepMs(10);
+        Lock();
+        if (emptyCount != emptied || !running)
+            return false;
     }
 #else
+    cTimeMs Timeout(DRAINTIMEOUTMS);
     while (!DeviceFlush(100) && !Timeout.TimedOut())
         ;
 #endif
+    return emptyCount == emptied;
 }
 
 void cDvdPlayer::DrawSPU()
@@ -749,6 +772,7 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
     pktpts            = 0xFFFFFFFF;
     pktptsAudio       = 0xFFFFFFFF;
     pktptsLastAudio   = 0xFFFFFFFF;
+    emptyCount++;
     prev_e_ptm = 0;
     ptm_offs = 0;
     vobuHistoryCount = 0; // its PTS had the old offset
@@ -1138,7 +1162,8 @@ void cDvdPlayer::Action(void) {
                     // we played an IFrame with DeviceStillPicture, or else -> reset !
                     DEBUG_CONTROL("clearing device because of IframeCnt < 0 && VideoFrame\n");
                     IframeCnt = 0;
-                    WaitDeviceDrained();
+                    if (!WaitDeviceDrained())
+                        continue; // pframe is gone
                     if (!firstClear) DeviceReset();
                 }
 
@@ -1205,7 +1230,8 @@ void cDvdPlayer::Action(void) {
 	        if (cntVidBlocksPlayed > 0) {
 		        DEBUG_CONTROL("clearing device because of IframeCnt > 0, vid %d, aud %d\n",
 		    	    cntVidBlocksPlayed, cntAudBlocksPlayed);
-	            WaitDeviceDrained();
+	            if (!WaitDeviceDrained())
+	                continue; // the I-frame is gone
 	            DeviceReset();
 	        }
             int iframeSize;
@@ -1226,7 +1252,8 @@ void cDvdPlayer::Action(void) {
 	    	    DeviceStillPicture(iframe, iframeSize);
 
                 DEBUG_IFRAME("SEND; ");
-                WaitDeviceDrained();
+                if (!WaitDeviceDrained())
+                    continue; // emptied, which also ended the still
                 DEBUG_IFRAME("FLUSH!\n");
 	        }
             iframeAssembler->Clear();
@@ -1559,6 +1586,11 @@ void cDvdPlayer::Action(void) {
 	  }
 	  case DVDNAV_VTS_CHANGE:
 	      DEBUG_NAV("%s:%d:NAV VTS CHANGE -> Empty, setAll-spu&audio \n", __FILE__, __LINE__);
+	      // Let the device play out what it holds of the title set that ends,
+	      // or the clip in front of the next one - such as a menu's way into
+	      // the film - lost its end. Not after a jump: that emptied the player.
+	      if (playMode == pmPlay && (cntVidBlocksPlayed > 0 || cntAudBlocksPlayed > 0))
+	          WaitDeviceDrained();
 	      Empty(true);
 	      UpdateBlockInfo(); // TEST
           UpdateVTSInfo(); // TEST
