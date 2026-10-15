@@ -123,6 +123,19 @@ class cDvdPlayer : public cPlayer, cThread {
     int prev_e_ptm;
     int ptm_offs;
 
+    // The VOBUs read last, to find the one on screen: ReplayFromPicture().
+    struct cVobuPosition {
+        uint32_t start, end; // its pictures' PTS as the device gets them
+        uint32_t block;      // position in the program chain
+        int32_t title, pgcN;
+    };
+    enum { VobuHistorySize = 32 }; // > 10 s, more than any device holds
+    cVobuPosition vobuHistory[VobuHistorySize];
+    int vobuHistoryCount, vobuHistoryNext;
+    bool replayFromPictureOnPlay;
+    void NoteVobu(const pci_t *Pci);
+    bool ReplayFromPicture(void);
+
     uint8_t stillFrame;
     uint8_t lastFrameType;
     uint64_t VideoPts;

@@ -518,6 +518,9 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     videoPictureType=0;
     subtitleTrackSync=false;
     subpMenuChoice=false;
+    vobuHistoryCount=0;
+    vobuHistoryNext=0;
+    replayFromPictureOnPlay=false;
     fastWindFactor=1;
 
     // resume
@@ -748,6 +751,8 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
     pktptsLastAudio   = 0xFFFFFFFF;
     prev_e_ptm = 0;
     ptm_offs = 0;
+    vobuHistoryCount = 0; // its PTS had the old offset
+    replayFromPictureOnPlay = false;
 
     DELETENULL(rframe);
     pframe=NULL;
@@ -1616,6 +1621,8 @@ void cDvdPlayer::Action(void) {
 		        ptm_offs += (prev_e_ptm - current_pci->pci_gi.vobu_s_ptm);
 	      DEBUG_NAV0("ptm_offs: %8d\n", ptm_offs);
 	      prev_e_ptm = current_pci->pci_gi.vobu_e_ptm;
+	      if (!IsInMenuDomain())
+	          NoteVobu(current_pci);
 	      if (current_pci && (current_pci->hli.hl_gi.hli_ss & 0x03) == 1)
 		  UpdateButtonHighlight(NULL);
 	      dsi = dvdnav_get_current_nav_dsi(nav);
@@ -2558,7 +2565,8 @@ void cDvdPlayer::Play(void)
                 dvdnav_set_readahead_flag(nav, DVDSetup.ReadAHead);
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
-        }
+        } else if (replayFromPictureOnPlay)
+            ReplayFromPicture(); // an audio track chosen while paused
         DevicePlay();
         playMode = pmPlay;
         playDir = pdForward;
@@ -3263,6 +3271,7 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
     // switches streams at the start of a title. Taken from the id, that was
     // stream 0, which the player passed on while VDR waited for the other.
     int id = (Type - (IS_DOLBY_TRACK(Type) ? ttDolbyFirst : ttAudioFirst)) & AC3AudioTrackMask;
+    int previous = currentNavAudioTrack;
 
     DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: dd=%d, index=%d, id=0x%2X\n", IS_DOLBY_TRACK(Type), Type, id);
 
@@ -3286,10 +3295,63 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         if (audioTrackLangCode != 0xFFFF) {
             dvdnav_audio_language_select(nav, (char *)&audioTrackLangCode);
         }
-//        Empty();
+        // The viewer's choice, not VDR passing on the player's own (as VDR's
+        // player does it): the new track starts with the picture on screen.
+        if (previous != id && cThread::IsMainThread() && !IsInMenuDomain()) {
+            if (playMode == pmPlay)
+                ReplayFromPicture();
+            else if (playMode == pmPause)
+                replayFromPictureOnPlay = true;
+        }
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: SWITCHED !\n");
     }
     UpdateTrackInfo();
+}
+
+void cDvdPlayer::NoteVobu(const pci_t *Pci)
+{
+    uint32_t pos, len;
+    int32_t title, pgcN, pgN;
+    if (dvdnav_get_position(nav, &pos, &len) != DVDNAV_STATUS_OK ||
+        dvdnav_current_title_program(nav, &title, &pgcN, &pgN) != DVDNAV_STATUS_OK)
+        return;
+    cVobuPosition &vobu = vobuHistory[vobuHistoryNext];
+    // The player adds ptm_offs to every PTS it passes on.
+    vobu.start = Pci->pci_gi.vobu_s_ptm + ptm_offs;
+    vobu.end = Pci->pci_gi.vobu_e_ptm + ptm_offs;
+    vobu.block = pos;
+    vobu.title = title;
+    vobu.pgcN = pgcN;
+    vobuHistoryNext = (vobuHistoryNext + 1) % VobuHistorySize;
+    if (vobuHistoryCount < VobuHistorySize)
+        vobuHistoryCount++;
+}
+
+bool cDvdPlayer::ReplayFromPicture(void)
+{
+    // Reads on from the VOBU on screen, as VDR's own player does for a new
+    // audio track. The device holds a second and more of what was read, so
+    // the new track's audio, which starts after that, was that far ahead of
+    // the picture: vaapivideo dropped as much video to catch up.
+    replayFromPictureOnPlay = false;
+    int64_t stc = (int64_t)DeviceGetSTC();
+    int32_t title, pgcN, pgN;
+    if (stc < 0 || !nav || dvdnav_current_title_program(nav, &title, &pgcN, &pgN) != DVDNAV_STATUS_OK)
+        return false;
+    for (int i = 1; i <= vobuHistoryCount; i++) {
+        const cVobuPosition &vobu = vobuHistory[(vobuHistoryNext - i + VobuHistorySize) % VobuHistorySize];
+        // modulo 2^32, as PTS wrap
+        if (vobu.title == title && vobu.pgcN == pgcN && uint32_t(stc) - vobu.start < vobu.end - vobu.start) {
+            uint32_t block = vobu.block;
+            Empty();
+            if (dvdnav_sector_search(nav, block, SEEK_SET) != DVDNAV_STATUS_OK) {
+                esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
+                return false;
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 int cDvdPlayer::DolbyTrackIndex(int SubStreamId)
