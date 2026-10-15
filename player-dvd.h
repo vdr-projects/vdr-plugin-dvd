@@ -209,6 +209,9 @@ class cDvdPlayer : public cPlayer, cThread {
     void playSPU(int spuId, unsigned char *data, int datalen);
 
     static int DolbyTrackIndex(int SubStreamId);
+    bool subtitleTrackSync; // the player announces or reports a subtitle track to VDR
+    void AnnounceSubtitleTrack(int Stream);
+    void ReportSubtitleTrack(void);
     int  LogicalAudioStream(int Physical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
     int  GetAudioStreamNumbers(void) const ;
@@ -259,6 +262,7 @@ public:
     bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame);
     bool GetReplayMode(bool &Play, bool &Forward, int &Speed) ;
     void SetAudioTrack(eTrackType Type, const tTrackId *TrackId);
+    virtual void SetSubtitleTrack(eTrackType Type, const tTrackId *TrackId);
 
 protected:
     void seenSpuPts(uint64_t pts);

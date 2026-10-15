@@ -516,6 +516,7 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
 
     skipPlayVideo=false;
     videoPictureType=0;
+    subtitleTrackSync=false;
     fastWindFactor=1;
 
     // resume
@@ -1477,6 +1478,7 @@ void cDvdPlayer::Action(void) {
 	            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
             if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
+                int previousNavSubpStream = currentNavSubpStream;
                 cSpuDecoder::eScaleMode mode = SPUdecoder ? SPUdecoder->getScaleMode() : cSpuDecoder::eSpuNormal;
 
                 /* !!! Bit 7 set means hide, and only let Forced display show (see vm.c from libdvdnav) */
@@ -1496,6 +1498,9 @@ void cDvdPlayer::Action(void) {
 			            currentNavSubpStream, currentNavSubpStream);
 		        }
 		        changeNavSubpStreamOnceInSameCell=false;
+		        // A menu's subpicture stream holds its buttons, not subtitles.
+		        if (currentNavSubpStream != previousNavSubpStream && !IsInMenuDomain())
+		            ReportSubtitleTrack();
 	        } else {
 		        DEBUG_SUBP_ID("DVDNAV_SPU_STREAM_CHANGE: ignore (locked=%d/%d|not enabled=%d), menu=%d, feature=%d \n",
 		            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell,
@@ -1541,8 +1546,9 @@ void cDvdPlayer::Action(void) {
 	      Empty(true);
 	      UpdateBlockInfo(); // TEST
           UpdateVTSInfo(); // TEST
-	      setAllSubpStreams();
+          // Audio first: its clear removes the subtitle tracks from VDR too.
           setAllAudioTracks();
+	      setAllSubpStreams();
 	      SetTitleInfoString();
 	      SetTitleString();
 	      SetAspectString();
@@ -1909,6 +1915,24 @@ void cDvdPlayer::playSPU(int spuId, unsigned char *data, int datalen)
     if(IsInMenuDomain()) seenVPTS(pktpts); // else should be seen later ..
 }
 
+// The ISO 639-1 code a DVD gives for a track's language in Language, empty
+// if there is none, and the language's name, or NULL.
+static const char *TrackLanguage(uint16_t LanguageCode, char *Language)
+{
+    Language[0] = char(LanguageCode & 0xFF);
+    Language[1] = char(LanguageCode >> 8);
+    Language[2] = 0;
+    if (LanguageCode == 0xFFFF || !isalpha((unsigned char)Language[0]) || !isalpha((unsigned char)Language[1])) {
+        Language[0] = 0;
+        return NULL;
+    }
+    for (int i = 0; i < 22; i++) {
+        if (!strcasecmp(Language, DvdLanguageCode[i][0]))
+            return DvdLanguageCode[i][1];
+    }
+    return NULL;
+}
+
 void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
 {
     // DVDs give a track's language as an ISO 639-1 code. That is the track's
@@ -1926,19 +1950,42 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
         }
         announcedLanguageCode[track] = languageCode;
     }
-    char language[3] = { char(languageCode & 0xFF), char(languageCode >> 8), 0 };
-    const char *languageName = NULL;
-    if (languageCode == 0xFFFF || !isalpha((unsigned char)language[0]) || !isalpha((unsigned char)language[1]))
-        language[0] = 0;
-    else {
-        for (int i = 0; i < 22; i++) {
-            if (!strcasecmp(language, DvdLanguageCode[i][0])) {
-                languageName = DvdLanguageCode[i][1];
-                break;
-            }
-        }
-    }
+    char language[3];
+    const char *languageName = TrackLanguage(languageCode, language);
     DeviceSetAvailableTrack(Type, Index, Id, language[0] ? language : NULL, languageName);
+}
+
+void cDvdPlayer::AnnounceSubtitleTrack(int Stream)
+{
+    // VDR's subtitle menu lists the subtitle tracks; this player draws the
+    // subtitles itself, VDR never gets their packets.
+    char language[3];
+    const char *languageName = TrackLanguage(GetSubtitleLanguageCode(Stream), language);
+    subtitleTrackSync = true;
+    DeviceSetAvailableTrack(ttSubtitle, Stream, 0x20 | Stream, language[0] ? language : NULL, languageName);
+    subtitleTrackSync = false;
+}
+
+void cDvdPlayer::ReportSubtitleTrack(void)
+{
+    // As a manual choice, so that VDR doesn't pick a track of its own when
+    // one is announced: the disc or the user chose this one. Hidden streams
+    // (bit 7) show forced subtitles only, which VDR's menu calls "none".
+    int stream = currentNavSubpStream;
+    eTrackType type = stream < 0 || (stream & 0x80) ? ttNone : eTrackType(ttSubtitleFirst + (stream & SubpStreamMask));
+    subtitleTrackSync = true;
+    cDevice::PrimaryDevice()->SetCurrentSubtitleTrack(type, true);
+    subtitleTrackSync = false;
+}
+
+void cDvdPlayer::SetSubtitleTrack(eTrackType Type, const tTrackId *TrackId)
+{
+    LOCK_THREAD; // also orders the flag with the player thread setting it
+    // While the player announces or reports a track, VDR's call back only
+    // echoes the player's own state, or VDR's guess at one.
+    if (subtitleTrackSync || !DVDActiveAndRunning())
+        return;
+    SetSubpStream(IS_SUBTITLE_TRACK(Type) ? Type - ttSubtitleFirst : -1);
 }
 
 int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio)
@@ -2936,6 +2983,7 @@ void cDvdPlayer::clearSeenSubpStream( )
 void cDvdPlayer::setAllSubpStreams(void)
 {
     clearSeenSubpStream();
+    ReportSubtitleTrack();
 
     for (int i = 0; nav != NULL && i < MaxSubpStreams; i++) {
         if (GetSubtitleLanguageCode(i) != 0xFFFF)
@@ -2989,6 +3037,8 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
                 navSubpStreamSeen.Ins(new IntegerListObject(navSubpStream), before);
             else
                 navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
+            if (navSubpStream >= 0)
+                AnnounceSubtitleTrack(navSubpStream);
         }
     }
 }
@@ -3067,6 +3117,7 @@ int cDvdPlayer::NextSubpStream()
 
     SetCurrentNavSubpStreamUsrLocked(true);
     UpdateTrackInfo();
+    ReportSubtitleTrack();
 
 //    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
 //        currentNavSubpStream, i, (char *)&currentNavSubpStreamLangCode,
