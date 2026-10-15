@@ -1985,12 +1985,16 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 pktpts = cPStream::fromPTS(sector + 9) + (uint64_t)ptm_offs;
             }
 
-            datalen = cPStream::packetLength(sector);
             //skip optional Header bytes
-            datalen -= cPStream::PESHeaderLength(sector);
             data += cPStream::PESHeaderLength(sector);
             //skip mandatory header bytes
             data += 3;
+            // What is left of the packet from data on, which starts 6 bytes
+            // before the payload: the scan below must not run past it. The
+            // length without the header data counted 3 bytes of the next block,
+            // and a sequence header starting at the end of a packet had its
+            // aspect ratio "corrected" there, in libdvdnav's read cache.
+            datalen = min(cPStream::packetLength(sector), r) - int(data - sector);
 
 	        // Trick modes play I-frames only, from their start: not the rest of
 	        // a picture that was under way when the trick mode began.
@@ -2007,7 +2011,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        bool havePictureHeader = false;
 	        bool haveSequenceHeader = false;
 	        bool haveSliceBeforePicture = false;
-	        while (datalen > 6) {
+	        while (datalen >= 6) { // a picture header's type is in its 6th byte
 	            if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
 	                int  ptype2 = cPStream::packetType(data);
 	                if (!firstHeader && (ptype2 == SEQUENCE_HEADER || ptype2 == GOP_START || ptype2 == SC_PICTURE))
@@ -2044,8 +2048,6 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		                    // the rest (zero bytes are stuffing before a start
 		                    // code); the next packet is skipped. Skipping this
 		                    // one cut the bottom rows off every I-frame.
-		                    // The rest ends with the packet: datalen counts from
-		                    // 6 bytes before the payload, it overshoots that.
 		                    blankFrom = data - sector;
 		                    blankTo = cPStream::packetLength(sector);
 		                    break;
