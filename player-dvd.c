@@ -3327,6 +3327,15 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
         if (audioTrackLangCode != 0xFFFF) {
             dvdnav_audio_language_select(nav, (char *)&audioTrackLangCode);
         }
+#if DVDNAV_VERSION >= 70000
+        // And the disc's audio stream register, as a player's Audio button
+        // sets it. With the language alone the disc took its first stream of
+        // that language again at the next title set - Dolby Digital where
+        // the viewer had chosen DTS - and its menu showed the old track.
+        int logical = LogicalAudioStream(id);
+        if (logical >= 0 && !IsInMenuDomain())
+            dvdnav_set_active_stream(nav, logical, DVD_AUDIO_STREAM);
+#endif
         // The viewer's choice, not VDR passing on the player's own (as VDR's
         // player does it): the new track starts with the picture on screen.
         if (previous != id && cThread::IsMainThread() && !IsInMenuDomain()) {
