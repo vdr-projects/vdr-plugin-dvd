@@ -1,6 +1,9 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2026-10-16 Version 0.3.9
+    - fix wrong refactorization for API 14 (thanks to TomJoad) 
+
 2026-09-16 Version 0.3.8
     - set width/height at SPU decoder (thanks to Andreas Regel)
     - fix deprecated functions and settings of VDR 2.8.3

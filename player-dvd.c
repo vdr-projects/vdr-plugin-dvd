@@ -2052,9 +2052,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 }
 
 #if APIVERSNUM > 30013
-            if (audioType == aLPCM)
+                if (audioType == aLPCM)
 #else
-            if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
+                if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
 #endif
                     DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageStr);
                 else
@@ -2124,17 +2124,18 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		            }
 #endif
 
-	    if (HasReelbox && ptype == 'A'){
+				    if (HasReelbox && ptype == 'A'){
 
-		rframe = new cFrame(sector, r, ftDolby);
-		if (ptsFlag)
-		    seenAPTS(pktpts);
-	    } else 
+				        rframe = new cFrame(sector, r, ftDolby);
+				        if (ptsFlag)
+				            seenAPTS(pktpts);
+				    } else 
 #if APIVERSNUM > 30013
-            if (audioType == aLPCM && !SoftDeviceOutActive) { // else 2 pcm's -> 1 device
+			        if (true)
 #else
-            if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) { // else 2 pcm's -> 1 device
+			        if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) // else 2 pcm's -> 1 device
 #endif
+			        {
                         rframe = new cFrame(sector, r, ftDolby);
 			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
                             IsInMenuDomain(),

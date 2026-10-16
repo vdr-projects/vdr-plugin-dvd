@@ -14,7 +14,7 @@
 
 #include "dvd.h"
 
-static const char *VERSION        = "0.3.8";
+static const char *VERSION        = "0.3.9";
 #if VDRVERSNUM >= 10507
 static const char *DESCRIPTION    = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
 static const char *MAINMENUENTRY  = trNOOP("Plugin.DVD$DVD");
