@@ -70,8 +70,7 @@ ifdef DBG
 CXXFLAGS += -g -ggdb -O0
 LDFLAGS  += -g -ggdb -O0
 else
-CXXFLAGS += -O3
-LDFLAGS  += -O3 -Wl,--retain-symbols-file,retain-sym
+LDFLAGS  += -Wl,--retain-symbols-file,retain-sym
 endif
 
 ifdef RESUMEDIR
