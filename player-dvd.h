@@ -185,6 +185,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
     void playSPU(int spuId, unsigned char *data, int datalen);
 
+    int  LogicalAudioStream(int Physical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
     int  GetAudioStreamNumbers(void) const ;
     uint16_t GetSubtitleLanguageCode(int Channel) const;
