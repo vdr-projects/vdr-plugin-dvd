@@ -136,6 +136,17 @@
 #warning using patched POLLTIMEOUTS_BEFORE_DEVICECLEAR
 #endif
 
+// VDR 2.8.3 (API 14) dropped the "Use Dolby Digital" setup option, which
+// is always on now: Dolby Digital and DTS go to the device as they are.
+static inline bool UseDolbyDigital(void)
+{
+#if APIVERSNUM > 30013
+    return true;
+#else
+    return Setup.UseDolbyDigital;
+#endif
+}
+
 #define OsdInUse() ((controller!=NULL)?controller->OsdVisible(this):false)
 #define TakeOsd()  ((controller!=NULL)?controller->TakeOsd((void *)this):false)
 
@@ -1454,15 +1465,19 @@ void cDvdPlayer::Action(void) {
 	        ev = (dvdnav_audio_stream_change_event_t *)cache_ptr;
 	        if(!currentNavAudioTrackUsrLocked) {
 		        int id = dvdnav_get_active_audio_stream(nav);
-                DEBUG_AUDIO_ID("dvd->SetCurrentAudioTrack DOLBY %02X\n", ttDolby + id);
-#if APIVERSNUM > 30013
-   				DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
-#else
-  		        if (Setup.UseDolbyDigital)
-   					DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
-   				else
-   					DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
-#endif
+                if (id >= 0) {
+                    // Only Dolby Digital and DTS are Dolby tracks for VDR; it
+                    // plays MPEG audio and LPCM as ttAudio, the track type has
+                    // to match or VDR drops the stream.
+                    int logical = LogicalAudioStream(id);
+                    uint16_t format = logical >= 0 ? dvdnav_audio_stream_format(nav, logical) : DVD_AUDIO_FORMAT_AC3;
+                    bool dolby = format == DVD_AUDIO_FORMAT_AC3 || format == DVD_AUDIO_FORMAT_DTS;
+                    DEBUG_AUDIO_ID("dvd->SetCurrentAudioTrack %s %02X\n", dolby ? "DOLBY" : "AUDIO", id);
+                    if (UseDolbyDigital() && dolby)
+                        DeviceSetCurrentAudioTrack(eTrackType(ttDolby + id));
+                    else
+                        DeviceSetCurrentAudioTrack(eTrackType(ttAudio + id));
+                }
                 currentNavAudioTrack = id;
 
 		        DEBUG_AUDIO_ID("DVDNAV_AUDIO_STREAM_CHANGE: curNavAu=%d 0x%02X, phys=%d, 0x%X\n",
@@ -2081,11 +2096,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                     }
                 }
 
-#if APIVERSNUM > 30013
-                if (audioType == aLPCM)
-#else
-                if ((!Setup.UseDolbyDigital && audioType == aAC3) || audioType == aLPCM)
-#endif
+                if ((!UseDolbyDigital() && audioType == aAC3) || audioType == aLPCM)
                     DeviceSetAvailableTrack(ttAudio, audioId, aLPCM | audioId, audioLanguageStr);
                 else
                     DeviceSetAvailableTrack(ttDolby, audioId, subStreamId, audioLanguageStr);
@@ -2160,11 +2171,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 				        if (ptsFlag)
 				            seenAPTS(pktpts);
 				    } else 
-#if APIVERSNUM > 30013
-			        if (true)
-#else
-			        if (Setup.UseDolbyDigital || (audioType == aLPCM && !SoftDeviceOutActive)) // else 2 pcm's -> 1 device
-#endif
+			        if (UseDolbyDigital() || (audioType == aLPCM && !SoftDeviceOutActive)) // else 2 pcm's -> 1 device
 			        {
                         rframe = new cFrame(sector, r, ftDolby);
 			            DEBUG_AUDIO_PLAY2("dvd pcm/fake menu=%d, stc=%8ums apts=%8ums vpts=%8ums len=%d\n",
@@ -3027,6 +3034,18 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 //        Empty();
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: SWITCHED !\n");
     }
+}
+
+int cDvdPlayer::LogicalAudioStream(int Physical) const
+{
+    // Despite its name, dvdnav_get_audio_logical_stream() maps a logical
+    // audio stream - the number the DVD's attributes and menus use - to the
+    // physical one in the MPEG stream, so search for the inverse.
+    for (int logical = 0; nav && logical < 8; logical++) {
+        if (dvdnav_get_audio_logical_stream(nav, logical) == Physical)
+            return logical;
+    }
+    return -1;
 }
 
 uint16_t cDvdPlayer::GetAudioTrackLanguageCode(int Channel) const
