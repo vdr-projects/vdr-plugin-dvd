@@ -117,7 +117,7 @@ class cDvdPlayer : public cPlayer, cThread {
     bool GetCurrentNavSubpStreamUsrLocked(void) const ;
     void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
 
-    uint32_t stillTimer;
+    uint64_t stillTimer; // in time_ticks(), 0 = no still frame
     dvdnav_t *nav;
     pci_t *current_pci;
     int prev_e_ptm;

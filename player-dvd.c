@@ -329,6 +329,8 @@ public:
 
 cDVDPlayerResume::cDVDPlayerResume(void)
 {
+  // nothing loaded, nothing to save
+  modified = false;
   // initialize the resume filename string.
   asprintf(&resfile, "%s/%s", RESUMEDIR, RESUME_FILE);
 }
@@ -400,7 +402,7 @@ void cDVDPlayerResume::LoadResume()
       int t, c;
       int64_t s;
       // parse line as "title:chapter:second:key"
-      if(sscanf(line,"%d:%d:%ld:%511[^\n]",&t,&c,&s,key) == 4) {
+      if(sscanf(line,"%d:%d:%" SCNd64 ":%511[^\n]",&t,&c,&s,key) == 4) {
         // successful parse, save in resume entry
         cResumeEntry *re = new cResumeEntry;
         re->key = strdup(key);
@@ -427,7 +429,7 @@ bool cDVDPlayerResume::SaveResume(void)
       // forall resume entries in the memory database
       for (cResumeEntry *re=First(); re; re=Next(re)) {
         // save the as one line in the format "title:chapter:second:key"
-        fprintf(f, "%d:%d:%ld:%s\n", re->title, re->chapter, re->second, re->key);
+        fprintf(f, "%d:%d:%" PRId64 ":%s\n", re->title, re->chapter, re->second, re->key);
       }
       // don't forget to close what you have opened!
       f.Close();
@@ -532,8 +534,13 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     clearSeenAudioTrack();
 
     currentNavSubpStream = -1;
+    changeNavSubpStreamOnceInSameCell = false;
 
+    currentNavAudioTrack = -1; // until libdvdnav announces the active stream
+    currentNavAudioTrackLangCode = 0xFFFF;
     currentNavAudioTrackType = -1;
+    hsize = vsize = vaspect = 0;
+    cntVidBlocksPlayed = cntAudBlocksPlayed = 0;
     lastNavAudioTrackType = -1;
 
     pgcCurrentBlockNum=1;
@@ -847,15 +854,8 @@ static char *dvd_ev[] =
   */
 uint64_t cDvdPlayer::time_ticks(void)
 {
-  static time_t t0 = 0;
-  struct timeval t;
-  if (gettimeofday(&t, NULL) == 0) {
-     if (t0 == 0)
-        t0 = t.tv_sec; // this avoids an overflow (we only work with deltas)
-     return (uint64_t)(t.tv_sec - t0) * 90000U +
-            (uint64_t)( t.tv_usec * 9U ) / 100U ;
-     }
-  return 0;
+  // monotonic, so that setting the clock can't end or prolong a still frame
+  return cTimeMs::Now() * 90U;
 }
 
 uint64_t cDvdPlayer::delay_ticks(uint64_t ticks)
@@ -1101,12 +1101,12 @@ void cDvdPlayer::Action(void) {
 		        DEBUG_PTS("\n***** WARNING >=1000ms sleep %llums\n", sleept/90U);
             sleept_done = delay_ticks(sleept);
 
-            DEBUG_PTS2("dvd loop sleep=%5ut(%3ums)/%5ut(%3ums), blk_size=%3d, skipPlayV=%d, AudioBlock=%d IframeCnt=%d stillTimer=%u\n",
+            DEBUG_PTS2("dvd loop sleep=%5ut(%3ums)/%5ut(%3ums), blk_size=%3d, skipPlayV=%d, AudioBlock=%d IframeCnt=%d stillTimer=%llu\n",
 		        (unsigned int)sleept, (unsigned int)sleept/90U,
 		        (unsigned int)sleept_done, (unsigned int)sleept_done/90U,
 		        blk_size, skipPlayVideo,
                 playedPacket==pktAudio,
-		        IframeCnt, stillTimer/90U);
+		        IframeCnt, (unsigned long long)stillTimer/90U);
         }
         sleept = 0;
         if (playMode == pmPause || playMode == pmStill) {
@@ -1468,9 +1468,10 @@ void cDvdPlayer::Action(void) {
 	      break;
 	  case DVDNAV_STILL_FRAME: {
 	      uint64_t currentTicks = time_ticks();
-	      DEBUG_PTS2("%s:%d:NAV STILL FRAME (menu=%d), rem. stillTimer=%ut(%ums), currTicks=%llut(%llums)\n",
+	      DEBUG_PTS2("%s:%d:NAV STILL FRAME (menu=%d), rem. stillTimer=%llut(%llums), currTicks=%llut(%llums)\n",
             __FILE__, __LINE__, IsInMenuDomain(),
-			stillTimer, stillTimer/90, currentTicks, currentTicks/90);
+			(unsigned long long)stillTimer, (unsigned long long)stillTimer/90,
+			(unsigned long long)currentTicks, (unsigned long long)currentTicks/90);
 	      dvdnav_still_event_t *still = (dvdnav_still_event_t *)cache_ptr;
 	      if (stillTimer != 0) {
 	          seenVPTS(0);
@@ -1484,11 +1485,12 @@ void cDvdPlayer::Action(void) {
 		  DEBUG_PTS2("StillTimer->Sleep: %llut(%llums)\n", sleept, sleept/90);
 	      } else {
 	      	  if(still->length == 0xff) {
-		  	stillTimer = INT_MAX;
-		        DEBUG_PTS("Still time (max): %ut(%ums)\n", stillTimer, stillTimer/90);
+		  	stillTimer = UINT64_MAX; // until the user leaves it
+		        DEBUG_PTS("Still time (max)\n");
 		  } else {
 		  	stillTimer = currentTicks + (uint64_t)(still->length) * 90000U;
-		        DEBUG_PTS("Still time (set): %ut(%ums)\n", stillTimer, stillTimer/90);
+		        DEBUG_PTS("Still time (set): %llut(%llums)\n",
+			    (unsigned long long)stillTimer, (unsigned long long)stillTimer/90);
 		  }
 	          SendIframe( true );
 	      }
