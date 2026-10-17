@@ -11,6 +11,7 @@
 #ifndef __CONTROL_DVD_H
 #define __CONTROL_DVD_H
 
+#include <atomic>
 #include <vdr/status.h>
 #include <vdr/player.h>
 #include <vdr/thread.h>
@@ -29,7 +30,7 @@ private:
   bool modeOnly;
   bool shown;
   bool visible;
-  void *osdTaker;
+  std::atomic<void *> osdTaker; // the player thread takes the OSD for the SPU
   int inputIntVal;
   int lastCurrent;
   int lastTotal;

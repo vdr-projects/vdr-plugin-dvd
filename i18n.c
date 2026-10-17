@@ -29,7 +29,7 @@ const char *ISO639code[] = {
     "pl",
     "es",
     "el",
-    "se",
+    "sv",
     "ro",
     "hu",
     "ca",
@@ -44,29 +44,29 @@ const char *ISO639code[] = {
 };
 
 const char *DvdLanguageCode[][2] = {
-  // Language ISO 639 codes for DVD
+  // Language ISO 639-1 codes for DVD and the language names, UTF-8
     {"en", "English"},
     {"de", "Deutsch"},
     {"sl", "Slovenski"},
     {"it", "Italiano"},
     {"nl", "Nederlands"},
-    {"pt", "Português"},
-    {"fr", "Français"},
+    {"pt", "PortuguÃªs"},
+    {"fr", "FranÃ§ais"},
     {"no", "Norsk"},
     {"fi", "suomi"},
     {"pl", "Polski"},
-    {"es", "Español"},
-    {"el", "ÅëëçíéêÜ"},
-    {"se", "Svenska"},
+    {"es", "EspaÃ±ol"},
+    {"el", "Î•Î»Î»Î·Î½Î¹ÎºÎ¬"},
+    {"sv", "Svenska"},
     {"ro", "Romaneste"},
     {"hu", "Magyar"},
-    {"ca", "Català"},
+    {"ca", "CatalÃ "},
     {"ru", "Ğ ÑƒÑÑĞºĞ¸Ğ¹"},
     {"hr", "Hrvatski"},
     {"et", "Eesti"},
     {"da", "Dansk"},
     {"cs", "Czech"},
-    {"tr", "Türkçe"}
+    {"tr", "TÃ¼rkÃ§e"}
 };
 
 #if VDRVERSNUM < 10507

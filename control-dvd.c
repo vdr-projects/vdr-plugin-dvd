@@ -202,7 +202,7 @@ bool cDvdPlayerControl::TakeOsd(void * owner)
         osdTaker = owner; // not taken by other: new owner
         return true;
     } else {
-        DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken! %p \n", owner,osdTaker);
+        DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken! %p \n", owner, osdTaker.load());
     }
     return false;
 }
@@ -213,7 +213,7 @@ bool cDvdPlayerControl::OsdTaken(void *me)
         DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) !IsOpen->taker:=NULL\n", me);
         osdTaker = NULL; // update info ..
     }
-    DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) != %p := %d \n", me, osdTaker, osdTaker!=me);
+    DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) != %p := %d \n", me, osdTaker.load(), osdTaker != me);
     return osdTaker != NULL && osdTaker != me;
 }
 
