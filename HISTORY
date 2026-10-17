@@ -1,13 +1,50 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
+2026-10-17 Version 0.4.0
+    - revised README, removing outdated references
+    - converted HISTORY, CONTRIBUTORS to UTF-8 (thanks to dnehring7)
+    - replaced the FSF postal address (thanks to dnehring7)
+    - keep the optimization level from vdr.pc (thanks to dnehring7)
+    - don't wipe the resume file, read it on 32-bit systems too (thanks to dnehring7)
+    - keep the device name and the cDVD instance in static storage (thanks to dnehring7)
+    - free the liba52 state (thanks to dnehring7)
+    - initialize what is read before libdvdnav sets it (thanks to dnehring7)
+    - keep still frame timers in 64 bits (thanks to dnehring7)
+    - scan a video packet only up to its end (thanks to dnehring7)
+    - play whole I-frames in fast forward and rewind (thanks to dnehring7)
+    - set the disc's audio stream for the viewer's track (thanks to dnehring7)
+    - play a title set out, wait for the drain while the picture runs (thanks to dnehring7)
+    - start a new audio track with the picture on screen (thanks to dnehring7)
+    - wait up to six seconds for the device to drain (thanks to dnehring7)
+    - show the subtitles chosen in the disc's menu (thanks to dnehring7)
+    - switch VDR's audio track only when the stream changes (thanks to dnehring7)
+    - offer the subtitle streams in VDR's subtitle menu (thanks to dnehring7)
+    - take the selected audio stream from the track number (thanks to dnehring7)
+    - keep the subtitle streams in stream order (thanks to dnehring7)
+    - number DTS tracks the way VDR does (thanks to dnehring7)
+    - scan a video packet only up to its end (thanks to dnehring7)
+    - play whole I-frames in fast forward and rewind (thanks to dnehring7)
+    - publish the dvdnav handle under the thread lock (thanks to dnehring7)
+    - announce a track's language once, not with every packet (thanks to dnehring7)
+    - stop when libdvdnav can't open a title set (thanks to dnehring7)
+    - take frames from the ring buffer under the thread lock (thanks to dnehring7)
+    - don't let the control use nav and its data unlocked (thanks to dnehring7)
+    - don't read past libdvdnav's audio stream attributes (thanks to dnehring7)
+    - select a Dolby track only for AC-3 and DTS streams (thanks to dnehring7)
+    - reset the device only when it takes no data in normal play (thanks to dnehring7)
+    - fix the track counts in the title line (thanks to dnehring7)
+    - end the replay when the DVD stops, don't loop on read errors (thanks to dnehring7)
+    - wrap around at the first and last title again (thanks to dnehring7)
+    - don't spin forever waiting for the device to drain (thanks to dnehring7)
+
 2026-10-16 Version 0.3.9
     - fix wrong refactorization for API 14 (thanks to TomJoad) 
 
 2026-09-16 Version 0.3.8
     - set width/height at SPU decoder (thanks to Andreas Regel)
     - fix deprecated functions and settings of VDR 2.8.3
-    - fix (at least some) compiler warnings (thx. to Zabrimus)
+    - fix (at least some) compiler warnings (thanks to Zabrimus)
     - change Makefile acc. to VDR conventions
 
 2021-12-17 Version 0.3.7
