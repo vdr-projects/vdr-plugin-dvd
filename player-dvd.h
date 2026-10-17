@@ -220,6 +220,14 @@ class cDvdPlayer : public cPlayer, cThread {
     void SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id);
     int announcedLanguageCode[ttMaxTrackTypes]; // per track, -1 = not announced
     eTrackType currentAudioTrack; // VDR's current audio track, as set by the player or VDR
+    // An audio track VDR selects from another thread, for the player thread
+    // to switch to, see SetAudioTrack():
+    cMutex audioTrackRequestMutex;
+    eTrackType audioTrackRequest; // ttNone: none
+    bool audioTrackRequestByViewer;
+    std::atomic<tThreadId> playerThreadId;
+    void SwitchAudioTrack(eTrackType Type, bool ByViewer);
+    void SwitchRequestedAudioTrack(void);
     void playSPU(int spuId, unsigned char *data, int datalen);
 
     static int DolbyTrackIndex(int SubStreamId);
