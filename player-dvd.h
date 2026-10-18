@@ -14,9 +14,14 @@
 #include <stdarg.h>
 #define this _this
 #include <dvdnav/dvdnav.h>
-#include <dvdnav/version.h>
 #include <dvdnav/dvdnav_events.h>
 #undef this
+
+// dvdnav.h includes version.h since libdvdnav 6.1.0. Before, there was no
+// DVDNAV_VERSION_CODE, and 5.x had no DVDNAV_VERSION either (0 in #if).
+#ifndef DVDNAV_VERSION_CODE
+#define DVDNAV_VERSION_CODE(major, minor, micro) ((major) * 10000 + (minor) * 100 + (micro))
+#endif
 
 #include <atomic>
 #include <vdr/device.h>

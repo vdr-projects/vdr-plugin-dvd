@@ -1,26 +1,14 @@
 This is the DVD plugin for the Video Disk Recorder (VDR).
 
-+++
+Project's homepage:
+    https://github.com/vdr-projects/vdr-plugin-dvd
 
-Project's homepage:          
-	https://github.com/vdr-projects/vdr-plugin-dvd
+Written by:
+    Andreas Schultz <aschultz@warp10.net> (original author)
+    Sven Göthel (interim maintainer)
+    Marco Schlüssler, Miko Wohlgemuth (CVS team)
 
-Written by:                  
-
-	Andreas Schultz (original author)
-	<aschultz@warp10.net> 
-
-	Sven Göthel (interim maintainer)
-
-	Marco Schlüssler (CVS team)
-	Miko Wohlgemuth (CVS team)
-
-Currently community maintained:
-
-	https://github.com/vdr-projects/vdr-plugin-dvd
-
-
-+++
+Currently community maintained on the project's homepage.
 
 See the file COPYING for license information.
 
@@ -28,115 +16,131 @@ See the file COPYING for license information.
 Requirements
 ============
 
-vdr       >= 2.4.0	https://tvdr.de/
-libdvdcss >= 1.4.3	https://www.videolan.org/libdvdcss/download.html
-libdvdnav >= 4.1.2	https://download.videolan.org/pub/videolan/libdvdnav/
-liba52    >= 0.7.4	https://sourceforge.net/projects/liba52/
+VDR       >= 2.6.0   https://www.tvdr.de/
+libdvdnav >= 5.0.0   https://www.videolan.org/developers/libdvdnav.html
+liba52    >= 0.7.4   https://sourceforge.net/projects/liba52/
+libdvdcss (optional) https://www.videolan.org/developers/libdvdcss.html
 
-The plugin has been tested with the following versions:
+Tested with VDR 2.8.3, libdvdnav 7.0.0, libdvdread 7.0.1, libdvdcss 1.5.0
+and liba52 0.7.4.
 
-libdvdcss:	1.4.3
-libdvdnav:	4.1.2
-liba52:		0.7.4
+Build and install the plugin like any other VDR plugin. The Makefile links
+with -ldvdnav and -la52, so the development files of both libraries must be
+installed.
 
-+++
-
-libdvdcss is optional, but required for playing CSS protected DVDs.
-The libraries should be installed into /usr/lib, e.g.:
-
-    # ./configure --prefix=/usr
-    # make
-    # make install
-
-But be aware to check your countries law, for example, nowadays
-it is prohibited in Europe to work around a _copy_protection_ 
-- so just don't copy ;-)
+libdvdcss is needed for CSS encrypted discs only. libdvdread, which
+libdvdnav uses, loads it at runtime; the plugin doesn't link with it.
+Check whether the law of your country allows its use.
 
 
-Accessing the DVD drive
-=======================
+DVD drive
+=========
 
-The plugin uses libdvdcss to access CSS protected DVDs. 
+The plugin reads from /dev/dvd unless another device is given with -C:
 
-Note that the user ID under which VDR is runningneeds to have write access 
-to the DVD device in order to replay CSS protected DVDs.
+    vdr -P"dvd -C /dev/sr0"
 
-By default, VDR expects the DVD drive to be located at /dev/dvd (which
-typically is a symbolic link to the actual device, for instance /dev/hdc).
-You can use the '-C' option to overwrite this, as in
+udev creates no /dev/dvd, only /dev/cdrom for the first drive (/dev/sr0),
+so most systems need -C. It also takes an ISO image of a DVD. If the
+device or image given with -C doesn't exist, VDR doesn't start.
 
-    vdr -P"dvd -C/media/dvd"
-
-
-Navigation in DVD mode
-======================
-
-The following navigation keys are available in DVD mode:
-
-Key             Function
---------------- ---------------------------------------------
-Green           1 min. backward
-Yellow          1 min. forward
-Blue            go to title (enter title number)
-
-Back            stop replay - exit
-
-Ok              toggle progess display (this will mess up any subtitles)
-
-Up,   kPlay     playback
-Down, kPause    pause playback
-Red             go to position (enter time)
-
-Left/Right      rewind/forward (fast if play mode, slow if pause mode)
-kFastRew/kFastFwd
-
-kAudio          select audio track
-
-2               skip to next     subtitle ( if "no subtitle" is reached, progress display on, 
-                                           if subtitle language code is prefixed with "forced-" 
-                                           (eg. 'forced-en') only forced subs will be shown )
-3               skip to next     angle    (skip copyright notice)
-
-4, kPrev        skip to previous chapter
-6, kNext        skip to next     chapter
-7, kChanDn      skip to previous title
-9, kChanUp      skip to next     title
-
-5               DvdNavigationForce ON / go to DVD root menu (if progress display on)
-8               go to DVD Title menu
-0               go to DVD Audio menu     (only available if progress display off)
-
-In DVD-Menu:
-2/8/4/6,5       DVD menu Up/Down/Left/Right, OK control's
-                Left/Right/Up/Down OK also work when in menu space
-                Red           Leave DvdNavigationForce
-                Green         skip to previous title
-                Yellow        skip to next     title
-                go to title (enter title number)
+The user VDR runs as needs access to the drive. On most distributions that
+means being a member of the "cdrom" group.
 
 
-Notes
+Audio
 =====
 
-If you use next/prev title and you are e.g. jumping from title 3
-to title 13, then this is not a bug, but a feature of the author 
-of the current DVD!
-
-So, you can use go to title for manually checking a specific one.
-This nables you to look at "hidden" titles ;-)
+With VDR 2.8.3 and newer, the plugin passes the disc's audio (AC-3, DTS,
+LPCM, MPEG) to the output device as it is, and the device decodes it. With
+older VDR versions and "Use Dolby Digital" off in VDR's setup, the plugin
+decodes AC-3 itself with liba52; DTS is not played then.
 
 
-How to play DVD games
-=====================
+Keys during playback
+====================
 
-If ou have a typical DVD game, you need to enter/force DVD navigation mode:
+Play, Up          play
+Pause, Down       pause
+FastFwd, Right    fast forward, slow motion forward while paused
+FastRew, Left     fast rewind, slow motion backward while paused
+                  (speeds as in VDR's own replay, see "Multi speed mode")
+Red               jump to a time: enter hours and minutes (hh:mm), then
+                  Ok to jump there (Down: and pause), or Left/Right to
+                  jump that far backward/forward
+Green             1 minute backward
+Yellow            1 minute forward
+Blue              go to a title: enter its number, then Ok
+Ok                show/hide the progress display (subtitles are hidden
+                  while it is open)
+Back, Stop        stop replay
+Audio             VDR's audio track menu
+Subtitles         VDR's subtitle menu
+2                 next subtitle stream, after the last one subtitles off
+3                 next camera angle
+4, Prev           previous chapter
+6, Next           next chapter
+7, ChanDn         previous title
+9, ChanUp         next title
+5                 DVD navigation mode (see below); with the progress
+                  display open: the disc's root menu
+8                 the disc's title menu
+0                 the disc's audio menu
 
-- Key 5	        DvdNavigationForce ON (not if progress display on)
-- Key Red       Leave DvdNavigationForce
+Next and previous title step through the disc's title numbers and wrap
+around at the ends. Blue also reaches titles the disc's menus don't offer.
 
 
-BUG
-===
-If you have subtitles enabled by setup or by key, the OSD/progress display
-may disappear, but believes it is still visible. So just press OK one more 
-times to make it hide for real.
+Keys in DVD menus
+=================
+
+In the disc's menus and in DVD navigation mode:
+
+Up, Down, Left, Right,
+2, 8, 4, 6        select a button
+Ok, 5             activate the selected button
+1                 root menu
+3                 title menu
+7                 subtitle menu
+9, 0              audio menu
+Green, Yellow     previous, next title
+Red               leave DVD navigation mode
+
+Blue and Back work as during playback.
+
+Some discs (games, quizzes) expect button input outside their menus. Key 5
+switches to DVD navigation mode for them, Red switches back.
+
+
+Setup
+=====
+
+Preferred menu language      the languages the disc should choose for
+Preferred audio language     its menus, audio and subtitles, if it has
+Preferred subtitle language  them (default: en)
+Player region code           region 1-8 reported to the disc, 0 keeps
+                             libdvdnav's default (default: 2)
+Display subtitles            show subtitles a disc switches on by itself
+                             (default: no); subtitles chosen with key 2,
+                             VDR's subtitle menu or the disc's menu are
+                             always shown
+Hide Mainmenu Entry          hide "DVD" in VDR's main menu
+ReadAHead                    libdvdnav's read-ahead cache (default: no)
+Gain (analog)                volume of AC-3 audio the plugin decodes
+                             itself, see "Audio" (0-10, default: 4)
+
+
+Resume
+======
+
+When replay stops inside a title, the plugin stores the title, chapter and
+position of the disc in the file dvdplayer.resume in VDR's video directory
+("make RESUMEDIR=..." sets another directory). The next replay of the same
+disc continues 30 seconds before that position.
+
+
+Known issue
+===========
+
+With subtitles on, the progress display can disappear while the plugin
+still considers it open. Press Ok once more to close it for real.
