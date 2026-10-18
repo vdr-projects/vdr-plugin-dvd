@@ -1,8 +1,10 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-2026-10-17 Version 0.4.0
-    - revised README, removing outdated references
+2026-10-18 Version 0.4.0
+    - bring README up to date with the code (thanks to dnehring7)
+    - build with libdvdnav before 6.1.0 again (thanks to dnehring7)
+    - let the player thread switch audio tracks VDR selects (thanks to dnehring7)
     - converted HISTORY, CONTRIBUTORS to UTF-8 (thanks to dnehring7)
     - replaced the FSF postal address (thanks to dnehring7)
     - keep the optimization level from vdr.pc (thanks to dnehring7)
