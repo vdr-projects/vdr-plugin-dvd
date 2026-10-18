@@ -519,6 +519,9 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     skipPlayVideo=false;
     videoPictureType=0;
     subtitleTrackSync=false;
+    audioTrackRequest=ttNone;
+    audioTrackRequestByViewer=false;
+    playerThreadId=0;
     subpMenuChoice=false;
     vobuHistoryCount=0;
     vobuHistoryNext=0;
@@ -972,6 +975,7 @@ bool cDvdPlayer::LoadResume(int& title, int& chapter, int64_t& second) {
 }
 
 void cDvdPlayer::Action(void) {
+    playerThreadId = cThread::ThreadId();
     memset(event_buf, 0, sizeof(uint8_t)*4096);
 
     unsigned char *write_blk = NULL;
@@ -1109,6 +1113,7 @@ void cDvdPlayer::Action(void) {
 		        IframeCnt, (unsigned long long)stillTimer/90U);
         }
         sleept = 0;
+        SwitchRequestedAudioTrack(); // also while paused
         if (playMode == pmPause || playMode == pmStill) {
             cCondWait::SleepMs(10);
 	        continue;
@@ -3295,9 +3300,43 @@ int cDvdPlayer::GetAudioStreamNumbers(void) const
 
 void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 {
-    LOCK_THREAD;
+    if (!TrackId)
+        return;
+    // cDevice::SetCurrentAudioTrack() calls this holding its
+    // mutexCurrentAudioTrack, which the player thread takes in VDR 2.8.3 with
+    // the thread lock held, when it announces or clears tracks
+    // (SetAvailableTrack(), ClrAvailableTracks()). Waiting for the thread
+    // lock here deadlocked the two when the viewer switched tracks with the
+    // Audio key: from another thread, the player thread does the switch.
+    if (cThread::ThreadId() != playerThreadId) {
+        cMutexLock MutexLock(&audioTrackRequestMutex);
+        audioTrackRequest = Type;
+        audioTrackRequestByViewer = cThread::IsMainThread();
+        return;
+    }
+    SwitchAudioTrack(Type, false);
+}
+
+void cDvdPlayer::SwitchRequestedAudioTrack(void)
+{
+    eTrackType type;
+    bool byViewer;
+    {
+        cMutexLock MutexLock(&audioTrackRequestMutex);
+        type = audioTrackRequest;
+        byViewer = audioTrackRequestByViewer;
+        audioTrackRequest = ttNone;
+    }
+    if (type != ttNone) {
+        LOCK_THREAD;
+        SwitchAudioTrack(type, byViewer);
+    }
+}
+
+void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer)
+{
     currentAudioTrack = Type;
-    if(!DVDActiveAndRunning() || !TrackId)
+    if (!DVDActiveAndRunning())
         return;
 
     // The stream is in the track's number: VDR selects a track before the
@@ -3340,7 +3379,7 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId)
 #endif
         // The viewer's choice, not VDR passing on the player's own (as VDR's
         // player does it): the new track starts with the picture on screen.
-        if (previous != id && cThread::IsMainThread() && !IsInMenuDomain()) {
+        if (previous != id && ByViewer && !IsInMenuDomain()) {
             if (playMode == pmPlay)
                 ReplayFromPicture();
             else if (playMode == pmPause)
