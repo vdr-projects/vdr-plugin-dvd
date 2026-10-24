@@ -74,49 +74,49 @@
 /**
 #define DVDDEBUG
 #undef  DEBUGDVD
-#define DEBUGDVD(format, args...) printf (format, ## args)
+#define DEBUGDVD(...) printf (__VA_ARGS__)
 #define CTRLDEBUG
 #undef DEBUG_CONTROL
-#define DEBUG_CONTROL(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_CONTROL(...) printf (__VA_ARGS__); fflush(NULL)
 #define NAVDEBUG
 #undef DEBUG_NAV
-#define DEBUG_NAV(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_NAV(...) printf (__VA_ARGS__); fflush(NULL)
  **
  **
 #define NAV0DEBUG
 #undef  DEBUG_NAV0
-#define DEBUG_NAV0(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_NAV0(...) printf (__VA_ARGS__); fflush(NULL)
  **
  **
  **
 #define SUBPDECDEBUG
 #undef DEBUG_SUBP_DEC
-#define DEBUG_SUBP_DEC(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_SUBP_DEC(...) printf (__VA_ARGS__); fflush(NULL)
  **
 #define SUBPDEBUG
 #undef DEBUG_SUBP_ID
-#define DEBUG_SUBP_ID(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_SUBP_ID(...) printf (__VA_ARGS__); fflush(NULL)
 #define IFRAMEDEBUG
 #undef DEBUG_IFRAME
-#define DEBUG_IFRAME(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_IFRAME(...) printf (__VA_ARGS__); fflush(NULL)
 #define IFRAMEDEBUG2
 #undef DEBUG_IFRAME2
-#define DEBUG_IFRAME2(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_IFRAME2(...) printf (__VA_ARGS__); fflush(NULL)
 #define PTSDEBUG
 #undef DEBUG_PTS
-#define DEBUG_PTS(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_PTS(...) printf (__VA_ARGS__); fflush(NULL)
 
 #define AUDIOIDDEBUG
 #undef DEBUG_AUDIO_ID
-#define DEBUG_AUDIO_ID(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_AUDIO_ID(...) printf (__VA_ARGS__); fflush(NULL)
 #define AUDIOPLAYDEBUG
 #undef DEBUG_AUDIO_PLAY
-#define DEBUG_AUDIO_PLAY(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_AUDIO_PLAY(...) printf (__VA_ARGS__); fflush(NULL)
 
 
 #define AUDIOPLAYDEBUG2
 #undef DEBUG_AUDIO_PLAY2
-#define DEBUG_AUDIO_PLAY2(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_AUDIO_PLAY2(...) printf (__VA_ARGS__); fflush(NULL)
 */
 
 #endif
@@ -2103,8 +2103,15 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
     pictureFlip=false;
 
-    switch (cPStream::packetType(sector)) {
-        case VIDEO_STREAM_S ... VIDEO_STREAM_E: {
+    // MPEG video and audio streams have a range of ids each.
+    int streamType = cPStream::packetType(sector);
+    if (VIDEO_STREAM_S <= streamType && streamType <= VIDEO_STREAM_E)
+        streamType = VIDEO_STREAM_S;
+    else if (AUDIO_STREAM_S <= streamType && streamType <= AUDIO_STREAM_E)
+        streamType = AUDIO_STREAM_S;
+
+    switch (streamType) {
+        case VIDEO_STREAM_S: {
             bool ptsFlag = ((sector[7] & 0x80) && sector[8]>=5);
             if (ptsFlag) {
                 pktpts = cPStream::fromPTS(sector + 9) + (uint64_t)ptm_offs;
@@ -2280,7 +2287,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        ptype = 'V';
             break;
         }
-        case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
+        case AUDIO_STREAM_S: {
             lastFrameType = AUDIO_STREAM_S;
 	        int audioVal = cPStream::packetType(sector);
 	        int audioId  = audioVal & AudioTrackMask;
@@ -2345,9 +2352,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             data += cPStream::PESHeaderLength(sector);
             //skip mandatory header bytes
             data += 3;
-	    
-            //fallthrough is intended
         }
+        // fall through
         case PRIVATE_STREAM2: {
             lastFrameType = PRIVATE_STREAM2;
 	        //FIXME: Stream1 + Stream2 is ok, but is Stream2 alone also?
@@ -2623,7 +2629,7 @@ void cDvdPlayer::Forward(void)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    switch (playMode) {
+    switch (playMode.load()) {
         case pmFast:
             if (Setup.MultiSpeedMode) {
                 TrickSpeed(playDir == pdForward ? 1 : -1);
@@ -2632,7 +2638,7 @@ void cDvdPlayer::Forward(void)
                 Play();
                 break;
             }
-            // run into pmPlay
+            // fall through
         case pmPlay:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
@@ -2650,7 +2656,7 @@ void cDvdPlayer::Forward(void)
                 Pause();
                 break;
             }
-            // run into pmPause
+            // fall through
         case pmStill:
         case pmPause:
             DeviceMute();
@@ -2667,7 +2673,7 @@ void cDvdPlayer::Backward(void)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    switch (playMode) {
+    switch (playMode.load()) {
         case pmFast:
             if (Setup.MultiSpeedMode) {
                TrickSpeed(playDir == pdBackward ? 1 : -1);
@@ -2676,7 +2682,7 @@ void cDvdPlayer::Backward(void)
                Play();
                break;
             }
-            // run into pmPlay
+            // fall through
         case pmPlay:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
@@ -2694,7 +2700,7 @@ void cDvdPlayer::Backward(void)
                Pause();
                break;
             }
-            // run into pmPause
+            // fall through
         case pmStill:
         case pmPause:
 	        DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
@@ -3080,10 +3086,8 @@ int cDvdPlayer::SearchSubpStream(int SubpStreamId) const {
         SubpStreamId &= SubpStreamMask;
     int i = navSubpStreamSeen.Count() - 1;
     while (i >= 0) {
-        int streamId = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
-        if (streamId != -1)
-            streamId &= SubpStreamMask;
-        if (SubpStreamId == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue())
+        // the list holds stream numbers without bit 7, and -1
+        if (SubpStreamId == navSubpStreamSeen.Get(i)->getValue())
             break; // found
         i--;
     }
@@ -3376,7 +3380,7 @@ void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer)
         if (audioTrackLangCode != 0xFFFF) {
             dvdnav_audio_language_select(nav, (char *)&audioTrackLangCode);
         }
-#if DVDNAV_VERSION >= 70000
+#if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
         // And the disc's audio stream register, as a player's Audio button
         // sets it. With the language alone the disc took its first stream of
         // that language again at the next title set - Dolby Digital where

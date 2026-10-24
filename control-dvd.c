@@ -29,12 +29,12 @@ bool cDvdPlayerControl::dvd_active = false;
 
 #define DVDDEBUG
 
-#define DEBUG_KEY(format, args...)
-#define DEBUG_SHOW(format, args...)
-#define DEBUG_OSDCTRL(format, args...)
-//#define DEBUG_KEY(format, args...) printf (format, ## args); fflush(NULL)
-//#define DEBUG_SHOW(format, args...) printf (format, ## args); fflush(NULL)
-//#define DEBUG_OSDCTRL(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_KEY(...)
+#define DEBUG_SHOW(...)
+#define DEBUG_OSDCTRL(...)
+//#define DEBUG_KEY(...) printf (__VA_ARGS__); fflush(NULL)
+//#define DEBUG_SHOW(...) printf (__VA_ARGS__); fflush(NULL)
+//#define DEBUG_OSDCTRL(...) printf (__VA_ARGS__); fflush(NULL)
 
 // --- cDvdPlayerControl -----------------------------------------------------
 
@@ -342,7 +342,8 @@ void cDvdPlayerControl::InputIntDisplay(const char *msg, int val)
 void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val)
 {
     switch (Key) {
-        case k0 ... k9:
+        case k0: case k1: case k2: case k3: case k4:
+        case k5: case k6: case k7: case k8: case k9:
             val = val * 10 + Key - k0;
             InputIntDisplay(msg, val);
             break;
@@ -420,7 +421,8 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
     int Total = (lastTotal / FRAMESPERSEC);
 #endif
     switch (Key) {
-        case k0 ... k9:
+        case k0: case k1: case k2: case k3: case k4:
+        case k5: case k6: case k7: case k8: case k9:
             if (timeSearchPos < 4) {
                 timeSearchTime <<= 8;
                 timeSearchTime |= Key - k0;
@@ -636,11 +638,13 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
             case kLeft:
             case kRight:
             case kOk:
-            case k0 ... k9:
+            case k0: case k1: case k2: case k3: case k4:
+            case k5: case k6: case k7: case k8: case k9:
                 DoShowMode = false;
                 displayFrames = DisplayedFrames;
                 if (DvdNavigation(Key))
                     break;
+                // fall through
             default:
                 state = osUnknown;
                 break;
@@ -660,6 +664,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
             case kLeft|k_Release:
                 if (Setup.MultiSpeedMode)
                     break;
+                // fall through
             case kFastRew:
             case kLeft:
                 Backward();
@@ -668,6 +673,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
             case kRight|k_Release:
                 if (Setup.MultiSpeedMode)
                     break;
+                // fall through
             case kFastFwd:
             case kRight:
                 Forward();
