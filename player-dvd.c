@@ -2737,7 +2737,7 @@ void cDvdPlayer::BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &To
         Ticks = 0;
 }
 
-void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum)
+void cDvdPlayer::PGCTicksToBlocks( int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum)
 {
     int64_t totalTicks = GetPGCLengthInTicks();
     TotalBlockNum = pgcTotalBlockNum;
@@ -2823,20 +2823,29 @@ void cDvdPlayer::SkipSeconds(int Seconds)
     if (!DVDActiveAndRunning())
         return;
     if (Seconds) {
-        int64_t diffTicks = Seconds * 90000;
-        uint32_t diffBlockNum;
-        uint32_t currentBlockNumber = pgcCurrentBlockNum;
-        PGCTicksToBlocks(diffTicks, diffBlockNum, pgcTotalBlockNum);
-
-        currentBlockNumber += diffBlockNum;
-
-        DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-        Empty();
-
-        if (dvdnav_sector_search(nav, currentBlockNumber, SEEK_SET) != DVDNAV_STATUS_OK)
-            printf("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
-        Play();
+        // In 64 bits: the time search skips up to 99:59 hours. A skip of
+        // more than the whole program chain ends at its start or end.
+        int64_t totalTicks = GetPGCLengthInTicks();
+        int64_t diffTicks = max(min(int64_t(Seconds) * 90000, totalTicks), -totalTicks);
+        int64_t diffBlockNum;
+        uint32_t totalBlockNum;
+        PGCTicksToBlocks(diffTicks, diffBlockNum, totalBlockNum);
+        PlayFromBlock(pgcCurrentBlockNum + diffBlockNum);
     }
+}
+
+void cDvdPlayer::PlayFromBlock(int64_t Block)
+{
+    // As VDR's player does it: from the start of the program chain at the
+    // earliest, and a position past its end is ignored. A block number that
+    // wrapped around made the seek fail, after the player had been emptied.
+    if (Block >= pgcTotalBlockNum)
+        return;
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
+    if (dvdnav_sector_search(nav, max(Block, int64_t(0)), SEEK_SET) != DVDNAV_STATUS_OK)
+        esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
+    Play();
 }
 
 bool cDvdPlayer::GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec)
@@ -2866,23 +2875,16 @@ bool cDvdPlayer::GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks)
 
 void cDvdPlayer::Goto(int Seconds, bool Still)
 {
-    int64_t currentTicks = Seconds * 90000;
-    uint32_t currentBlockNumber;
-    uint32_t totalBlockNumber;
-
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
 
-    PGCTicksToBlocks(currentTicks, currentBlockNumber, totalBlockNumber);
-
-    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-    Empty();
-
-    if (dvdnav_sector_search(nav, currentBlockNumber, SEEK_SET) != DVDNAV_STATUS_OK)
-        printf("dvd error dvdnav_sector_search: %s\n", dvdnav_err_to_string(nav));
-
-    Play();
+    // The time search asks for 10 s before the end, which is before the
+    // start of a shorter program chain.
+    int64_t blockNum;
+    uint32_t totalBlockNum;
+    PGCTicksToBlocks(min(int64_t(max(Seconds, 0)) * 90000, GetPGCLengthInTicks()), blockNum, totalBlockNum);
+    PlayFromBlock(blockNum);
 }
 
 int cDvdPlayer::GotoAngle(int Angle)
