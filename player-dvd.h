@@ -204,6 +204,7 @@ class cDvdPlayer : public cPlayer, cThread {
     void StillSkip(void);
     void TrickSpeed(int Increment);
     void Empty(bool emptyDeviceToo=true);
+    void PlayFromBlock(int64_t Block);
     void StripAudioPackets(uchar *b, int Length, uchar Except = 0x00);
     int Resume(void);
     bool Save(void);
@@ -370,7 +371,7 @@ public:
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void PGCTicksToBlocks(int64_t Ticks, uint32_t &BlockNum, uint32_t &TotalBlockNum) ;
+    void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum) ;
 
     bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) ;
     bool GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) ;
