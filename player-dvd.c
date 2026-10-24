@@ -2071,8 +2071,10 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
     static int adiff;
     char ptype = '-';
 
-    //make sure we got a PS packet header
-    if (!cPStream::packetStart(sector, DVD_VIDEO_LB_LEN) && cPStream::packetType(sector) != 0xBA) {
+    // Every block of a VOB is a pack and starts with the pack header. A
+    // search for a start code further in parsed the rest of the block from
+    // there as if it were all of it, that many bytes past its end.
+    if (!cPStream::packetStart(sector) || cPStream::packetType(sector) != 0xBA) {
         esyslog("ERROR: dvd-plugin got unexpected packet: %x %x %x %x", sector[0], sector[1], sector[2], sector[3]);
         return playedPacket;
     }
@@ -2332,7 +2334,9 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             break;
         }
         case PRIVATE_STREAM1: {
-            datalen = cPStream::packetLength(sector);
+            // Within the block, as for video: a packet's length beyond it
+            // had subtitles and liba52 read past it.
+            datalen = min(cPStream::packetLength(sector), r);
 
             //skip optional Header bytes
             datalen -= cPStream::PESHeaderLength(sector);

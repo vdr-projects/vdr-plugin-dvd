@@ -28,12 +28,7 @@ typedef unsigned long long uint_64;
 
 class cPStream {
  public:
-    static bool packetStart(uint8_t * &data, int len) {
-        while (len > 6 && !(data[0] == 0x00 &&
-                            data[1] == 0x00 && data[2] == 0x01)) {
-            data++;
-            len--;
-        }
+    static bool packetStart(const uint8_t *data) {
         return (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x01);
     }
 
