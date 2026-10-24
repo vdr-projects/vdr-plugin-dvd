@@ -644,6 +644,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                 displayFrames = DisplayedFrames;
                 if (DvdNavigation(Key))
                     break;
+                // fall through
             default:
                 state = osUnknown;
                 break;
@@ -663,6 +664,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
             case kLeft|k_Release:
                 if (Setup.MultiSpeedMode)
                     break;
+                // fall through
             case kFastRew:
             case kLeft:
                 Backward();
@@ -671,6 +673,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
             case kRight|k_Release:
                 if (Setup.MultiSpeedMode)
                     break;
+                // fall through
             case kFastFwd:
             case kRight:
                 Forward();

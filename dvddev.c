@@ -69,7 +69,7 @@ int cDVD::Command(int Cmd)
 {
   int result = -1;
   int f;
-  if ((f = open(deviceName, O_RDONLY | O_NONBLOCK)) > 0) {
+  if ((f = open(deviceName, O_RDONLY | O_NONBLOCK)) >= 0) {
      result = ioctl(f, Cmd, 0);
      close(f);
      }

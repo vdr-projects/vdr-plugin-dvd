@@ -52,8 +52,6 @@
 #define DEBUG_A52(...)
 #endif
 
-static const uint8_t burstHeader[4] = { 0xf8, 0x72, 0x4e, 0x1f };
-
 A52decoder::A52decoder(cDvdPlayer &ThePlayer): player(ThePlayer)
 {
   syncMode = ptsCopy;

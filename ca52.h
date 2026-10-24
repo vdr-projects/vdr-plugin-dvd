@@ -61,8 +61,6 @@ class A52decoder {
   A52assembler a52asm;
   a52_state_t * state;
 
-  uint8_t burst[6144];
-
   int sample_rate;
   int flags;
 

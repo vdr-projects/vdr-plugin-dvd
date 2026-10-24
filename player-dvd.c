@@ -2346,9 +2346,8 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             data += cPStream::PESHeaderLength(sector);
             //skip mandatory header bytes
             data += 3;
-	    
-            //fallthrough is intended
         }
+        // fall through
         case PRIVATE_STREAM2: {
             lastFrameType = PRIVATE_STREAM2;
 	        //FIXME: Stream1 + Stream2 is ok, but is Stream2 alone also?
@@ -2633,7 +2632,7 @@ void cDvdPlayer::Forward(void)
                 Play();
                 break;
             }
-            // run into pmPlay
+            // fall through
         case pmPlay:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
@@ -2651,7 +2650,7 @@ void cDvdPlayer::Forward(void)
                 Pause();
                 break;
             }
-            // run into pmPause
+            // fall through
         case pmStill:
         case pmPause:
             DeviceMute();
@@ -2677,7 +2676,7 @@ void cDvdPlayer::Backward(void)
                Play();
                break;
             }
-            // run into pmPlay
+            // fall through
         case pmPlay:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
@@ -2695,7 +2694,7 @@ void cDvdPlayer::Backward(void)
                Pause();
                break;
             }
-            // run into pmPause
+            // fall through
         case pmStill:
         case pmPause:
 	        DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
@@ -3079,10 +3078,8 @@ int cDvdPlayer::SearchSubpStream(int SubpStreamId) const {
         SubpStreamId &= SubpStreamMask;
     int i = navSubpStreamSeen.Count() - 1;
     while (i >= 0) {
-        int streamId = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
-        if (streamId != -1)
-            streamId &= SubpStreamMask;
-        if (SubpStreamId == ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue())
+        // the list holds stream numbers without bit 7, and -1
+        if (SubpStreamId == navSubpStreamSeen.Get(i)->getValue())
             break; // found
         i--;
     }
@@ -3375,7 +3372,7 @@ void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer)
         if (audioTrackLangCode != 0xFFFF) {
             dvdnav_audio_language_select(nav, (char *)&audioTrackLangCode);
         }
-#if DVDNAV_VERSION >= 70000
+#if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
         // And the disc's audio stream register, as a player's Audio button
         // sets it. With the language alone the disc took its first stream of
         // that language again at the next title set - Dolby Digital where
