@@ -12,10 +12,8 @@
 #define __PLAYER_DVD_H
 
 #include <stdarg.h>
-#define this _this
 #include <dvdnav/dvdnav.h>
 #include <dvdnav/dvdnav_events.h>
-#undef this
 
 // dvdnav.h includes version.h since libdvdnav 6.1.0. Before, there was no
 // DVDNAV_VERSION_CODE, and 5.x had no DVDNAV_VERSION either (0 in #if).

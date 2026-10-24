@@ -35,7 +35,7 @@
 
 #define CTRLDEBUG
 #undef DEBUG_CONTROL
-#define DEBUG_CONTROL(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_CONTROL(...) printf (__VA_ARGS__); fflush(NULL)
 
 #else
 
@@ -43,7 +43,7 @@
 #undef CTRLDEBUG
 #endif
 #ifndef DEBUG_CONTROL
-#define DEBUG_CONTROL(format, args...)
+#define DEBUG_CONTROL(...)
 #endif
 
 #endif

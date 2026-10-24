@@ -47,9 +47,9 @@
 
 #ifdef A52DEBUG
 #warning A52DEBUG is defined
-#define DEBUG_A52(format, args...) fprintf (stderr, format, ## args)
+#define DEBUG_A52(...) fprintf (stderr, __VA_ARGS__)
 #else
-#define DEBUG_A52(format, args...)
+#define DEBUG_A52(...)
 #endif
 
 static const uint8_t burstHeader[4] = { 0xf8, 0x72, 0x4e, 0x1f };

@@ -74,49 +74,49 @@
 /**
 #define DVDDEBUG
 #undef  DEBUGDVD
-#define DEBUGDVD(format, args...) printf (format, ## args)
+#define DEBUGDVD(...) printf (__VA_ARGS__)
 #define CTRLDEBUG
 #undef DEBUG_CONTROL
-#define DEBUG_CONTROL(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_CONTROL(...) printf (__VA_ARGS__); fflush(NULL)
 #define NAVDEBUG
 #undef DEBUG_NAV
-#define DEBUG_NAV(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_NAV(...) printf (__VA_ARGS__); fflush(NULL)
  **
  **
 #define NAV0DEBUG
 #undef  DEBUG_NAV0
-#define DEBUG_NAV0(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_NAV0(...) printf (__VA_ARGS__); fflush(NULL)
  **
  **
  **
 #define SUBPDECDEBUG
 #undef DEBUG_SUBP_DEC
-#define DEBUG_SUBP_DEC(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_SUBP_DEC(...) printf (__VA_ARGS__); fflush(NULL)
  **
 #define SUBPDEBUG
 #undef DEBUG_SUBP_ID
-#define DEBUG_SUBP_ID(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_SUBP_ID(...) printf (__VA_ARGS__); fflush(NULL)
 #define IFRAMEDEBUG
 #undef DEBUG_IFRAME
-#define DEBUG_IFRAME(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_IFRAME(...) printf (__VA_ARGS__); fflush(NULL)
 #define IFRAMEDEBUG2
 #undef DEBUG_IFRAME2
-#define DEBUG_IFRAME2(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_IFRAME2(...) printf (__VA_ARGS__); fflush(NULL)
 #define PTSDEBUG
 #undef DEBUG_PTS
-#define DEBUG_PTS(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_PTS(...) printf (__VA_ARGS__); fflush(NULL)
 
 #define AUDIOIDDEBUG
 #undef DEBUG_AUDIO_ID
-#define DEBUG_AUDIO_ID(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_AUDIO_ID(...) printf (__VA_ARGS__); fflush(NULL)
 #define AUDIOPLAYDEBUG
 #undef DEBUG_AUDIO_PLAY
-#define DEBUG_AUDIO_PLAY(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_AUDIO_PLAY(...) printf (__VA_ARGS__); fflush(NULL)
 
 
 #define AUDIOPLAYDEBUG2
 #undef DEBUG_AUDIO_PLAY2
-#define DEBUG_AUDIO_PLAY2(format, args...) printf (format, ## args); fflush(NULL)
+#define DEBUG_AUDIO_PLAY2(...) printf (__VA_ARGS__); fflush(NULL)
 */
 
 #endif
@@ -2099,8 +2099,15 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 
     pictureFlip=false;
 
-    switch (cPStream::packetType(sector)) {
-        case VIDEO_STREAM_S ... VIDEO_STREAM_E: {
+    // MPEG video and audio streams have a range of ids each.
+    int streamType = cPStream::packetType(sector);
+    if (VIDEO_STREAM_S <= streamType && streamType <= VIDEO_STREAM_E)
+        streamType = VIDEO_STREAM_S;
+    else if (AUDIO_STREAM_S <= streamType && streamType <= AUDIO_STREAM_E)
+        streamType = AUDIO_STREAM_S;
+
+    switch (streamType) {
+        case VIDEO_STREAM_S: {
             bool ptsFlag = ((sector[7] & 0x80) && sector[8]>=5);
             if (ptsFlag) {
                 pktpts = cPStream::fromPTS(sector + 9) + (uint64_t)ptm_offs;
@@ -2276,7 +2283,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 	        ptype = 'V';
             break;
         }
-        case AUDIO_STREAM_S ... AUDIO_STREAM_E: {
+        case AUDIO_STREAM_S: {
             lastFrameType = AUDIO_STREAM_S;
 	        int audioVal = cPStream::packetType(sector);
 	        int audioId  = audioVal & AudioTrackMask;
@@ -2617,7 +2624,7 @@ void cDvdPlayer::Forward(void)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    switch (playMode) {
+    switch (playMode.load()) {
         case pmFast:
             if (Setup.MultiSpeedMode) {
                 TrickSpeed(playDir == pdForward ? 1 : -1);
@@ -2661,7 +2668,7 @@ void cDvdPlayer::Backward(void)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    switch (playMode) {
+    switch (playMode.load()) {
         case pmFast:
             if (Setup.MultiSpeedMode) {
                TrickSpeed(playDir == pdBackward ? 1 : -1);

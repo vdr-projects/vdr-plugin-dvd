@@ -37,9 +37,9 @@
 #endif
 
 #ifdef DVDDEBUG
-#define DEBUG(format, args...) fprintf (stderr, format, ## args)
+#define DEBUG(...) fprintf (stderr, __VA_ARGS__)
 #else
-#define DEBUG(format, args...)
+#define DEBUG(...)
 #endif
 
 // --- cDVD ------------------------------------------------------------------
