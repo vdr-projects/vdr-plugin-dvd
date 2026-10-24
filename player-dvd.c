@@ -1294,7 +1294,9 @@ void cDvdPlayer::Action(void) {
 	     */
             pgcPosTicksIncr = (int64_t) ((fastWindFactor * 90000L)/2L) ;
 
-	    if( pgcPosTicks+pgcPosTicksIncr < pgcTotalTicks )
+	    // pgcTicksPerBlock is 0 if the program chain's playback time is
+	    // shorter than its number of blocks, or 0 itself.
+	    if( pgcPosTicks+pgcPosTicksIncr < pgcTotalTicks && pgcTicksPerBlock > 0 )
 	    {
 		      DEBUG_CONTROL("dvd %d %4.4u/%4.4u fwd get block: %4.4ldb %10.10ldt %lds\n",
 				playDir == pdBackward,
@@ -1351,7 +1353,7 @@ void cDvdPlayer::Action(void) {
 		     * else fast rewind
 		     *		half a secound * fastWindFactor
 		     */
-		    if ( trickSpeed-NORMAL_SPEED <= MAX_SPEEDS )
+		    if ( trickSpeed-NORMAL_SPEED <= MAX_SPEEDS || pgcTicksPerBlock <= 0 )
 		    {
 			    cntVidBlocksPlayed++; // one more block back ..
 			    posdiff = cntVidBlocksPlayed*fastWindFactor ;
