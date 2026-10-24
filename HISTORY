@@ -2,6 +2,12 @@ VDR Plugin 'dvd' Revision History
 ---------------------------------
 
 2026-10-18 Version 0.4.0
+    - small cleanups
+    - build with -pedantic-errors
+    - skip back to the start at most, ignore a skip past the end
+    - don't divide by a zero ticks per block in fast forward/rewind
+    - parse a block only within its 2048 bytes
+    - keep the region code and the languages in range
     - bring README up to date with the code (thanks to dnehring7)
     - build with libdvdnav before 6.1.0 again (thanks to dnehring7)
     - let the player thread switch audio tracks VDR selects (thanks to dnehring7)
