@@ -1984,7 +1984,7 @@ static const char *TrackLanguage(uint16_t LanguageCode, char *Language)
         Language[0] = 0;
         return NULL;
     }
-    for (int i = 0; i < 22; i++) {
+    for (int i = 0; i < DvdLanguageCodes; i++) {
         if (!strcasecmp(Language, DvdLanguageCode[i][0]))
             return DvdLanguageCode[i][1];
     }
