@@ -43,6 +43,8 @@ const char *ISO639code[] = {
 #endif
 };
 
+const int ISO639codes = sizeof(ISO639code) / sizeof(ISO639code[0]);
+
 const char *DvdLanguageCode[][2] = {
   // Language ISO 639-1 codes for DVD and the language names, UTF-8
     {"en", "English"},
@@ -68,6 +70,8 @@ const char *DvdLanguageCode[][2] = {
     {"cs", "Czech"},
     {"tr", "Türkçe"}
 };
+
+const int DvdLanguageCodes = sizeof(DvdLanguageCode) / sizeof(DvdLanguageCode[0]);
 
 #if VDRVERSNUM < 10507
 const tI18nPhrase DvdPhrases[] = {

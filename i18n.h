@@ -14,7 +14,9 @@
 #include <vdr/i18n.h>
 
 extern const char *ISO639code[];
+extern const int ISO639codes; // the number of entries
 extern const char *DvdLanguageCode[][2];
+extern const int DvdLanguageCodes;
 #if VDRVERSNUM < 10507
 extern const tI18nPhrase DvdPhrases[];
 #endif
