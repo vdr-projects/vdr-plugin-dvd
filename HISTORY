@@ -1,7 +1,13 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-2026-10-18 Version 0.4.0
+2026-10-25 Version 0.4.0
+    - default to /dev/cdrom and start without a drive
+    - require VDR 2.6.6 and drop pre-2.6.6 compatibility code (i18n to ASCII)
+    - convert the message catalogues to UTF-8, unify the headers, fix the Russian translation and add Spanish, Finnish, French, Italian and Dutch
+    - describe audio tracks by codec, channel layout and type
+    - describe subtitle tracks by type (forced, captions, commentary)
+    - remove the patches directory (old VDR 1.3.x and xine diffs)
     - small cleanups
     - build with -pedantic-errors
     - skip back to the start at most, ignore a skip past the end
@@ -31,8 +37,6 @@ VDR Plugin 'dvd' Revision History
     - take the selected audio stream from the track number (thanks to dnehring7)
     - keep the subtitle streams in stream order (thanks to dnehring7)
     - number DTS tracks the way VDR does (thanks to dnehring7)
-    - scan a video packet only up to its end (thanks to dnehring7)
-    - play whole I-frames in fast forward and rewind (thanks to dnehring7)
     - publish the dvdnav handle under the thread lock (thanks to dnehring7)
     - announce a track's language once, not with every packet (thanks to dnehring7)
     - stop when libdvdnav can't open a title set (thanks to dnehring7)
