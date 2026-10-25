@@ -184,11 +184,7 @@ void cDvdPlayerControl::HideOwnOsd(void)
 
     if (visible) {
         OsdClose();
-#if VDRVERSNUM >= 10500
         SetNeedsFastResponse(false);
-#else
-        needsFastResponse = false;
-#endif
         visible = modeOnly = false;
         lastPlay = lastForward = false;
         lastSpeed = -1;
@@ -287,11 +283,7 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
     if (GetIndex(Current, Total) && Total > 0) {
         DEBUG_SHOW("DVD-Ctrl: ShowProgress: ... \n");
         if (!visible) {
-#if VDRVERSNUM >= 10500
             SetNeedsFastResponse(true);
-#else
-            needsFastResponse = true;
-#endif
             OsdOpen();
         }
         if (!visible)
@@ -413,13 +405,8 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
 {
     #define STAY_SECONDS_OFF_END 10
     int Seconds = (timeSearchTime >> 24) * 36000 + ((timeSearchTime & 0x00FF0000) >> 16) * 3600 + ((timeSearchTime & 0x0000FF00) >> 8) * 600 + (timeSearchTime & 0x000000FF) * 60;
-#if VDRVERSNUM >= 10703
     int Current = int(lastCurrent / FramesPerSecond());
     int Total = int(lastTotal / FramesPerSecond());
-#else
-    int Current = (lastCurrent / FRAMESPERSEC);
-    int Total = (lastTotal / FRAMESPERSEC);
-#endif
     switch (Key) {
         case k0: case k1: case k2: case k3: case k4:
         case k5: case k6: case k7: case k8: case k9:

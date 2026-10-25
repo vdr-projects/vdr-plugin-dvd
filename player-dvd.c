@@ -30,7 +30,6 @@
 #endif
 
 #include "common-dvd.h"
-#include "i18n.h"
 #include "dvddev.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"
@@ -277,11 +276,7 @@ cResumeEntry::~cResumeEntry()
 
 // ... in this directory (default: /video)
 #ifndef RESUMEDIR
-#if APIVERSNUM > 20101
 #define RESUMEDIR cVideoDirectory::Name()
-#else
-#define RESUMEDIR VideoDirectory
-#endif
 #endif
 
 
@@ -634,11 +629,7 @@ void cDvdPlayer::TrickSpeed(int Increment)
 	        if (playMode == pmSlow)
                 sp=2;
         }
-#if VDRVERSNUM < 20103
-        DeviceTrickSpeed(sp);
-#else
         DeviceTrickSpeed(sp,playDir == pdForward);
-#endif
     } else if ( nts>0 && nts-NORMAL_SPEED <= MAX_MAX_SPEEDS ) {
         fastWindFactor  = 1;
         trickSpeed = nts;
@@ -2757,13 +2748,8 @@ bool cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame)
     cMutexLock MutexLock(&infoMutex);
     if (!infoPositionValid || infoTotalBlock == 0)
         return false;
-#if VDRVERSNUM >= 10703
     CurrentFrame = (int)(infoCurrentBlock * infoPgcLength / infoTotalBlock / 90000L * FramesPerSecond());
     TotalFrame   = (int)(infoPgcLength / 90000L * FramesPerSecond());
-#else
-    CurrentFrame = (int)(infoCurrentBlock * infoPgcLength / infoTotalBlock / 90000L) * FRAMESPERSEC;
-    TotalFrame   = (int)(infoPgcLength / 90000L) * FRAMESPERSEC;
-#endif
     return true;
 }
 
@@ -2794,7 +2780,7 @@ void cDvdPlayer::UpdateVTSInfo()
         isInMenuDomain = dvdnav_is_domain_vmgm(nav) || dvdnav_is_domain_vtsm(nav);
         isInFeature    = dvdnav_is_domain_vts(nav);
 
-#if VDRVERSNUM >= 20801
+#if APIVERSNUM >= 30012 // cSpuDecoder::setResolution(), VDR 2.8.1
         uint32_t dvd_width, dvd_height;
         dvdnav_get_video_resolution(nav, &dvd_width, &dvd_height);
         if (SPUdecoder)
@@ -2815,11 +2801,7 @@ int cDvdPlayer::SkipFrames(int Frames)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return -1;
-#if VDRVERSNUM >= 10703
     SkipSeconds(int(Frames * FramesPerSecond()));
-#else
-    SkipSeconds(Frames*FRAMESPERSEC);
-#endif
     return Frames;
 }
 

@@ -80,7 +80,7 @@ endif
 ### The object files (add further files here):
 
 OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o     \
-	           ca52.o i18n.o setup-dvd.o 
+	           ca52.o setup-dvd.o 
 
 ### The main target:
 

@@ -44,5 +44,10 @@ class cMenuSetupDVD : public cMenuSetupPage {
 
 extern cDVDSetup DVDSetup;
 
+extern const char *ISO639code[];
+extern const int ISO639codes;
+extern const char *DvdLanguageCode[][2];
+extern const int DvdLanguageCodes;
+
 #endif // __SETUP_DVD_H
 

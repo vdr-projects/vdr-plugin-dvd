@@ -20,7 +20,6 @@
 #include "player-dvd.h"
 #include "control-dvd.h"
 #include "setup-dvd.h"
-#include "i18n.h"
 
 
 // --- cPluginDvd ------------------------------------------------------------
