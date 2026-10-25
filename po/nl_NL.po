@@ -31,6 +31,12 @@ msgstr "Fout bij het openen van de dvd!"
 msgid "Error.DVD$Error fetching data from DVD!"
 msgstr "Fout bij het ophalen van gegevens van de dvd!"
 
+msgid "DVD$visually impaired"
+msgstr "slechtzienden"
+
+msgid "DVD$comments"
+msgstr "commentaar"
+
 msgid "Setup.DVD$Preferred menu language"
 msgstr "Voorkeurstaal voor menu's"
 
