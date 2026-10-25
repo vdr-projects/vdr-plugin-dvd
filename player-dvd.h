@@ -242,6 +242,7 @@ class cDvdPlayer : public cPlayer, cThread {
     bool SubtitlesShown(int Stream) const;
     int  LogicalAudioStream(int Physical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
+    cString AudioTrackDescription(int Channel, const char *LanguageName) const;
     int  GetAudioStreamNumbers(void) const ;
     uint16_t GetSubtitleLanguageCode(int Channel) const;
     int  GetSubtitleStreamNumbers(void) const ;

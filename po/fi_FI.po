@@ -31,6 +31,12 @@ msgstr "Virhe avattaessa DVD:tä!"
 msgid "Error.DVD$Error fetching data from DVD!"
 msgstr "Virhe luettaessa tietoja DVD:ltä!"
 
+msgid "DVD$visually impaired"
+msgstr "näkövammaisille"
+
+msgid "DVD$comments"
+msgstr "kommentit"
+
 msgid "Setup.DVD$Preferred menu language"
 msgstr "Ensisijainen valikkokieli"
 

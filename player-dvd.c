@@ -2003,7 +2003,8 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
     }
     char language[3];
     const char *languageName = TrackLanguage(languageCode, language);
-    DeviceSetAvailableTrack(Type, Index, Id, language[0] ? language : NULL, languageName);
+    cString description = AudioTrackDescription(Id & AC3AudioTrackMask, languageName);
+    DeviceSetAvailableTrack(Type, Index, Id, language[0] ? language : NULL, description);
 }
 
 void cDvdPlayer::AnnounceSubtitleTrack(int Stream)
@@ -2548,6 +2549,12 @@ void cDvdPlayer::Activate(bool On)
 {
     DEBUGDVD("cDvdPlayer::Activate %d->%d\n", active.load(), On);
     if (On) {
+        // VDR's audio and subtitle menus clear the descriptions of every track
+        // that does not belong to a recording (SetTrackDescriptions()). Keep
+        // them, so the descriptions this player sets for the disc's tracks stay
+        // visible; the player manages its own track selection, which VDR's
+        // EnsureAudioTrack()/EnsureSubtitleTrack() would otherwise do.
+        cDevice::PrimaryDevice()->SetKeepTracks(true);
         Start();
     } else {
         // The thread leaves its loop and closes nav itself. Cancel() returns
@@ -2555,6 +2562,7 @@ void cDvdPlayer::Activate(bool On)
         running = false;
         Cancel(3);
         active = false;
+        cDevice::PrimaryDevice()->SetKeepTracks(false);
     }
 }
 
@@ -3197,7 +3205,11 @@ void cDvdPlayer::clearSeenAudioTrack( )
     navAudioTracksSeen.Clear();
     DEBUG_AUDIO_ID("cDvdPlayer::cDvdPlayer: seen audio cleared\n");
     SetCurrentNavAudioTrackUsrLocked(false);
+    // This rebuilds the track list on a title or cell change, so VDR must drop
+    // the old tracks here even though SetKeepTracks(true) otherwise keeps them.
+    cDevice::PrimaryDevice()->SetKeepTracks(false);
     DeviceClrAvailableTracks();
+    cDevice::PrimaryDevice()->SetKeepTracks(true);
     currentAudioTrack = ttNone; // VDR's clear resets it
     for (int i = 0; i < ttMaxTrackTypes; i++)
         announcedLanguageCode[i] = -1;
@@ -3462,6 +3474,32 @@ uint16_t cDvdPlayer::GetAudioTrackLanguageCode(int Channel) const
         audioStreamLanguageCode = audioStreamLanguageCode >> 8 | (audioStreamLanguageCode & 0xFF) << 8;
     }
     return audioStreamLanguageCode;
+}
+
+cString cDvdPlayer::AudioTrackDescription(int Channel, const char *LanguageName) const
+{
+    // VDR's audio menu shows this description in place of the bare language
+    // code, so tell the tracks apart by their codec, channel layout and, for
+    // commentary or audio-description tracks, a marker - a disc often carries
+    // two tracks in the same language that only these distinguish.
+    static const char *const Codec[8] = { "AC3", NULL, "MPEG", "MPEG", "LPCM", NULL, "DTS", NULL };
+    int logical = LogicalAudioStream(Channel);
+    audio_attr_t attr;
+    if (logical < 0 || dvdnav_get_audio_attr(nav, logical, &attr) != DVDNAV_STATUS_OK)
+        return cString(LanguageName); // cString(NULL) keeps whatever VDR already has
+    cString d(LanguageName ? LanguageName : "");
+    if (const char *c = Codec[attr.audio_format & 0x07])
+        d = cString::sprintf("%s%s%s", *d, **d ? " " : "", c);
+    int channels = attr.channels + 1; // the field holds the count minus one
+    if (channels == 6)
+        d = cString::sprintf("%s%s5.1", *d, **d ? " " : "");
+    else
+        d = cString::sprintf("%s%s%d.0", *d, **d ? " " : "", channels);
+    const char *ext = attr.code_extension == 2 ? tr("DVD$visually impaired") :
+                      attr.code_extension == 3 || attr.code_extension == 4 ? tr("DVD$comments") : NULL;
+    if (ext)
+        d = cString::sprintf("%s (%s)", *d, ext);
+    return **d ? d : cString(LanguageName);
 }
 
 uint16_t cDvdPlayer::GetSubtitleLanguageCode(int Channel) const
