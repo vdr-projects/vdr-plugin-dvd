@@ -1,56 +1,57 @@
-# VDR plugin language source file.
-# Copyright (C) 2007
-# This file is distributed under the same license as the dvd-plugin package.
-# Marco Schluessler <marco@lordzodiac.de>, 2007
+# German translations for vdr-dvd.
+# Copyright (C) 2007 Marco Schluessler <marco@lordzodiac.de>
+# Copyright (C) 2026 Dirk Nehring <dnehring@gmx.net>
+# This file is distributed under the same license as the vdr-dvd package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: VDR dvd-plugin 0.3.8\n"
+"Project-Id-Version: vdr-dvd 0.4.0\n"
 "Report-Msgid-Bugs-To: <marco@lordzodiac.de>\n"
-"POT-Creation-Date: 2013-01-02 05:14+1100\n"
-"PO-Revision-Date: 2007-08-12 23:15+0200\n"
-"Last-Translator: Marco Schluessler <marco@lordzodiac.de>\n"
-"Language-Team: German\n"
+"POT-Creation-Date: 2026-10-25 09:00+0200\n"
+"PO-Revision-Date: 2026-10-25 09:00+0200\n"
+"Last-Translator: Dirk Nehring <dnehring@gmx.net>\n"
+"Language-Team: German <vdr@linuxtv.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-15\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Error.DVD$Current subp stream not seen!"
-msgstr "Der ausgewählte Untertitel ist nicht vorhanden!"
+msgstr "Der ausgewÃ¤hlte Untertitel ist nicht vorhanden!"
 
 msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
-msgstr "verwandelt VDR in einen (fast) vollständigen DVD Spieler"
+msgstr "verwandelt VDR in einen (fast) vollstÃ¤ndigen DVD Spieler"
 
 msgid "Plugin.DVD$DVD"
 msgstr "DVD"
 
 msgid "Error.DVD$Error opening DVD!"
-msgstr "Fehler beim Öffnen der DVD!"
+msgstr "Fehler beim Ã–ffnen der DVD!"
 
 msgid "Error.DVD$Error fetching data from DVD!"
 msgstr "Fehler beim Lesen von der DVD!"
 
 msgid "Setup.DVD$Preferred menu language"
-msgstr "Bevorzugte Sprache für Menüs"
+msgstr "Bevorzugte Sprache fÃ¼r MenÃ¼s"
 
 msgid "Setup.DVD$Preferred audio language"
-msgstr "Bevorzugte Sprache für Dialog"
+msgstr "Bevorzugte Sprache fÃ¼r Dialog"
 
 msgid "Setup.DVD$Preferred subtitle language"
-msgstr "Bevorzugte Sprache für Untertitel"
+msgstr "Bevorzugte Sprache fÃ¼r Untertitel"
 
 msgid "Setup.DVD$Player region code"
-msgstr "Regionalkode für DVD Spieler"
+msgstr "Regionalkode fÃ¼r DVD Spieler"
 
 msgid "Setup.DVD$Display subtitles"
 msgstr "Untertitel anzeigen"
 
 msgid "Setup.DVD$Hide Mainmenu Entry"
-msgstr "Hauptmenüeintrag verstecken"
+msgstr "HauptmenÃ¼eintrag verstecken"
 
 msgid "Setup.DVD$ReadAHead"
 msgstr "ReadAHead"
 
 msgid "Setup.DVD$Gain (analog)"
-msgstr "Verstärkung (analog)"
+msgstr "VerstÃ¤rkung (analog)"

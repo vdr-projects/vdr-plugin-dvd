@@ -1,26 +1,27 @@
-# VDR plugin language source file.
-# Copyright (C) 2007
-# This file is distributed under the same license as the dvd-plugin package.
-# Marco Schluessler <marco@lordzodiac.de>, 2007
+# Russian translations for vdr-dvd.
+# Copyright (C) 2007 Marco Schluessler <marco@lordzodiac.de>
+# Copyright (C) 2026 Dirk Nehring <dnehring@gmx.net>
+# This file is distributed under the same license as the vdr-dvd package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: VDR dvd-plugin 0.3.8\n"
+"Project-Id-Version: vdr-dvd 0.4.0\n"
 "Report-Msgid-Bugs-To: <marco@lordzodiac.de>\n"
-"POT-Creation-Date: 2013-01-02 05:14+1100\n"
-"PO-Revision-Date: 2007-08-12 23:15+0200\n"
-"Last-Translator: Marco Schluessler <marco@lordzodiac.de>\n"
-"Language-Team: Russian\n"
+"POT-Creation-Date: 2026-10-25 09:00+0200\n"
+"PO-Revision-Date: 2026-10-25 09:00+0200\n"
+"Last-Translator: Dirk Nehring <dnehring@gmx.net>\n"
+"Language-Team: Russian <vdr@linuxtv.org>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Error.DVD$Current subp stream not seen!"
 msgstr "Поток не найден!"
 
 msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
-msgstr "Проигрыватель DVD"
+msgstr "превращает VDR в (почти) полноценный DVD-проигрыватель"
 
 msgid "Plugin.DVD$DVD"
 msgstr "DVD"
@@ -38,7 +39,7 @@ msgid "Setup.DVD$Preferred audio language"
 msgstr "Предпочтительный язык звука"
 
 msgid "Setup.DVD$Preferred subtitle language"
-msgstr "Предпочтииельный язык субтитров"
+msgstr "Предпочтительный язык субтитров"
 
 msgid "Setup.DVD$Player region code"
 msgstr "Код региона"
@@ -47,7 +48,7 @@ msgid "Setup.DVD$Display subtitles"
 msgstr "Показывать субтитры"
 
 msgid "Setup.DVD$Hide Mainmenu Entry"
-msgstr "Скрыть основное меню"
+msgstr "Скрыть пункт главного меню"
 
 msgid "Setup.DVD$ReadAHead"
 msgstr "ReadAHead"
