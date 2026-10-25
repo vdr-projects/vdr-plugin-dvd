@@ -7,6 +7,7 @@ Written by:
     Andreas Schultz <aschultz@warp10.net> (original author)
     Sven Göthel (interim maintainer)
     Marco Schlüssler, Miko Wohlgemuth (CVS team)
+    Dirk Nehring <dnehring@gmx.net> (modernization)
 
 Currently community maintained on the project's homepage.
 
@@ -16,13 +17,13 @@ See the file COPYING for license information.
 Requirements
 ============
 
-VDR       >= 2.6.0   https://www.tvdr.de/
+VDR       >= 2.6.6   https://www.tvdr.de/
 libdvdnav >= 5.0.0   https://www.videolan.org/developers/libdvdnav.html
 liba52    >= 0.7.4   https://sourceforge.net/projects/liba52/
 libdvdcss (optional) https://www.videolan.org/developers/libdvdcss.html
 
 Tested with VDR 2.8.3, libdvdnav 7.0.0, libdvdread 7.0.1, libdvdcss 1.5.0
-and liba52 0.7.4.
+and liba52 0.7.4. VDR versions before 2.6.6 are no longer supported.
 
 Build and install the plugin like any other VDR plugin. The Makefile links
 with -ldvdnav and -la52, so the development files of both libraries must be

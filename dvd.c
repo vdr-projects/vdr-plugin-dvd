@@ -14,14 +14,13 @@
 
 #include "dvd.h"
 
+#if APIVERSNUM < 20606
+#error "VDR 2.6.6+ required (APIVERSNUM >= 20606)"
+#endif
+
 static const char *VERSION        = "0.4.0 devel";
-#if VDRVERSNUM >= 10507
 static const char *DESCRIPTION    = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
 static const char *MAINMENUENTRY  = trNOOP("Plugin.DVD$DVD");
-#else
-static const char *DESCRIPTION    = "Plugin.DVD$turn VDR into an (almost) full featured DVD player";
-static const char *MAINMENUENTRY  = "Plugin.DVD$DVD";
-#endif
 
 // --- cPluginDvd ------------------------------------------------------------
 cPluginDvd::cPluginDvd(void)
@@ -91,9 +90,6 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 bool cPluginDvd::Initialize(void)
 {
     // Initialize any background activities the plugin shall perform.
-#if VDRVERSNUM < 10507
-    RegisterI18n(DvdPhrases);
-#endif
     return true;
 }
 
