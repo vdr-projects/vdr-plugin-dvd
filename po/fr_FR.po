@@ -1,0 +1,56 @@
+# French translations for vdr-dvd.
+# Copyright (C) 2026 Dirk Nehring <dnehring@gmx.net>
+# This file is distributed under the same license as the vdr-dvd package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: vdr-dvd 0.4.0\n"
+"Report-Msgid-Bugs-To: <marco@lordzodiac.de>\n"
+"POT-Creation-Date: 2026-10-25 09:00+0200\n"
+"PO-Revision-Date: 2026-10-25 09:00+0200\n"
+"Last-Translator: Dirk Nehring <dnehring@gmx.net>\n"
+"Language-Team: French <vdr@linuxtv.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Error.DVD$Current subp stream not seen!"
+msgstr "Piste de sous-titres actuelle introuvable !"
+
+msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
+msgstr "transforme VDR en un lecteur de DVD (presque) complet"
+
+msgid "Plugin.DVD$DVD"
+msgstr "DVD"
+
+msgid "Error.DVD$Error opening DVD!"
+msgstr "Erreur à l'ouverture du DVD !"
+
+msgid "Error.DVD$Error fetching data from DVD!"
+msgstr "Erreur de lecture des données du DVD !"
+
+msgid "Setup.DVD$Preferred menu language"
+msgstr "Langue préférée pour les menus"
+
+msgid "Setup.DVD$Preferred audio language"
+msgstr "Langue préférée pour l'audio"
+
+msgid "Setup.DVD$Preferred subtitle language"
+msgstr "Langue préférée pour les sous-titres"
+
+msgid "Setup.DVD$Player region code"
+msgstr "Code de région du lecteur"
+
+msgid "Setup.DVD$Display subtitles"
+msgstr "Afficher les sous-titres"
+
+msgid "Setup.DVD$Hide Mainmenu Entry"
+msgstr "Masquer l'entrée du menu principal"
+
+msgid "Setup.DVD$ReadAHead"
+msgstr "ReadAHead"
+
+msgid "Setup.DVD$Gain (analog)"
+msgstr "Gain (analogique)"

@@ -1,0 +1,56 @@
+# Dutch translations for vdr-dvd.
+# Copyright (C) 2026 Dirk Nehring <dnehring@gmx.net>
+# This file is distributed under the same license as the vdr-dvd package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: vdr-dvd 0.4.0\n"
+"Report-Msgid-Bugs-To: <marco@lordzodiac.de>\n"
+"POT-Creation-Date: 2026-10-25 09:00+0200\n"
+"PO-Revision-Date: 2026-10-25 09:00+0200\n"
+"Last-Translator: Dirk Nehring <dnehring@gmx.net>\n"
+"Language-Team: Dutch <vdr@linuxtv.org>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Error.DVD$Current subp stream not seen!"
+msgstr "Huidig ondertitelspoor niet gevonden!"
+
+msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
+msgstr "maakt van VDR een (bijna) volwaardige dvd-speler"
+
+msgid "Plugin.DVD$DVD"
+msgstr "DVD"
+
+msgid "Error.DVD$Error opening DVD!"
+msgstr "Fout bij het openen van de dvd!"
+
+msgid "Error.DVD$Error fetching data from DVD!"
+msgstr "Fout bij het ophalen van gegevens van de dvd!"
+
+msgid "Setup.DVD$Preferred menu language"
+msgstr "Voorkeurstaal voor menu's"
+
+msgid "Setup.DVD$Preferred audio language"
+msgstr "Voorkeurstaal voor audio"
+
+msgid "Setup.DVD$Preferred subtitle language"
+msgstr "Voorkeurstaal voor ondertiteling"
+
+msgid "Setup.DVD$Player region code"
+msgstr "Regiocode van speler"
+
+msgid "Setup.DVD$Display subtitles"
+msgstr "Ondertiteling weergeven"
+
+msgid "Setup.DVD$Hide Mainmenu Entry"
+msgstr "Hoofdmenu-item verbergen"
+
+msgid "Setup.DVD$ReadAHead"
+msgstr "ReadAHead"
+
+msgid "Setup.DVD$Gain (analog)"
+msgstr "Versterking (analoog)"
