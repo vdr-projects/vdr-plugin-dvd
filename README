@@ -36,13 +36,14 @@ Check whether the law of your country allows its use.
 DVD drive
 =========
 
-The plugin reads from /dev/dvd unless another device is given with -C:
+The plugin reads from /dev/cdrom, the link udev creates for the first
+drive (/dev/sr0), unless another device is given with -C:
 
-    vdr -P"dvd -C /dev/sr0"
+    vdr -P"dvd -C /dev/sr1"
 
-udev creates no /dev/dvd, only /dev/cdrom for the first drive (/dev/sr0),
-so most systems need -C. It also takes an ISO image of a DVD. If the
-device or image given with -C doesn't exist, VDR doesn't start.
+-C also takes an ISO image of a DVD. If the device or image given with -C
+doesn't exist yet, the plugin logs it and VDR starts anyway; a USB drive
+can be plugged in later.
 
 The user VDR runs as needs access to the drive. On most distributions that
 means being a member of the "cdrom" group.
