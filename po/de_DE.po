@@ -38,6 +38,12 @@ msgstr "Sehbehinderte"
 msgid "DVD$comments"
 msgstr "Kommentar"
 
+msgid "DVD$forced"
+msgstr "erzwungen"
+
+msgid "DVD$captions"
+msgstr "Hörgeschädigte"
+
 msgid "Setup.DVD$Preferred menu language"
 msgstr "Bevorzugte Sprache für Menüs"
 

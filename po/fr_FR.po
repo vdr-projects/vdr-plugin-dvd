@@ -37,6 +37,12 @@ msgstr "malvoyants"
 msgid "DVD$comments"
 msgstr "commentaires"
 
+msgid "DVD$forced"
+msgstr "forcés"
+
+msgid "DVD$captions"
+msgstr "malentendants"
+
 msgid "Setup.DVD$Preferred menu language"
 msgstr "Langue préférée pour les menus"
 
