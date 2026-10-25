@@ -37,6 +37,12 @@ msgstr "näkövammaisille"
 msgid "DVD$comments"
 msgstr "kommentit"
 
+msgid "DVD$forced"
+msgstr "pakotetut"
+
+msgid "DVD$captions"
+msgstr "kuulovammaisille"
+
 msgid "Setup.DVD$Preferred menu language"
 msgstr "Ensisijainen valikkokieli"
 

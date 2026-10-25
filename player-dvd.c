@@ -2013,8 +2013,9 @@ void cDvdPlayer::AnnounceSubtitleTrack(int Stream)
     // subtitles itself, VDR never gets their packets.
     char language[3];
     const char *languageName = TrackLanguage(GetSubtitleLanguageCode(Stream), language);
+    cString description = SubtitleTrackDescription(Stream, languageName);
     subtitleTrackSync = true;
-    DeviceSetAvailableTrack(ttSubtitle, Stream, 0x20 | Stream, language[0] ? language : NULL, languageName);
+    DeviceSetAvailableTrack(ttSubtitle, Stream, 0x20 | Stream, language[0] ? language : NULL, description);
     subtitleTrackSync = false;
 }
 
@@ -3500,6 +3501,25 @@ cString cDvdPlayer::AudioTrackDescription(int Channel, const char *LanguageName)
     if (ext)
         d = cString::sprintf("%s (%s)", *d, ext);
     return **d ? d : cString(LanguageName);
+}
+
+cString cDvdPlayer::SubtitleTrackDescription(int Channel, const char *LanguageName) const
+{
+    // A DVD often carries several subtitle streams in the same language that
+    // differ only in their code extension - forced subtitles for foreign
+    // dialogue, captions for the hearing impaired, a director's commentary.
+    // Mark those, so VDR's subtitle menu tells them apart.
+    int logical = nav ? dvdnav_get_spu_logical_stream(nav, Channel) : -1;
+    int stream = (logical >= 0 ? logical : Channel) & SubpStreamMask; // as in GetSubtitleLanguageCode()
+    subp_attr_t attr;
+    if (!nav || dvdnav_get_spu_attr(nav, stream, &attr) != DVDNAV_STATUS_OK)
+        return cString(LanguageName);
+    const char *ext = attr.code_extension == 9 ? tr("DVD$forced") :
+                      attr.code_extension >= 5 && attr.code_extension <= 7 ? tr("DVD$captions") :
+                      attr.code_extension >= 13 && attr.code_extension <= 15 ? tr("DVD$comments") : NULL;
+    if (!ext)
+        return cString(LanguageName);
+    return LanguageName ? cString::sprintf("%s (%s)", LanguageName, ext) : cString::sprintf("(%s)", ext);
 }
 
 uint16_t cDvdPlayer::GetSubtitleLanguageCode(int Channel) const

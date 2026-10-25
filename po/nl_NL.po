@@ -37,6 +37,12 @@ msgstr "slechtzienden"
 msgid "DVD$comments"
 msgstr "commentaar"
 
+msgid "DVD$forced"
+msgstr "geforceerd"
+
+msgid "DVD$captions"
+msgstr "slechthorenden"
+
 msgid "Setup.DVD$Preferred menu language"
 msgstr "Voorkeurstaal voor menu's"
 
