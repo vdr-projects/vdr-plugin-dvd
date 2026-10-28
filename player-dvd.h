@@ -171,6 +171,9 @@ class cDvdPlayer : public cPlayer, cThread {
     std::atomic<bool> navFailed; // see NavLog()
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
     static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args);
+    cMutex navLogMutex; // libdvdnav logs from whatever thread calls it
+    cStringList navLogged; // the notes NavLog() logged
+    bool NavLogFirst(const char *Msg);
 #endif
     std::atomic<ePlayModes> playMode; // the thread's loop checks it without the lock
     ePlayDirs playDir;

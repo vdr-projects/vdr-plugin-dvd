@@ -1744,6 +1744,13 @@ void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *F
 {
     char msg[256];
     vsnprintf(msg, sizeof(msg), Format, Args);
+    cDvdPlayer *player = static_cast<cDvdPlayer *>(Player);
+    // libdvdnav repeats its notes: on a disc without menus in the menu
+    // language every jump to a menu brought "Language 'de' not found, using
+    // 'en' instead" and the disc's menu languages, hundreds of lines in an
+    // evening. Log a note once a replay, an error each time.
+    if (Level != DVDNAV_LOGGER_LEVEL_ERROR && !player->NavLogFirst(msg))
+        return;
     switch (Level) {
         case DVDNAV_LOGGER_LEVEL_ERROR:
             esyslog("ERROR: dvd-plugin libdvdnav: %s", msg);
@@ -1764,10 +1771,20 @@ void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *F
     // even returns.
     if (Level == DVDNAV_LOGGER_LEVEL_ERROR &&
         (startswith(msg, "ifoOpenVTSI failed") || (startswith(msg, "ifoRead_") && strstr(msg, " failed")))) {
-        cDvdPlayer *player = static_cast<cDvdPlayer *>(Player);
         player->navFailed = true;
         player->running = false;
     }
+}
+
+bool cDvdPlayer::NavLogFirst(const char *Msg)
+{
+    cMutexLock MutexLock(&navLogMutex);
+    if (navLogged.Find(Msg) >= 0)
+        return false;
+    // A bound for a disc with endless different notes, which are logged then.
+    if (navLogged.Size() < 100)
+        navLogged.Append(strdup(Msg));
+    return true;
 }
 #endif
 
