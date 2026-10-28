@@ -29,7 +29,7 @@ private:
   bool lastPlay;
   bool modeOnly;
   bool shown;
-  bool visible;
+  std::atomic<bool> visible;    // the player thread asks OsdVisible() for each SPU
   std::atomic<void *> osdTaker; // the player thread takes the OSD for the SPU
   int inputIntVal;
   int lastCurrent;
