@@ -1048,6 +1048,9 @@ void cDvdPlayer::Action(void) {
     running = true;
     eFrameType frameType = ftUnknown;
 
+    // Reset the device once at the first audio pack (a fix for the A/V sync
+    // of DVB cards with a decoder), but only at the start of the replay: after
+    // an opening clip without sound, the reset cut the next clip's first GOP.
     bool firstClear = true;
 
     // we need to know the very first VTS change to hook inthe resume call
@@ -1591,6 +1594,8 @@ void cDvdPlayer::Action(void) {
 	      // the film - lost its end. Not after a jump: that emptied the player.
 	      if (playMode == pmPlay && (cntVidBlocksPlayed > 0 || cntAudBlocksPlayed > 0))
 	          WaitDeviceDrained();
+	      if (cntVidBlocksPlayed > 0)
+	          firstClear = false;
 	      Empty(true);
 	      UpdateBlockInfo(); // TEST
           UpdateVTSInfo(); // TEST
@@ -1618,6 +1623,8 @@ void cDvdPlayer::Action(void) {
 	      break;
 	  case DVDNAV_CELL_CHANGE: {
 	      DEBUG_NAV("%s:%d:NAV CELL CHANGE\n", __FILE__, __LINE__);
+	      if (cntVidBlocksPlayed > 0)
+	          firstClear = false;
 
 	      /**
 	       * update information
