@@ -20,19 +20,19 @@ const char *cDVD::deviceName = "/dev/cdrom";
 
 void cDVD::SetDeviceName(const char *DeviceName)
 {
-  // static, not new: the plugin keeps it until it is unloaded, and
-  // LeakSanitizer then reports an object nobody deleted
-  static std::string name;
-  name = DeviceName;
-  deviceName = name.c_str();
+    // static, not new: the plugin keeps it until it is unloaded, and
+    // LeakSanitizer then reports an object nobody deleted
+    static std::string name;
+    name = DeviceName;
+    deviceName = name.c_str();
 }
 
 const char *cDVD::DeviceName(void)
 {
-  return deviceName;
+    return deviceName;
 }
 
 bool cDVD::DriveExists(void)
 {
-  return access(deviceName, F_OK) == 0;
+    return access(deviceName, F_OK) == 0;
 }

@@ -14,7 +14,7 @@
 #include <vdr/menuitems.h>
 
 class cDVDSetup {
- public:
+public:
     int MenuLanguage;
     int AudioLanguage;
     int SpuLanguage;
@@ -24,18 +24,20 @@ class cDVDSetup {
     int ReadAHead;
     int Gain;
 
- public:
+public:
     cDVDSetup(void);
 
     bool SetupParse(const char *Name, const char *Value);
 };
 
 class cMenuSetupDVD : public cMenuSetupPage {
- private:
+private:
     cDVDSetup data;
- protected:
+
+protected:
     virtual void Store(void);
- public:
+
+public:
     cMenuSetupDVD(void);
 };
 
@@ -47,4 +49,3 @@ extern const char *DvdLanguageCode[][2];
 extern const int DvdLanguageCodes;
 
 #endif // __SETUP_DVD_H
-

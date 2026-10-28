@@ -17,17 +17,16 @@
 #include "control-dvd.h"
 #include "setup-dvd.h"
 
-
 // --- cPluginDvd ------------------------------------------------------------
 
 class cPluginDvd : public cPlugin {
 public:
-  virtual const char *Version(void);
-  virtual const char *Description(void);
-  virtual const char *CommandLineHelp(void);
-  virtual bool ProcessArgs(int argc, char *argv[]);
-  virtual const char *MainMenuEntry(void);
-  virtual cOsdMenu *MainMenuAction(void);
-  virtual cMenuSetupPage *SetupMenu(void);
-  virtual bool SetupParse(const char *Name, const char *Value);
+    virtual const char *Version(void);
+    virtual const char *Description(void);
+    virtual const char *CommandLineHelp(void);
+    virtual bool ProcessArgs(int argc, char *argv[]);
+    virtual const char *MainMenuEntry(void);
+    virtual cOsdMenu *MainMenuAction(void);
+    virtual cMenuSetupPage *SetupMenu(void);
+    virtual bool SetupParse(const char *Name, const char *Value);
 };

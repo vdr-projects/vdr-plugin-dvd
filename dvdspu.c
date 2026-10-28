@@ -40,14 +40,14 @@
  *                       and Michel Lespinasse <walken@via.ecp.fr>
  *
  * Lots of rearranging by:
- *	Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
- *	Thomas Mirlacher <dent@cosy.sbg.ac.at>
- *		implemented reassembling
- *		cleaner implementation of SPU are saving
- *		overlaying (proof of concept for now)
- *		... and yes, it works now with oms
- *		added tranparency (provided by the SPU hdr)
- *		changed structures for easy porting to MGAs DVD mode
+ *      Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
+ *      Thomas Mirlacher <dent@cosy.sbg.ac.at>
+ *              implemented reassembling
+ *              cleaner implementation of SPU are saving
+ *              overlaying (proof of concept for now)
+ *              ... and yes, it works now with oms
+ *              added tranparency (provided by the SPU hdr)
+ *              changed structures for easy porting to MGAs DVD mode
  *
  * addapted for VDR by Andreas Schultz
  *
@@ -67,7 +67,7 @@
  *
  */
 
- /*
+/*
  * added some functions to extract some informations of the SPU command
  * sequence (cSPUassembler::checkSPUHeader and related).
  * needed for 'forced subtitles only' mode
@@ -78,18 +78,17 @@
  *
  */
 
- /**
-  * fixed and willing to merge with xine's solution ..
-  *
-  * sven goethel sgoethel@jausoft.com
-  */
+/**
+ * fixed and willing to merge with xine's solution ..
+ *
+ * sven goethel sgoethel@jausoft.com
+ */
 
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "dvdspu.h"
-
 
 //----------- cSPUdata -----------------------------------
 
@@ -107,58 +106,60 @@ simpleFIFO::~simpleFIFO()
 
 int simpleFIFO::Put(const uint8_t *Data, int Count)
 {
-  if (Count > 0) {
-     int rest = size - head;
-     int free = Free();
+    if (Count > 0) {
+        int rest = size - head;
+        int free = Free();
 
-     if (free <= 0)
-        return 0;
-     if (free < Count)
-        Count = free;
-     if (Count >= rest) {
-        memcpy(buffer + head, Data, (size_t)rest);
-        if (Count - rest)
-           memcpy(buffer, Data + rest, (size_t)(Count - rest));
-        head = Count - rest;
+        if (free <= 0)
+            return 0;
+        if (free < Count)
+            Count = free;
+        if (Count >= rest) {
+            memcpy(buffer + head, Data, (size_t)rest);
+            if (Count - rest)
+                memcpy(buffer, Data + rest, (size_t)(Count - rest));
+            head = Count - rest;
+        } else {
+            memcpy(buffer + head, Data, (size_t)Count);
+            head += Count;
         }
-     else {
-        memcpy(buffer + head, Data, (size_t)Count);
-        head += Count;
-        }
-     }
-  return Count;
+    }
+    return Count;
 }
 
 int simpleFIFO::Get(uint8_t *Data, int Count)
 {
-  if (Count > 0) {
-     int rest = size - tail;
-     int cont = Available();
+    if (Count > 0) {
+        int rest = size - tail;
+        int cont = Available();
 
-     if (rest <= 0)
-        return 0;
-     if (cont < Count)
-        Count = cont;
-     if (Count >= rest) {
-	 memcpy(Data, buffer + tail, (size_t)rest);
-	 if (Count - rest)
-	     memcpy(Data + rest, buffer, (size_t)(Count - rest));
-	 tail = Count - rest;
-     } else {
-	 memcpy(Data, buffer + tail, (size_t)Count);
-	 tail += Count;
-     }
-  }
-  return Count;
+        if (rest <= 0)
+            return 0;
+        if (cont < Count)
+            Count = cont;
+        if (Count >= rest) {
+            memcpy(Data, buffer + tail, (size_t)rest);
+            if (Count - rest)
+                memcpy(Data + rest, buffer, (size_t)(Count - rest));
+            tail = Count - rest;
+        } else {
+            memcpy(Data, buffer + tail, (size_t)Count);
+            tail += Count;
+        }
+    }
+    return Count;
 }
 
 // ---------- cSPUassembler -----------------------------------
 
-cSPUassembler::cSPUassembler(): simpleFIFO(SPU_BUFFER_SIZE) { pts = 0; };
+cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE)
+{
+    pts = 0;
+}
 
 int cSPUassembler::Put(const uint8_t *Data, int Count, uint64_t Pts)
 {
     if (Pts > 0)
-	pts = Pts;
+        pts = Pts;
     return simpleFIFO::Put(Data, Count);
 }

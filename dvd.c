@@ -14,34 +14,37 @@
 #error "VDR 2.6.6+ required (APIVERSNUM >= 20606)"
 #endif
 
-static const char *VERSION        = "0.4.0 devel";
-static const char *DESCRIPTION    = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
-static const char *MAINMENUENTRY  = trNOOP("Plugin.DVD$DVD");
+static const char *VERSION = "0.4.0 devel";
+static const char *DESCRIPTION = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
+static const char *MAINMENUENTRY = trNOOP("Plugin.DVD$DVD");
 
 // --- cPluginDvd ------------------------------------------------------------
 
-const char *cPluginDvd::Description(void) {
+const char *cPluginDvd::Description(void)
+{
     return tr(DESCRIPTION);
 }
 
-const char *cPluginDvd::MainMenuEntry(void) {
+const char *cPluginDvd::MainMenuEntry(void)
+{
     return DVDSetup.HideMainMenu ? NULL : tr(MAINMENUENTRY);
 }
 
-const char *cPluginDvd::Version(void) {
+const char *cPluginDvd::Version(void)
+{
     return VERSION;
 }
 
 const char *cPluginDvd::CommandLineHelp(void)
 {
-    return   "  -C DEV,   --dvd=DEV      use DEV as the DVD device (default: /dev/cdrom)\n";
+    return "  -C DEV,   --dvd=DEV      use DEV as the DVD device (default: /dev/cdrom)\n";
 }
 
 bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 {
     static struct option long_options[] = {
-        { "dvd",      required_argument, NULL, 'C' },
-        { NULL, 0, NULL, 0 }
+        {"dvd", required_argument, NULL, 'C'},
+        {NULL, 0, NULL, 0},
     };
 
     int c;

@@ -36,24 +36,24 @@ class cDvdPlayer;
 #include "ca52.h"
 
 class IntegerListObject : public cListObject {
-    private:
-        int value;
-    public:
-        IntegerListObject( int i ) { value=i; }
+private:
+    int value;
 
-        int getValue() const { return value; }
+public:
+    IntegerListObject(int i) { value = i; }
+
+    int getValue() const { return value; }
 };
 
-class cDvdPlayerControl ;
+class cDvdPlayerControl;
 class cIframeAssembler;
 class cDVDPlayerResume;
 
 class cDvdPlayer : public cPlayer, cThread {
- private:
-
+private:
     enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
     enum ePlayDirs { pdForward, pdBackward };
-    enum ePacketType { pktNone=0, pktVideo=1, pktAudio=2, pktIFrame=4, pktSpu=8 };
+    enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2, pktIFrame = 4, pktSpu = 8 };
 
     cDvdPlayerControl *controller;
 
@@ -63,12 +63,12 @@ class cDvdPlayer : public cPlayer, cThread {
 
     cIframeAssembler *iframeAssembler;
     int IframeCnt;
-    uint8_t * event_buf;
+    uint8_t *event_buf;
 
     cRingBufferFrame *ringBuffer;
     cFrame *rframe, *pframe;
 
-    dvdnav_cell_change_event_t lastCellEventInfo ;
+    dvdnav_cell_change_event_t lastCellEventInfo;
     uint32_t pgcCurrentBlockNum, pgcTotalBlockNum;
     int64_t pgcTotalTicks;
     int64_t pgcTicksPerBlock;
@@ -98,10 +98,10 @@ class cDvdPlayer : public cPlayer, cThread {
     void clearSeenSubpStream(void);
     void setAllSubpStreams(void);
     int SearchSubpStream(int SubpStreamId) const;
-    void notifySeenSubpStream( int navSubpStream );
+    void notifySeenSubpStream(int navSubpStream);
     void SelectSubpStream(void);
     void SetSubpStream(int id);
-    void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
+    void SetCurrentNavSubpStreamUsrLocked(bool lock);
 
     uint64_t stillTimer; // in time_ticks(), 0 = no still frame
     dvdnav_t *nav;
@@ -127,9 +127,9 @@ class cDvdPlayer : public cPlayer, cThread {
     uint64_t VideoPts;
     uint64_t pktpts;
 
-    int   currentNavAudioTrack;
-    int   currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
-    bool  currentNavAudioTrackUsrLocked;
+    int currentNavAudioTrack;
+    int currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
+    bool currentNavAudioTrackUsrLocked;
 
     cList<IntegerListObject> navAudioTracksSeen;
     void clearSeenAudioTrack(void);
@@ -143,8 +143,9 @@ class cDvdPlayer : public cPlayer, cThread {
     std::atomic<bool> active;
     std::atomic<bool> navFailed; // see NavLog()
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
-    static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args) __attribute__ ((format (printf, 3, 0)));
-    cMutex navLogMutex; // libdvdnav logs from whatever thread calls it
+    static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args)
+        __attribute__((format(printf, 3, 0)));
+    cMutex navLogMutex;    // libdvdnav logs from whatever thread calls it
     cStringList navLogged; // the notes NavLog() logged
     bool NavLogFirst(const char *Msg);
 #endif
@@ -152,14 +153,14 @@ class cDvdPlayer : public cPlayer, cThread {
     ePlayDirs playDir;
     int trickSpeed;
 
-    static const char * dummy_title;
-    static const char * dummy_n_a;
-    char * title_str;
-    char * titleinfo_str;
-    char * aspect_str;
-    void SetTitleString( void ) ;
-    void SetTitleInfoString( void );
-    void SetAspectString( void );
+    static const char *dummy_title;
+    static const char *dummy_n_a;
+    char *title_str;
+    char *titleinfo_str;
+    char *aspect_str;
+    void SetTitleString(void);
+    void SetTitleInfoString(void);
+    void SetAspectString(void);
 
     // What the control shows, kept up to date by the player thread: the
     // control polls it from VDR's main loop, which must not wait for the
@@ -177,7 +178,7 @@ class cDvdPlayer : public cPlayer, cThread {
     //player stuff
     void StillSkip(void);
     void TrickSpeed(int Increment);
-    void Empty(bool emptyDeviceToo=true);
+    void Empty(bool emptyDeviceToo = true);
     void PlayFromBlock(int64_t Block);
 
     //dvd stuff
@@ -187,10 +188,10 @@ class cDvdPlayer : public cPlayer, cThread {
     cSpuDecoder::eScaleMode getSPUScaleMode();
     void SendIframe(bool doSend);
 
-    int  playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
+    int playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
     void SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id);
     int announcedLanguageCode[ttMaxTrackTypes]; // per track, -1 = not announced
-    eTrackType currentAudioTrack; // VDR's current audio track, as set by the player or VDR
+    eTrackType currentAudioTrack;               // VDR's current audio track, as set by the player or VDR
     // An audio track VDR selects from another thread, for the player thread
     // to switch to, see SetAudioTrack():
     cMutex audioTrackRequestMutex;
@@ -207,21 +208,21 @@ class cDvdPlayer : public cPlayer, cThread {
     void ReportSubtitleTrack(void);
     bool subpMenuChoice; // the viewer used a button of the disc's menus
     bool SubtitlesShown(int Stream) const;
-    int  LogicalAudioStream(int Physical) const;
-    int  LogicalSubpStream(int Physical) const;
-    int  PhysicalSubpStream(int Logical) const;
+    int LogicalAudioStream(int Physical) const;
+    int LogicalSubpStream(int Physical) const;
+    int PhysicalSubpStream(int Logical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
     cString AudioTrackDescription(int Channel, const char *LanguageName) const;
     cString SubtitleTrackDescription(int Channel, const char *LanguageName) const;
-    int  GetAudioStreamNumbers(void) const ;
+    int GetAudioStreamNumbers(void) const;
     uint16_t GetSubtitleLanguageCode(int Channel) const;
-    int  GetSubtitleStreamNumbers(void) const ;
+    int GetSubtitleStreamNumbers(void) const;
 
     //resuming
     /**
      * the resume database
      */
-    cDVDPlayerResume* resume;
+    cDVDPlayerResume *resume;
     /**
      * GetDVDResumeKey():
      * computes a (hopefully) unique id for storing the resume data of the current disc.
@@ -229,7 +230,7 @@ class cDvdPlayer : public cPlayer, cThread {
      * this get returns a new allocated memory area ..
      * must be freed by callee ..
      */
-    char* GetDVDResumeKey() const;
+    char *GetDVDResumeKey() const;
     /**
      * SaveResume():
      * handles everything to save the current position on the disc for later resuming.
@@ -240,7 +241,7 @@ class cDvdPlayer : public cPlayer, cThread {
      * loads the resume data for the current disc and stores it in the given arguments.
      * returns false if no resume data for the disc can be found or and error occured while loading.
      */
-    bool LoadResume(int& title, int& chapter, int64_t& second);
+    bool LoadResume(int &title, int &chapter, int64_t &second);
 
 protected: //Player
     virtual void Activate(bool On);
@@ -260,7 +261,7 @@ public:
      * optional snap to the next IFrame (not functional now)
      */
     bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame);
-    bool GetReplayMode(bool &Play, bool &Forward, int &Speed) ;
+    bool GetReplayMode(bool &Play, bool &Forward, int &Speed);
     void SetAudioTrack(eTrackType Type, const tTrackId *TrackId);
     virtual void SetSubtitleTrack(eTrackType Type, const tTrackId *TrackId);
 
@@ -268,8 +269,8 @@ protected:
     void seenSpuPts(uint64_t pts);
     uint64_t time_ticks(void);
     void delay_ticks(uint64_t ticks);
-public:
 
+public:
     static const int MaxAudioTracks;
     static const int AudioTrackMask;
     static const int AC3AudioTrackMask;
@@ -278,15 +279,15 @@ public:
 
     cDvdPlayer(void);
     virtual ~cDvdPlayer();
-    bool Active(void) const { return active ; }
+    bool Active(void) const { return active; }
     bool DVDActiveAndRunning(void) const { return active && nav != NULL && running; }
     bool DVDRemoveable(void) const { return !active && !running; }
-    void GetAudioLanguageStr(const char **AudioLanguageStr) const ;
-    void GetSubtitleLanguageStr( const char **SubtitleLanguageStr ) const ;
+    void GetAudioLanguageStr(const char **AudioLanguageStr) const;
+    void GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const;
 
     // -- control stuff --
-    void setController (cDvdPlayerControl *ctrl );
-    bool IsDvdNavigationForced() const ;
+    void setController(cDvdPlayerControl *ctrl);
+    bool IsDvdNavigationForced() const;
     void DrawSPU();
     void HideSPU();
     void EmptySPU();
@@ -301,16 +302,16 @@ public:
      * these getter returns a new allocated memory area ..
      * must be freed by callee ..
      */
-    char *GetTitleString(void) const ;
-    char *GetTitleInfoString(void) const ;
-    char *GetAspectString(void) const ;
+    char *GetTitleString(void) const;
+    char *GetTitleInfoString(void) const;
+    char *GetAspectString(void) const;
 
     /**
      * returns the PGC (e.g. whole title) lenght in ticks
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    int64_t GetPGCLengthInTicks(void) ;
+    int64_t GetPGCLengthInTicks(void);
 
     /**
      * returns the Ticks and TotalTicks according to the given
@@ -320,7 +321,7 @@ public:
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks) ;
+    void BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks);
 
     /**
      * returns the CurrentBlockNum and TotalBlockNum according to the given
@@ -330,15 +331,15 @@ public:
      *
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum) ;
+    void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum);
 
-    bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) ;
-    void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) ;
+    bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec);
+    void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks);
 
     /**
      * we assume FRAMESPERSEC !
      */
-    int  SkipFrames(int Frames);
+    int SkipFrames(int Frames);
     void SkipSeconds(int Seconds);
 
     /**
@@ -388,12 +389,11 @@ public:
      */
     void PreviousPart(void);
 
-    int  GetCurrentNavSubpStream(void) const ;
+    int GetCurrentNavSubpStream(void) const;
     void NextSubpStream();
 
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
-    int  GetCurrentNavAudioTrackIdx(void) const ;
-
+    int GetCurrentNavAudioTrackIdx(void) const;
 
     void selectUpButton(void);
     void selectDownButton(void);
@@ -417,12 +417,10 @@ public:
     /**
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    static int64_t PTSTicksToSec(int64_t ticks)
-    { return ticks / 90000L; }
-
+    static int64_t PTSTicksToSec(int64_t ticks) { return ticks / 90000L; }
 };
 
-#define CIF_MAXSIZE  512
+#define CIF_MAXSIZE 512
 
 // --- cDvdPlayer ---------------------------------------------------
 
@@ -437,7 +435,7 @@ inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
 {
     if (ringBuffer) {
         cFrame *cbFrame = new cFrame(Data, Length, ftDolby);
-        if(cbFrame && !ringBuffer->Put(cbFrame))
+        if (cbFrame && !ringBuffer->Put(cbFrame))
             DELETENULL(cbFrame);
     }
     return Length;

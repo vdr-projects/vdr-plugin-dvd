@@ -22,24 +22,25 @@ extern "C" {
 #include "player-dvd.h"
 
 class A52frame {
- public:
+public:
     int size;
     uint8_t *frame;
 
     int pos;
 
- public:
+public:
     A52frame(int datasize, int frmsize);
     ~A52frame();
 };
 
 class A52assembler {
- private:
+private:
     A52frame *curfrm;
     uint16_t syncword;
 
     int parse_syncinfo(uint8_t *data);
- public:
+
+public:
     A52assembler();
     ~A52assembler();
     int put(uint8_t *buf, int len);
@@ -51,35 +52,36 @@ class A52assembler {
 
 class A52decoder {
 
- public:
-  enum eSyncMode { ptsCopy, ptsGenerate };
+public:
+    enum eSyncMode { ptsCopy, ptsGenerate };
 
- private:
-  cDvdPlayer &player;
+private:
+    cDvdPlayer &player;
 
-  A52assembler a52asm;
-  a52_state_t * state;
+    A52assembler a52asm;
+    a52_state_t *state;
 
-  sample_t level, bias;
+    sample_t level, bias;
 
-  eSyncMode syncMode;
-  uint32_t apts;
+    eSyncMode syncMode;
+    uint32_t apts;
 
-  uchar *blk_buf;
-  uchar *blk_ptr;
-  int blk_size;
+    uchar *blk_buf;
+    uchar *blk_ptr;
+    int blk_size;
 
-  void setup(void);
-  void float_to_int (float * _f, int16_t * s16, int flags);
-  void init_ipack(int p_size, uint32_t pktpts, uint8_t SubStreamId);
-  int convertSample (int flags, a52_state_t * _state, uint32_t pktpts, uint8_t SubStreamId);
- public:
-  A52decoder(cDvdPlayer &ThePlayer);
-  ~A52decoder();
-  void setSyncMode(eSyncMode mode) { syncMode = mode; };
-  eSyncMode getSyncMode(void) { return syncMode; }
-  void decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubStreamId);
-  void clear();
+    void setup(void);
+    void float_to_int(float *_f, int16_t *s16, int flags);
+    void init_ipack(int p_size, uint32_t pktpts, uint8_t SubStreamId);
+    int convertSample(int flags, a52_state_t *_state, uint32_t pktpts, uint8_t SubStreamId);
+
+public:
+    A52decoder(cDvdPlayer &ThePlayer);
+    ~A52decoder();
+    void setSyncMode(eSyncMode mode) { syncMode = mode; };
+    eSyncMode getSyncMode(void) { return syncMode; }
+    void decode(uint8_t *start, int size, uint32_t pktpts, uint8_t SubStreamId);
+    void clear();
 };
 
 #endif //__VDR_cA52_H

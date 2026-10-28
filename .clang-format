@@ -1,0 +1,17 @@
+# Style of the plugin's sources; apply with `clang-format -i *.c *.h`.
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+ColumnLimit: 120
+IndentWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+IndentCaseLabels: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+AllowShortFunctionsOnASingleLine: Inline
+AlignConsecutiveMacros: Consecutive
+SortIncludes: Never
+ReflowComments: false
+BreakStringLiterals: false
