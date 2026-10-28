@@ -39,23 +39,9 @@ class IntegerListObject : public cListObject {
     private:
         int value;
     public:
-        IntegerListObject() { value=0; }
-        IntegerListObject( const IntegerListObject & v ) { value=v.value; }
         IntegerListObject( int i ) { value=i; }
 
         int getValue() const { return value; }
-        void setValue(int v) { value=v; }
-
-        virtual bool operator==(const cListObject & ListObject ) const
-        { return value == ((IntegerListObject *)&ListObject)->value; }
-
-        virtual bool operator<(const cListObject & ListObject ) /* const */
-        { return value < ((IntegerListObject *)&ListObject)->value; }
-
-        virtual bool operator>(const cListObject & ListObject ) const
-        { return value > ((IntegerListObject *)&ListObject)->value; }
-
-        operator int () const { return value; }
 };
 
 class cDvdPlayerControl ;
@@ -74,13 +60,6 @@ class cDvdPlayer : public cPlayer, cThread {
     cSPUassembler SPUassembler;
     cSpuDecoder *SPUdecoder;
     A52decoder a52dec;
-#ifdef NOT_YET
-    cDTSdecoder dtsdec;
-#endif
-
-    int hsize;
-    int vsize;
-    int vaspect;
 
     cIframeAssembler *iframeAssembler;
     int IframeCnt;
@@ -95,7 +74,6 @@ class cDvdPlayer : public cPlayer, cThread {
     int64_t pgcTicksPerBlock;
     bool UpdateBlockInfo(void);
 
-    bool isInMenuDomain;
     bool isInFeature;
     int dvd_aspect;
     int dvd_scaleperm;
@@ -122,8 +100,7 @@ class cDvdPlayer : public cPlayer, cThread {
     int SearchSubpStream(int SubpStreamId) const;
     void notifySeenSubpStream( int navSubpStream );
     void SelectSubpStream(void);
-    int  SetSubpStream(int id);
-    bool GetCurrentNavSubpStreamUsrLocked(void) const ;
+    void SetSubpStream(int id);
     void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
 
     uint64_t stillTimer; // in time_ticks(), 0 = no still frame
@@ -148,28 +125,18 @@ class cDvdPlayer : public cPlayer, cThread {
     uint8_t stillFrame;
     uint8_t lastFrameType;
     uint64_t VideoPts;
-    uint64_t stcPTS;
     uint64_t pktpts;
-    uint64_t stcPTSAudio;
-    uint64_t stcPTSLastAudio;
-    uint64_t pktptsAudio;
-    uint64_t pktptsLastAudio;
-
-    uint64_t pictureNumber;
-    bool     pictureFlip;
 
     int   currentNavAudioTrack;
-    uint16_t currentNavAudioTrackLangCode;
     int   currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
-    int   lastNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
     bool  currentNavAudioTrackUsrLocked;
 
     cList<IntegerListObject> navAudioTracksSeen;
     void clearSeenAudioTrack(void);
     void setAllAudioTracks(void);
-    int notifySeenAudioTrack(int navAudioTrack);
+    void notifySeenAudioTrack(int navAudioTrack);
     int SearchAudioStream(int AudioStreamId) const;
-    bool SetCurrentNavAudioTrackType(int atype);
+    void SetCurrentNavAudioTrackType(int atype);
 
     static int Speeds[];
     std::atomic<bool> running;
@@ -212,17 +179,8 @@ class cDvdPlayer : public cPlayer, cThread {
     void TrickSpeed(int Increment);
     void Empty(bool emptyDeviceToo=true);
     void PlayFromBlock(int64_t Block);
-    void StripAudioPackets(uchar *b, int Length, uchar Except = 0x00);
-    int Resume(void);
-    bool Save(void);
-    static bool BitStreamOutActive;
-    static bool HasBitStreamOut;
-    static bool SoftDeviceOutActive; // currently used to switch for xine
-    static bool HasSoftDeviceOut;    // currently used to switch for xine
-    static bool HasReelbox;
 
     //dvd stuff
-    int currButtonN;
     void ClearButtonHighlight(void);
     void UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt);
     void DoScaleMode(int &vaspect);
@@ -241,7 +199,7 @@ class cDvdPlayer : public cPlayer, cThread {
     std::atomic<tThreadId> playerThreadId;
     void SwitchAudioTrack(eTrackType Type, bool ByViewer);
     void SwitchRequestedAudioTrack(void);
-    void playSPU(int spuId, unsigned char *data, int datalen);
+    void playSPU(int spuId);
 
     static int DolbyTrackIndex(int SubStreamId);
     bool subtitleTrackSync; // the player announces or reports a subtitle track to VDR
@@ -309,7 +267,7 @@ public:
 protected:
     void seenSpuPts(uint64_t pts);
     uint64_t time_ticks(void);
-    uint64_t delay_ticks(uint64_t ticks);
+    void delay_ticks(uint64_t ticks);
 public:
 
     static const int MaxAudioTracks;
@@ -347,16 +305,6 @@ public:
     char *GetTitleInfoString(void) const ;
     char *GetAspectString(void) const ;
 
-    int GetProgramNumber(void) const ;
-    int GetCellNumber(void) const ;
-
-    /**
-     * returns the PG (e.g. chapter) lenght in ticks
-     *
-     * 90000 ticks are 1 second, acording to MPEG !
-     */
-    int64_t GetPGLengthInTicks(void) ;
-
     /**
      * returns the PGC (e.g. whole title) lenght in ticks
      *
@@ -385,11 +333,7 @@ public:
     void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum) ;
 
     bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) ;
-    bool GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) ;
-
-    int  getWidth()  const { return hsize; }
-    int  getHeight() const { return vsize; }
-    int  getAspect() const { return vaspect; }
+    void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) ;
 
     /**
      * we assume FRAMESPERSEC !
@@ -400,7 +344,7 @@ public:
     /**
      * set the position of the actual PGC to the given Seconds
      */
-    void Goto(int Seconds, bool Still = false);
+    void Goto(int Seconds);
 
     int GotoAngle(int Angle);
 
@@ -444,25 +388,11 @@ public:
      */
     void PreviousPart(void);
 
-    /**
-     * jump to the next PG
-     */
-    void NextPG(void);
-
-    /**
-     * jump to the previous PG
-     */
-    void PreviousPG(void);
-
     int  GetCurrentNavSubpStream(void) const ;
-    int  GetCurrentNavSubpStreamIdx(void) const ;
-    int  NextSubpStream();
+    void NextSubpStream();
 
-    bool GetCurrentNavAudioTrackUsrLocked(void) const ;
     void SetCurrentNavAudioTrackUsrLocked(bool lock);
-    int  GetCurrentNavAudioTrack(void) const ;
     int  GetCurrentNavAudioTrackIdx(void) const ;
-    int  GetCurrentNavAudioTrackType(void) const ; // aAC3, aDTS, aLPCM, aMPEG
 
 
     void selectUpButton(void);
@@ -477,24 +407,16 @@ public:
     int callAudioMenu(void);
 
     bool IsInMenuDomain() const;
-    bool IsInStillFrame() const ;
-    bool IsInMenuDomainOrStillFrame() const ;
 
     // -- callbacks --
     void seenAPTS(uint64_t pts);
     void seenVPTS(uint64_t pts);
 
-    int cbPlayVideo(uchar *Data, int Length);
     int cbPlayAudio(uchar *Data, int Length);
 
     /**
      * 90000 ticks are 1 second, acording to MPEG !
      */
-    static const char *PTSTicksToHMSm(int64_t ticks, bool WithMS=false);
-
-    static int64_t PTSTicksToMilliSec(int64_t ticks)
-    { return ticks / 90L; }
-
     static int64_t PTSTicksToSec(int64_t ticks)
     { return ticks / 90000L; }
 
@@ -506,30 +428,9 @@ public:
 
 inline bool cDvdPlayer::IsInMenuDomain() const
 {
-//    return isInMenuDomain;
     // current_pci->hli.hl_gi.hli_ss as of the last NAV packet; current_pci
     // points into nav, which the player thread closes when it ends
     return menuButtons;
-}
-
-inline bool cDvdPlayer::IsInStillFrame() const
-{
-    return stillFrame!=0;
-}
-
-inline bool cDvdPlayer::IsInMenuDomainOrStillFrame() const
-{
-    return IsInStillFrame()||IsInMenuDomain();
-}
-
-inline int cDvdPlayer::cbPlayVideo(uchar *Data, int Length)
-{
-    if (ringBuffer) {
-        cFrame *cbFrame = new cFrame(Data, Length, ftVideo);
-        if(cbFrame && !ringBuffer->Put(cbFrame))
-            DELETENULL(cbFrame);
-    }
-    return Length;
 }
 
 inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)

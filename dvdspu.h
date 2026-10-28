@@ -29,10 +29,7 @@ class simpleFIFO {
     ~simpleFIFO();
     int Put(const uint8_t *Data, int Count);
     int Get(uint8_t *Data, int Count);
-    int Release(int Count);
 
-    int Size(void) const
-	{ return size; };
     int Free(void) const
 	{ return ((size + tail) - head - 1) % size; };
     int Available(void) const

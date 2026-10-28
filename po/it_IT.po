@@ -16,9 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Error.DVD$Current subp stream not seen!"
-msgstr "Traccia sottotitoli corrente non trovata!"
-
 msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
 msgstr "trasforma VDR in un lettore DVD (quasi) completo"
 

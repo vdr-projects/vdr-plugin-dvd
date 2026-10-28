@@ -13,20 +13,11 @@
 
 class cDVD {
 private:
-  static cDVD *dvdInstance;
   static const char *deviceName;
-
-  static int Command(int Cmd);
 public:
-  cDVD(void);
-  ~cDVD();
   static void SetDeviceName(const char *DeviceName);
   static const char *DeviceName(void);
   static bool DriveExists(void);
-  static bool DiscOk(void);
-  static void Eject(void);
-
-  static cDVD *getDVD(void);
   };
 
 #endif //__VDR_DVDDEV_H

@@ -10,34 +10,8 @@
 
 #include <stdio.h>
 #include <memory.h>
-
-#ifndef __QNXNTO__
-
 #include <byteswap.h>
 
-#elif defined(__QNXNTO__)
-
-#include <gulliver.h>
-#include <stdint.h>
-#include <strings.h>
-
-#ifdef WORDS_BIGENDIAN
-#define bswap_16(x) ENDIAN_LE16(x)
-#define bswap_32(x) ENDIAN_LE32(x)
-#define bswap_64(x) ENDIAN_LE64(x)
-#else
-#define bswap_16(x) ENDIAN_BE16(x)
-#define bswap_32(x) ENDIAN_BE32(x)
-#define bswap_64(x) ENDIAN_BE64(x)
-#endif
-
-#endif
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "dvddev.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"
 #include "player-dvd.h"
@@ -57,7 +31,6 @@ A52decoder::A52decoder(cDvdPlayer &ThePlayer): player(ThePlayer)
   syncMode = ptsCopy;
   apts = 0;
   state = a52_init (MM_ACCEL_DJBFFT);
-//  state = a52_init(MM_ACCEL_X86_MMXEXT);
 
   blk_buf = (uchar *)malloc(25*1024);
   blk_ptr = blk_buf;
@@ -84,23 +57,6 @@ void A52decoder::setup(void)
 }
 
 #define convert(x) x>0x43c07fff ? bswap_16(0x7fff) : x < 0x43bf8000 ? bswap_16(0x8000) : bswap_16(x - 0x43c00000);
-
-#if 0
-static inline int16_t bswap(int16_t i)
-{
-  return bswap_16(i);
-}
-
-inline int16_t A52decoder::convert (int32_t i)
-{
-    if (i > 0x43c07fff)
-	return bswap(32767);
-    else if (i < 0x43bf8000)
-	return bswap(-32768);
-    else
-	return bswap(i - 0x43c00000);
-}
-#endif
 
 inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 {
@@ -352,7 +308,7 @@ void A52decoder::clear()
 
 void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubStreamId)
 {
-    int bit_rate;
+    int sample_rate, bit_rate;
 
     //do we enter with an empty buffer
     bool sendPTS = a52asm.used() < 40;
@@ -371,7 +327,7 @@ void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubS
 
     while (size) {
 
-	int res = a52asm.put(start, size, pktpts);
+	int res = a52asm.put(start, size);
 	start += res;
 	size  -= res;
     if ( res==0 ) {
@@ -401,8 +357,7 @@ void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubS
 	    flags |= A52_ADJUST_LEVEL;
 	    if (a52_frame (state, frm->frame, &flags, &level, bias))
 		goto error;
-	    if (!DVDSetup.AC3dynrng)
-		a52_dynrng (state, NULL, NULL);
+	    a52_dynrng (state, NULL, NULL);
 	    for (i = 0; i < 6; i++) {
 		if (a52_block (state))
 		    goto error;
@@ -430,14 +385,13 @@ void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubS
 	player.cbPlayAudio(blk_buf, blk_size);
 }
 
-A52frame::A52frame(int datasize, int frmsize, uint32_t apts)
+A52frame::A52frame(int datasize, int frmsize)
 {
     frame = new uint8_t[datasize+2];
     frame[0] = 0x0b;
     frame[1] = 0x77;
     size = frmsize;
     pos  = 2;
-    pts  = apts;
 }
 
 A52frame::~A52frame()
@@ -487,13 +441,11 @@ bool A52assembler::ready(void)
 
 #ifndef WORDS_BIGENDIAN
 # define char2short(a,b)        ((((b) << 8) & 0xffff) ^ ((a) & 0xffff))
-# define shorts(a)              (a)
 #else
 # define char2short(a,b)        ((((a) << 8) & 0xffff) ^ ((b) & 0xffff))
-# define shorts(a)              char2short(((a) & 0xff),(((a) >> 8) & 0xff));
 #endif
 
-int A52assembler::put(uint8_t *buf, int len, uint32_t pts)
+int A52assembler::put(uint8_t *buf, int len)
 {
     if (ready())
 	return 0;
@@ -514,7 +466,7 @@ int A52assembler::put(uint8_t *buf, int len, uint32_t pts)
 	    int datasize = 1920;
 	    if (end - data > 3)
 	        datasize = frmsize = parse_syncinfo(data);
-	    curfrm = new A52frame(datasize, frmsize, pts);
+	    curfrm = new A52frame(datasize, frmsize);
     }
     if (curfrm->size == 0) {
 	    if (curfrm->pos < 6) {

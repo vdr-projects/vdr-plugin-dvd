@@ -13,21 +13,13 @@
 #include <vdr/thread.h>
 #include <vdr/skins.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "tools-dvd.h"
 #include "player-dvd.h"
 #include "control-dvd.h"
 
-#define MENUTIMEOUT     120 // seconds
-#define MAXWAIT4EPGINFO  10 // seconds
 #define MODETIMEOUT       3 // seconds
 
 bool cDvdPlayerControl::dvd_active = false;
-
-#define DVDDEBUG
 
 #define DEBUG_KEY(...)
 #define DEBUG_SHOW(...)
@@ -121,10 +113,10 @@ bool cDvdPlayerControl::GetReplayMode(bool &Play, bool &Forward, int &Speed)
     return player && player->GetReplayMode(Play, Forward, Speed);
 }
 
-void cDvdPlayerControl::Goto(int Seconds, bool Still)
+void cDvdPlayerControl::Goto(int Seconds)
 {
     if (player)
-        player->Goto(Seconds, Still);
+        player->Goto(Seconds);
 }
 
 void cDvdPlayerControl::OsdClose()
@@ -344,16 +336,8 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val)
         case kRight:
         case kUp:
         case kDown:
-            switch (inputActive) {
-                case TimeSearchInput:
-                    break;
-                case TrackSearchInput:
-                    if (player)
-                        player->GotoTitle(val);
-                    break;
-                default:
-                    break;
-            }
+            if (player)
+                player->GotoTitle(val);
             inputActive = NoneInput;
             break;
         default:
@@ -422,15 +406,7 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
             int dir = (Key == kRight ? 1 : -1);
             if (dir > 0)
                 Seconds = min(Total - Current - STAY_SECONDS_OFF_END, Seconds);
-            switch ( inputActive ) {
-                case TimeSearchInput:
-                    SkipSeconds(Seconds * dir);
-                    break;
-                case TrackSearchInput:
-                    break;
-                default:
-                    break;
-            }
+            SkipSeconds(Seconds * dir);
             inputActive = NoneInput;
             break;
         }
@@ -440,15 +416,7 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
         case kDown:
         case kOk:
             Seconds = min(Total - STAY_SECONDS_OFF_END, Seconds);
-            switch (inputActive) {
-                case TimeSearchInput:
-                    Goto(Seconds, Key == kDown);
-                    break;
-                case TrackSearchInput:
-                    break;
-                default:
-                    break;
-            }
+            Goto(Seconds);
             inputActive = NoneInput;
             break;
         default:
@@ -484,8 +452,7 @@ bool cDvdPlayerControl::DvdNavigation(eKeys Key)
         return false;
 
     HideOwnOsd();
-    if(player)
-        player->DrawSPU();
+    player->DrawSPU();
 
     switch (Key) {
         case kUp:
@@ -710,8 +677,7 @@ eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
                         break;
                     case k2:
                         if (player) {
-                            if (player->NextSubpStream() == -1)
-                                Skins.QueueMessage(mtError, tr("Error.DVD$Current subp stream not seen!"));
+                            player->NextSubpStream();
                             if (player->GetCurrentNavSubpStream() == -1) {
                                 Hide();
                                 Show();

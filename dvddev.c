@@ -8,78 +8,21 @@
  *
  */
 
-//#define DVDDEBUG
-
 #include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/ioctl.h>
 #include <string>
 
-#ifdef HAVE_CONFIG_H 
-#include "config.h"
-#endif
-
 #include "dvddev.h"
-
-#ifndef __QNXNTO__
-#include <linux/cdrom.h>
-#endif
-
-#ifdef DEBUG
-#define DVDDEBUG
-#undef DEBUG
-#else
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#endif
-
-#ifdef DVDDEBUG
-#define DEBUG(...) fprintf (stderr, __VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
 
 // --- cDVD ------------------------------------------------------------------
 
 // udev only creates /dev/cdrom (for sr0), no /dev/dvd
 const char *cDVD::deviceName = "/dev/cdrom";
 
-cDVD *cDVD::dvdInstance = NULL;
-
-cDVD *cDVD::getDVD(void)
+void cDVD::SetDeviceName(const char *DeviceName)
 {
   // static, not new: the plugin keeps it until it is unloaded, and
   // LeakSanitizer then reports an object nobody deleted
-  static cDVD dvd;
-  return dvdInstance;
-}
-
-cDVD::cDVD(void)
-{
-  dvdInstance = this;
-}
-
-cDVD::~cDVD()
-{
-}
-
-int cDVD::Command(int Cmd)
-{
-  int result = -1;
-  int f;
-  if ((f = open(deviceName, O_RDONLY | O_NONBLOCK)) >= 0) {
-     result = ioctl(f, Cmd, 0);
-     close(f);
-     }
-  return result;
-}
-
-void cDVD::SetDeviceName(const char *DeviceName)
-{
-  static std::string name; // see getDVD()
+  static std::string name;
   name = DeviceName;
   deviceName = name.c_str();
 }
@@ -93,40 +36,3 @@ bool cDVD::DriveExists(void)
 {
   return access(deviceName, F_OK) == 0;
 }
-
-bool cDVD::DiscOk(void)
-{
-#ifndef __QNXNTO__
-  return Command(CDROM_DRIVE_STATUS) == CDS_DISC_OK;
-#else
-  return 1; // fake ok for QNX
-#endif
-}
-
-void cDVD::Eject(void)
-{
-  //  vm_destroy();
-#ifndef __QNXNTO__
-  Command(CDROMEJECT);
-#endif
-}
-
-#if 0
-#define _lang2int( x )   ((x[0] << 8) | x[1]);
-
-int cDVD::vm_reset(void)
-{
-  int ret = ::vm_init(const_cast<char *>(deviceName));
-  if (ret ==0) {
-     ::vm_reset();
-     state.registers.SPRM[14] &= ~(0x0f <<  8); 
-     state.registers.SPRM[14] |= (Setup.VideoFormat ? 0x03 : 0) << 10; 
-     state.registers.SPRM[14] |= 0x02 << 8;   // letterbox is default for dvb/vdr
-     state.registers.SPRM[0]  = _lang2int( LangCodes()[Setup.DVDMenuLanguage] );  // Player Menu Languange code
-     state.registers.SPRM[16] = _lang2int( LangCodes()[Setup.DVDAudioLanguage] ); // Initial Language Code for Audio
-     state.registers.SPRM[18] = _lang2int( LangCodes()[Setup.DVDSpuLanguage] );   // Initial Language Code for Spu
-     state.registers.SPRM[20] = _lang2int( LangCodes()[Setup.DVDPlayerRCE] );     // Player Regional Code (bit mask?)
-  }
-  return ret;
-}
-#endif

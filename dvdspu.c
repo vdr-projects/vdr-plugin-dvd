@@ -31,23 +31,6 @@
 *
 *****/
 
-#if 0
-
-#define CTRLDEBUG
-#undef DEBUG_CONTROL
-#define DEBUG_CONTROL(...) printf (__VA_ARGS__); fflush(NULL)
-
-#else
-
-#ifdef CTRLDEBUG
-#undef CTRLDEBUG
-#endif
-#ifndef DEBUG_CONTROL
-#define DEBUG_CONTROL(...)
-#endif
-
-#endif
-
 /*
  * subpic_decode.c - converts DVD subtitles to an XPM image
  *
@@ -101,17 +84,9 @@
   * sven goethel sgoethel@jausoft.com
   */
 
-#include <assert.h>
-
 #include <inttypes.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
-
-#include <vdr/tools.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #include "dvdspu.h"
 
@@ -173,24 +148,6 @@ int simpleFIFO::Get(uint8_t *Data, int Count)
 	 memcpy(Data, buffer + tail, Count);
 	 tail += Count;
      }
-  }
-  return Count;
-}
-
-int simpleFIFO::Release(int Count)
-{
-  if (Count > 0) {
-     int rest = size - tail;
-     int cont = Available();
-
-     if (rest <= 0)
-        return 0;
-     if (cont < Count)
-        Count = cont;
-     if (Count >= rest)
-	tail = Count - rest;
-     else
-	tail += Count;
   }
   return Count;
 }

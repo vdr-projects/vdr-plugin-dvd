@@ -9,14 +9,7 @@
 
 #include <vdr/menuitems.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "setup-dvd.h"
-#ifdef __QNXNTO__
-#include <strings.h>
-#endif
 
 cDVDSetup DVDSetup;
 
@@ -54,8 +47,6 @@ cDVDSetup::cDVDSetup(void)
     HideMainMenu  = 0;
     ReadAHead     = 0;
     Gain          = 4;
-
-    AC3dynrng     = 0;
 }
 
 // Value if it is one the setup menu offers, else Default: the languages

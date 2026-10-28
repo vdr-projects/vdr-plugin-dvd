@@ -23,14 +23,13 @@ extern "C" {
 
 class A52frame {
  public:
-    uint32_t pts;
     int size;
     uint8_t *frame;
 
     int pos;
 
  public:
-    A52frame(int datasize, int frmsize, uint32_t apts);
+    A52frame(int datasize, int frmsize);
     ~A52frame();
 };
 
@@ -43,7 +42,7 @@ class A52assembler {
  public:
     A52assembler();
     ~A52assembler();
-    int put(uint8_t *buf, int len, uint32_t pts);
+    int put(uint8_t *buf, int len);
     A52frame *get(void);
     void clear(void);
     int used(void);
@@ -61,7 +60,6 @@ class A52decoder {
   A52assembler a52asm;
   a52_state_t * state;
 
-  int sample_rate;
   int flags;
 
   sample_t level, bias;

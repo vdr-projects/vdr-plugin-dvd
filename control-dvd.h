@@ -102,9 +102,8 @@ public:
        // we are going forward or backward and 'Speed' is -1 if this is normal
        // play/pause mode, 0 if it is single speed fast/slow forward/back mode
        // and >0 if this is multi speed mode.
-  void Goto(int Index, bool Still = false);
-       // Positions to the given index and displays that frame as a still picture
-       // if Still is true.
+  void Goto(int Seconds);
+       // Positions to the given second of the current program chain.
   };
 
 #endif // __CONTROL_DVD_H

@@ -15,16 +15,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#ifdef __QNXNTO__
-#include <strings.h>
-#endif
-
 #include "mpegtypes.h"
-
-#ifndef AARONS_TYPES
-#define AARONS_TYPES
-typedef unsigned long long uint_64;
-#endif
 
 class cPStream {
  public:
@@ -57,48 +48,6 @@ class cPStream {
             p[3] =        (uint8_t)(lpts >> 7);
             p[4] = 0x01 | (uint8_t)(lpts << 1);
     }
-
-
-/*
- *             28          20          13          5
- *  7654 3210   7654 3210   7654 3210   7654 3210   7654 3210   7654 3210
- *  01xx x1xx   xxxx xxxx   xxxx x1xx   xxxx xxxx   xxxx x1ee   eeee eee1
- */
-
-    static uint32_t fromSCR(const uint8_t *data)
-	{
-	    uint32_t ret;
-
-	    ret  = (((data[0] & 0x38) >> 1) | (data[0] & 0x03)) << 28;
-	    ret |= data[1] << 20;
-	    ret |= (((data[2] & 0xF8) >> 1) | (data[2] & 0x03)) << 13;
-	    ret |= data[3] << 5;
-	    ret |= data[4] >> 3;
-
-	    return ret;
-	}
-
-
-    static uint8_t fromSCRext(const uint8_t *data)
-	{
-	    uint8_t ret;
-
-	    ret  = (data[0] & 0x03) << 7;
-	    ret |=  data[1] >> 1;
-
-	    return ret;
-	}
-
-    static uint16_t fromMUXrate(const uint8_t *data)
-	{
-	    uint16_t ret;
-
-	    ret  = data[0] << 14;
-	    ret |= data[1] <<  6;
-	    ret |= data[2] >>  2;
-
-	    return ret;
-	}
 };
 
 #endif // __TOOLS_DVD_H

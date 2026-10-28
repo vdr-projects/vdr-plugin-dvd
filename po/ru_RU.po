@@ -17,9 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-msgid "Error.DVD$Current subp stream not seen!"
-msgstr "Поток не найден!"
-
 msgid "Plugin.DVD$turn VDR into an (almost) full featured DVD player"
 msgstr "превращает VDR в (почти) полноценный DVD-проигрыватель"
 

@@ -24,9 +24,6 @@ class cDVDSetup {
     int ReadAHead;
     int Gain;
 
-    // AC3 stuff
-    int AC3dynrng;
-
  public:
     cDVDSetup(void);
 
