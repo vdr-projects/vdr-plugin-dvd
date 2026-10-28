@@ -2892,8 +2892,6 @@ int cDvdPlayer::GotoAngle(int Angle)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return -1;
-    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-    Empty();
 
     dvdnav_get_angle_info(nav, &angleNumber, &angleNumbers);
 
@@ -2901,6 +2899,14 @@ int cDvdPlayer::GotoAngle(int Angle)
         Angle = 1;
     if (Angle <= 0)
         Angle = angleNumbers;
+
+    // Key 3 in a title with a single angle emptied the player, which cut the
+    // picture and the sound with no angle to change to.
+    if (Angle == angleNumber)
+        return Angle;
+
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
 
     if (stillTimer == 0)
         dvdnav_angle_change(nav, Angle);
