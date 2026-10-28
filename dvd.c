@@ -41,7 +41,7 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 {
     static struct option long_options[] = {
         { "dvd",      required_argument, NULL, 'C' },
-        { NULL }
+        { NULL, 0, NULL, 0 }
     };
 
     int c;

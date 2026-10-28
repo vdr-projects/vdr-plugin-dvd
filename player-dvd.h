@@ -143,7 +143,7 @@ class cDvdPlayer : public cPlayer, cThread {
     std::atomic<bool> active;
     std::atomic<bool> navFailed; // see NavLog()
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
-    static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args);
+    static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args) __attribute__ ((format (printf, 3, 0)));
     cMutex navLogMutex; // libdvdnav logs from whatever thread calls it
     cStringList navLogged; // the notes NavLog() logged
     bool NavLogFirst(const char *Msg);

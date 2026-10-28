@@ -97,7 +97,7 @@ simpleFIFO::simpleFIFO(int Size)
 {
     size = Size;
     head = tail = 0;
-    buffer = (uint8_t *)malloc(2*size);
+    buffer = (uint8_t *)malloc(2 * (size_t)size);
 }
 
 simpleFIFO::~simpleFIFO()
@@ -116,13 +116,13 @@ int simpleFIFO::Put(const uint8_t *Data, int Count)
      if (free < Count)
         Count = free;
      if (Count >= rest) {
-        memcpy(buffer + head, Data, rest);
+        memcpy(buffer + head, Data, (size_t)rest);
         if (Count - rest)
-           memcpy(buffer, Data + rest, Count - rest);
+           memcpy(buffer, Data + rest, (size_t)(Count - rest));
         head = Count - rest;
         }
      else {
-        memcpy(buffer + head, Data, Count);
+        memcpy(buffer + head, Data, (size_t)Count);
         head += Count;
         }
      }
@@ -140,12 +140,12 @@ int simpleFIFO::Get(uint8_t *Data, int Count)
      if (cont < Count)
         Count = cont;
      if (Count >= rest) {
-	 memcpy(Data, buffer + tail, rest);
+	 memcpy(Data, buffer + tail, (size_t)rest);
 	 if (Count - rest)
-	     memcpy(Data + rest, buffer, Count - rest);
+	     memcpy(Data + rest, buffer, (size_t)(Count - rest));
 	 tail = Count - rest;
      } else {
-	 memcpy(Data, buffer + tail, Count);
+	 memcpy(Data, buffer + tail, (size_t)Count);
 	 tail += Count;
      }
   }

@@ -60,8 +60,6 @@ class A52decoder {
   A52assembler a52asm;
   a52_state_t * state;
 
-  int flags;
-
   sample_t level, bias;
 
   eSyncMode syncMode;

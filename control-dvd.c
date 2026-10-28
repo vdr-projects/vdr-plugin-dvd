@@ -372,11 +372,11 @@ void cDvdPlayerControl::TimeSearchDisplay(void)
 {
     char buf[64];
     strcpy(buf, trVDR("Jump: "));
-    int len = strlen(buf);
-    char h10 = '0' + (timeSearchTime >> 24);
-    char h1  = '0' + ((timeSearchTime & 0x00FF0000) >> 16);
-    char m10 = '0' + ((timeSearchTime & 0x0000FF00) >> 8);
-    char m1  = '0' + (timeSearchTime & 0x000000FF);
+    int len = (int)strlen(buf);
+    char h10 = char('0' + (timeSearchTime >> 24));
+    char h1  = char('0' + ((timeSearchTime & 0x00FF0000) >> 16));
+    char m10 = char('0' + ((timeSearchTime & 0x0000FF00) >> 8));
+    char m1  = char('0' + (timeSearchTime & 0x000000FF));
     char ch10 = timeSearchPos > 3 ? h10 : '-';
     char ch1  = timeSearchPos > 2 ? h1  : '-';
     char cm10 = timeSearchPos > 1 ? m10 : '-';

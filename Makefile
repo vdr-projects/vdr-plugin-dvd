@@ -29,9 +29,13 @@ TMPDIR ?= /tmp
 export CFLAGS   = $(call PKGCFG,cflags)
 export CXXFLAGS = $(call PKGCFG,cxxflags)
 
-# Avoid plugin-specific compiler warnings
-override CXXFLAGS += -Wno-unused-result
-override CXXFLAGS += -Wno-unused-but-set-variable
+# Development warnings: off by default (safe for packaging); enable with
+# `make DEV_WARNINGS=1`.
+DEV_WARNINGS ?= 0
+ifeq ($(DEV_WARNINGS),1)
+override CXXFLAGS += -pedantic-errors -Wall -Wextra
+override CXXFLAGS += -Wformat=2 -Wconversion -Wsign-conversion -Wshadow -Werror -Wnull-dereference
+endif
 
 ### Allow user defined options to overwrite defaults:
 

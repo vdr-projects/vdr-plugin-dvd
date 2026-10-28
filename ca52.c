@@ -20,7 +20,6 @@
 // #define A52DEBUG
 
 #ifdef A52DEBUG
-#warning A52DEBUG is defined
 #define DEBUG_A52(...) fprintf (stderr, __VA_ARGS__)
 #else
 #define DEBUG_A52(...)
@@ -50,13 +49,17 @@ A52decoder::~A52decoder()
 
 void A52decoder::setup(void)
 {
-  flags = A52_DOLBY;
-
-  level = DVDSetup.Gain;
+  level = (sample_t)DVDSetup.Gain;
   bias = 384;
 }
 
-#define convert(x) x>0x43c07fff ? bswap_16(0x7fff) : x < 0x43bf8000 ? bswap_16(0x8000) : bswap_16(x - 0x43c00000);
+// A sample of liba52, biased by 384, as LPCM: from 256 to 512 the low bits
+// of a float are the value in steps of 2^-15.
+static inline int16_t convert(int32_t i)
+{
+    uint16_t sample = i > 0x43c07fff ? 0x7fff : i < 0x43bf8000 ? 0x8000 : (uint16_t)(i - 0x43c00000);
+    return (int16_t)bswap_16(sample);
+}
 
 inline void A52decoder::float_to_int (float * _f, int16_t * s16, int flags)
 {
@@ -194,11 +197,11 @@ void A52decoder::init_ipack(int p_size, uint32_t pktpts, uint8_t SubStreamId)
     blk_ptr[1] = 0x00;
     blk_ptr[2] = 0x01;
     blk_ptr[3] = PRIVATE_STREAM1;
-    blk_ptr[4] = (length >> 8) & 0xff;
-    blk_ptr[5] = length & 0xff;
+    blk_ptr[4] = (uchar)(length >> 8);
+    blk_ptr[5] = (uchar)length;
     blk_ptr[6] = 0x84;
     blk_ptr[7] = pktpts ? 0x80 : 0;
-    blk_ptr[8] = header;
+    blk_ptr[8] = (uchar)header;
     blk_ptr += 9;
 
     if (header) {
@@ -273,11 +276,12 @@ int A52decoder::convertSample(int flags, a52_state_t * _state,	uint32_t pktpts, 
 	return 1;
     }
 
-    init_ipack((int) 256 * sizeof (int16_t) * chans, pktpts, SubStreamId);
+    int size = 256 * (int)sizeof (int16_t) * chans;
+    init_ipack(size, pktpts, SubStreamId);
     float_to_int (samples, (int16_t *)blk_ptr, flags);
     // push data to driver
-    blk_ptr  += (int) 256 * sizeof (int16_t) * chans;
-    blk_size += (int) 256 * sizeof (int16_t) * chans;
+    blk_ptr  += size;
+    blk_size += size;
     return 0;
 }
 
@@ -308,7 +312,7 @@ void A52decoder::clear()
 
 void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubStreamId)
 {
-    int sample_rate, bit_rate;
+    int flags, sample_rate, bit_rate;
 
     //do we enter with an empty buffer
     bool sendPTS = a52asm.used() < 40;
@@ -354,7 +358,7 @@ void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubS
 	    int i;
 
 	    setup();
-	    flags |= A52_ADJUST_LEVEL;
+	    flags = A52_DOLBY | A52_ADJUST_LEVEL;
 	    if (a52_frame (state, frm->frame, &flags, &level, bias))
 		goto error;
 	    a52_dynrng (state, NULL, NULL);
@@ -387,7 +391,7 @@ void A52decoder::decode(uint8_t * start, int size, uint32_t pktpts, uint8_t SubS
 
 A52frame::A52frame(int datasize, int frmsize)
 {
-    frame = new uint8_t[datasize+2];
+    frame = new uint8_t[size_t(datasize + 2)];
     frame[0] = 0x0b;
     frame[1] = 0x77;
     size = frmsize;
@@ -455,10 +459,10 @@ int A52assembler::put(uint8_t *buf, int len)
 
     while(syncword != char2short(0x77, 0x0b)) {
 	    if (data >= end) {
-	        DEBUG_A52("skipping %d bytes without finding anything\n", data - buf);
-	        return data - buf;
+	        DEBUG_A52("skipping %d bytes without finding anything\n", (int)(data - buf));
+	        return (int)(data - buf);
 	    }
-        syncword = (syncword << 8) | *data++;
+        syncword = (uint16_t)((syncword << 8) | *data++);
     }
 
     int frmsize  = 0;
@@ -479,12 +483,12 @@ int A52assembler::put(uint8_t *buf, int len)
 	    frmsize = curfrm->size - curfrm->pos;
 
     if (frmsize > end - data)
-	    frmsize = end - data;
+	    frmsize = (int)(end - data);
     if (frmsize<0) return 0;
-    memcpy(curfrm->frame + curfrm->pos, data, frmsize);
+    memcpy(curfrm->frame + curfrm->pos, data, (size_t)frmsize);
     curfrm->pos += frmsize;
 
-    return data + frmsize - buf;
+    return (int)(data + frmsize - buf);
 }
 
 // Parse a syncinfo structure, minus the sync word
