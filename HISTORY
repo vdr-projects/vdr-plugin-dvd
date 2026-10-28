@@ -1,7 +1,15 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-2026-10-25 Version 0.4.0
+2026-XX-XX Version 1.0.0
+    - tell logical and physical subpicture streams apart
+    - reset the device at the first audio pack only at the start
+    - don't empty the player for a title with a single angle
+    - log each of libdvdnav's notes once a replay
+    - read the progress display's state atomically in the player thread
+    - remove dead code: #if 0 blocks, QNX and the bitstreamout, reelbox and xine plugins, unused functions and members
+    - build without warnings with `make DEV_WARNINGS=1` (-pedantic-errors -Wall -Wextra -Wconversion and more, as in vaapivideo), also with every debug switch
+    - format the sources consistently (.clang-format)
     - default to /dev/cdrom and start without a drive
     - require VDR 2.6.6 and drop pre-2.6.6 compatibility code (i18n to ASCII)
     - convert the message catalogues to UTF-8, unify the headers, fix the Russian translation and add Spanish, Finnish, French, Italian and Dutch
