@@ -107,7 +107,12 @@ class cDvdPlayer : public cPlayer, cThread {
     uint32_t cntVidBlocksPlayed;
     uint32_t cntAudBlocksPlayed;
 
-    int currentNavSubpStream;
+    // Subpicture streams have a logical number, which the disc's attributes,
+    // its menus and VDR's track list use, and a physical one in the VOB for
+    // each display mode.
+    int currentNavSubpStream;   // logical, bit 7 set: forced subtitles only; -1 = none
+    int currentNavSubpPhysical; // the physical stream shown for it, -1 = none
+    uint32_t subpPhysicalSeen;  // physical streams whose packets turned up
     bool currentNavSubpStreamUsrLocked;
     bool changeNavSubpStreamOnceInSameCell;
 
@@ -116,6 +121,7 @@ class cDvdPlayer : public cPlayer, cThread {
     void setAllSubpStreams(void);
     int SearchSubpStream(int SubpStreamId) const;
     void notifySeenSubpStream( int navSubpStream );
+    void SelectSubpStream(void);
     int  SetSubpStream(int id);
     bool GetCurrentNavSubpStreamUsrLocked(void) const ;
     void SetCurrentNavSubpStreamUsrLocked(bool lock) ;
@@ -241,6 +247,8 @@ class cDvdPlayer : public cPlayer, cThread {
     bool subpMenuChoice; // the viewer used a button of the disc's menus
     bool SubtitlesShown(int Stream) const;
     int  LogicalAudioStream(int Physical) const;
+    int  LogicalSubpStream(int Physical) const;
+    int  PhysicalSubpStream(int Logical) const;
     uint16_t GetAudioTrackLanguageCode(int channel) const;
     cString AudioTrackDescription(int Channel, const char *LanguageName) const;
     cString SubtitleTrackDescription(int Channel, const char *LanguageName) const;
