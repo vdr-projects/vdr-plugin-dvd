@@ -532,6 +532,8 @@ cDvdPlayer::cDvdPlayer(void): cThread("dvd-plugin"), a52dec(*this) {
     clearSeenAudioTrack();
 
     currentNavSubpStream = -1;
+    currentNavSubpPhysical = -1;
+    subpPhysicalSeen = 0;
     changeNavSubpStreamOnceInSameCell = false;
 
     currentNavAudioTrack = -1; // until libdvdnav announces the active stream
@@ -1048,6 +1050,9 @@ void cDvdPlayer::Action(void) {
     running = true;
     eFrameType frameType = ftUnknown;
 
+    // Reset the device once at the first audio pack (a fix for the A/V sync
+    // of DVB cards with a decoder), but only at the start of the replay: after
+    // an opening clip without sound, the reset cut the next clip's first GOP.
     bool firstClear = true;
 
     // we need to know the very first VTS change to hook inthe resume call
@@ -1505,33 +1510,31 @@ void cDvdPlayer::Action(void) {
 	  case DVDNAV_SPU_STREAM_CHANGE: {
 	      DEBUG_NAV("%s:%d:NAV SPU STREAM CHANGE\n", __FILE__, __LINE__);
 	      dvdnav_spu_stream_change_event_t *ev = (dvdnav_spu_stream_change_event_t *)cache_ptr;
-	      DEBUG_SUBP_ID("SPU Streams: w:0x%X (%d), l:0x%X (%d), p:0x%X (%d), L:0x%X (%d), locked=%d/%d\n",
+	      DEBUG_SUBP_ID("SPU Streams: w:0x%X (%d), l:0x%X (%d), p:0x%X (%d), locked=%d/%d\n",
 		    ev->physical_wide, ev->physical_wide,
 		    ev->physical_letterbox, ev->physical_letterbox,
 		    ev->physical_pan_scan, ev->physical_pan_scan,
-		    ev->logical, ev->logical,
 	            currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
             if( IsInMenuDomain() || IsDvdNavigationForced() || !currentNavSubpStreamUsrLocked || changeNavSubpStreamOnceInSameCell ) {
                 int previousNavSubpStream = currentNavSubpStream;
                 cSpuDecoder::eScaleMode mode = SPUdecoder ? SPUdecoder->getScaleMode() : cSpuDecoder::eSpuNormal;
-
-                /* !!! Bit 7 set means hide, and only let Forced display show (see vm.c from libdvdnav) */
-		        if (mode == cSpuDecoder::eSpuLetterBox ) {
-		            // TV 4:3,  DVD 16:9
-                    currentNavSubpStream = ev->physical_letterbox & (0x80 | SubpStreamMask);
-    			    DEBUG_SUBP_ID("dvd choosing letterbox SPU stream: curNavSpu=%d 0x%X\n",
-                        currentNavSubpStream, currentNavSubpStream);
-                } else if (mode == cSpuDecoder::eSpuPanAndScan ) {
-                    // TV 4:3,  DVD 16:9
-                    currentNavSubpStream = ev->physical_pan_scan & (0x80 | SubpStreamMask);
-                    DEBUG_SUBP_ID("dvd choosing pan_scan SPU stream: curNavSpu=%d 0x%X\n",
-                        currentNavSubpStream, currentNavSubpStream);
-		        } else {
-                    currentNavSubpStream = ev->physical_wide & (0x80 | SubpStreamMask);
-			        DEBUG_SUBP_ID("dvd choosing wide SPU stream: curNavSpu=%d 0x%X\n",
-			            currentNavSubpStream, currentNavSubpStream);
-		        }
+                // libdvdnav gives the physical streams of the active logical
+                // one, -1 for none; bit 7 set means hide, and only let forced
+                // subtitles show (see vm.c from libdvdnav). The logical
+                // number it leaves out.
+                int physical = mode == cSpuDecoder::eSpuLetterBox ? ev->physical_letterbox : // TV 4:3, DVD 16:9
+                               mode == cSpuDecoder::eSpuPanAndScan ? ev->physical_pan_scan : ev->physical_wide;
+                currentNavSubpPhysical = physical < 0 ? -1 : physical & SubpStreamMask;
+                currentNavSubpStream = -1;
+                if (ev->physical_wide >= 0) {
+                    currentNavSubpStream = LogicalSubpStream(ev->physical_wide & SubpStreamMask);
+                    if (currentNavSubpStream < 0) // a menu's
+                        currentNavSubpStream = ev->physical_wide & SubpStreamMask;
+                    currentNavSubpStream |= ev->physical_wide & 0x80;
+                }
+                DEBUG_SUBP_ID("dvd choosing SPU stream: curNavSpu=0x%X, physical %d (mode %d)\n",
+                    currentNavSubpStream, currentNavSubpPhysical, mode);
 		        changeNavSubpStreamOnceInSameCell=false;
 		        // A menu's subpicture stream holds its buttons, not subtitles.
 		        if (currentNavSubpStream != previousNavSubpStream && !IsInMenuDomain())
@@ -1591,6 +1594,8 @@ void cDvdPlayer::Action(void) {
 	      // the film - lost its end. Not after a jump: that emptied the player.
 	      if (playMode == pmPlay && (cntVidBlocksPlayed > 0 || cntAudBlocksPlayed > 0))
 	          WaitDeviceDrained();
+	      if (cntVidBlocksPlayed > 0)
+	          firstClear = false;
 	      Empty(true);
 	      UpdateBlockInfo(); // TEST
           UpdateVTSInfo(); // TEST
@@ -1618,6 +1623,8 @@ void cDvdPlayer::Action(void) {
 	      break;
 	  case DVDNAV_CELL_CHANGE: {
 	      DEBUG_NAV("%s:%d:NAV CELL CHANGE\n", __FILE__, __LINE__);
+	      if (cntVidBlocksPlayed > 0)
+	          firstClear = false;
 
 	      /**
 	       * update information
@@ -1744,6 +1751,13 @@ void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *F
 {
     char msg[256];
     vsnprintf(msg, sizeof(msg), Format, Args);
+    cDvdPlayer *player = static_cast<cDvdPlayer *>(Player);
+    // libdvdnav repeats its notes: on a disc without menus in the menu
+    // language every jump to a menu brought "Language 'de' not found, using
+    // 'en' instead" and the disc's menu languages, hundreds of lines in an
+    // evening. Log a note once a replay, an error each time.
+    if (Level != DVDNAV_LOGGER_LEVEL_ERROR && !player->NavLogFirst(msg))
+        return;
     switch (Level) {
         case DVDNAV_LOGGER_LEVEL_ERROR:
             esyslog("ERROR: dvd-plugin libdvdnav: %s", msg);
@@ -1764,10 +1778,20 @@ void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *F
     // even returns.
     if (Level == DVDNAV_LOGGER_LEVEL_ERROR &&
         (startswith(msg, "ifoOpenVTSI failed") || (startswith(msg, "ifoRead_") && strstr(msg, " failed")))) {
-        cDvdPlayer *player = static_cast<cDvdPlayer *>(Player);
         player->navFailed = true;
         player->running = false;
     }
+}
+
+bool cDvdPlayer::NavLogFirst(const char *Msg)
+{
+    cMutexLock MutexLock(&navLogMutex);
+    if (navLogged.Find(Msg) >= 0)
+        return false;
+    // A bound for a disc with endless different notes, which are logged then.
+    if (navLogged.Size() < 100)
+        navLogged.Append(strdup(Msg));
+    return true;
 }
 #endif
 
@@ -2479,7 +2503,14 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
 		        }
             } else if ((subStreamId & 0xE0) == 0x20) {
                 int subtitleIndex = subStreamId & SubpStreamMask;
-                notifySeenSubpStream(subtitleIndex);
+                // A title's stream that the list lacks: the stream number in
+                // the packet is a physical one.
+                if (isInFeature && !(subpPhysicalSeen & (1u << subtitleIndex))) {
+                    subpPhysicalSeen |= 1u << subtitleIndex;
+                    int logical = LogicalSubpStream(subtitleIndex);
+                    if (logical >= 0)
+                        notifySeenSubpStream(logical);
+                }
                 ptype = 'S';
 
 		        if (OsdInUse()) {
@@ -2497,7 +2528,7 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                 /**
                  * !!! currentNavSubpStream is used for Bit 7 from libdvdnav, it controls 'forced subs'
                  */
-                if (currentNavSubpStream != -1 && subtitleIndex == (currentNavSubpStream & SubpStreamMask)) {
+                if (currentNavSubpPhysical != -1 && subtitleIndex == currentNavSubpPhysical) {
                     SPUassembler.Put(data, datalen, pktpts);
                     if (SPUdecoder && SPUassembler.ready())
                         playSPU(currentNavSubpStream, data, datalen);
@@ -2892,8 +2923,6 @@ int cDvdPlayer::GotoAngle(int Angle)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return -1;
-    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
-    Empty();
 
     dvdnav_get_angle_info(nav, &angleNumber, &angleNumbers);
 
@@ -2901,6 +2930,14 @@ int cDvdPlayer::GotoAngle(int Angle)
         Angle = 1;
     if (Angle <= 0)
         Angle = angleNumbers;
+
+    // Key 3 in a title with a single angle emptied the player, which cut the
+    // picture and the sound with no angle to change to.
+    if (Angle == angleNumber)
+        return Angle;
+
+    DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
+    Empty();
 
     if (stillTimer == 0)
         dvdnav_angle_change(nav, Angle);
@@ -3053,6 +3090,8 @@ void cDvdPlayer::clearSeenSubpStream( )
 
     navSubpStreamSeen.Clear();
     currentNavSubpStream = -1;
+    currentNavSubpPhysical = -1;
+    subpPhysicalSeen = 0;
     notifySeenSubpStream(-1); // no subp ..
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: seen subp cleared\n");
     SetCurrentNavSubpStreamUsrLocked(false);
@@ -3063,8 +3102,11 @@ void cDvdPlayer::setAllSubpStreams(void)
     clearSeenSubpStream();
     ReportSubtitleTrack();
 
-    for (int i = 0; nav != NULL && i < MaxSubpStreams; i++) {
-        if (GetSubtitleLanguageCode(i) != 0xFFFF)
+    // The logical streams of the program chain, with a language or without.
+    // Not in a menu, whose subpicture stream holds its buttons: outside a
+    // title, libdvdnav gives every logical stream the menu's.
+    for (int i = 0; nav != NULL && isInFeature && i < MaxSubpStreams; i++) {
+        if (dvdnav_get_spu_logical_stream(nav, i) >= 0)
             notifySeenSubpStream(i);
     }
 }
@@ -3102,7 +3144,7 @@ void cDvdPlayer::notifySeenSubpStream(int navSubpStream)
             channel, channel, (char *)&subpStreamLanguageCode, channel_active, channel_active);
 #endif*/
         // only set possible subpstreams
-        if ((nav && dvdnav_get_spu_logical_stream(nav, navSubpStream) >= 0) || navSubpStream == -1) {
+        if (navSubpStream == -1 || (nav && dvdnav_get_spu_logical_stream(nav, navSubpStream) >= 0)) {
             // The subtitle key steps through this list: keep it in stream
             // order, "off" (-1) first, not in the order the first packets of
             // the streams turned up, which made the key start anywhere.
@@ -3146,6 +3188,24 @@ int cDvdPlayer::GetSubtitleStreamNumbers(void) const
     return navSubpStreamSeen.Count();
 }
 
+void cDvdPlayer::SelectSubpStream(void)
+{
+    // The viewer chose currentNavSubpStream: show its physical stream, and
+    // tell libdvdnav the language for the titles to come.
+    currentNavSubpPhysical = PhysicalSubpStream(currentNavSubpStream);
+    uint16_t subtitleLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
+    if (subtitleLanguageCode != 0xFFFF && nav)
+        dvdnav_spu_language_select(nav, (char *)&subtitleLanguageCode);
+#if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
+    // And the disc's subpicture stream register, as a player's subtitle button
+    // sets it and as for the audio track: with the language alone the disc
+    // took its first stream of that language again at the next title set.
+    // Whether the disc shows the stream or only its forced subtitles stays.
+    if (currentNavSubpStream >= 0 && isInFeature && nav)
+        dvdnav_set_active_stream(nav, currentNavSubpStream & SubpStreamMask, DVD_SUBTITLE_STREAM);
+#endif
+}
+
 int cDvdPlayer::SetSubpStream(int id)
 {
     LOCK_THREAD;
@@ -3157,14 +3217,11 @@ int cDvdPlayer::SetSubpStream(int id)
 
     currentNavSubpStream = id;
     SetCurrentNavSubpStreamUsrLocked(true);
-
-    uint16_t subtileLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
-    if (subtileLanguageCode != 0xFFFF && nav)
-        dvdnav_spu_language_select(nav, (char *)&subtileLanguageCode);
+    SelectSubpStream();
     UpdateTrackInfo();
 
-    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, %s, locked=%d/%d\n",
-        currentNavSubpStream, i, (char *)&subtileLanguageCode,
+    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, physical %d, locked=%d/%d\n",
+        currentNavSubpStream, i, currentNavSubpPhysical,
         currentNavSubpStreamUsrLocked, !changeNavSubpStreamOnceInSameCell);
 
     return id;
@@ -3185,13 +3242,8 @@ int cDvdPlayer::NextSubpStream()
         currentNavSubpStream, i);
 
     currentNavSubpStream = ((IntegerListObject *)navSubpStreamSeen.Get(i))->getValue();
-
-    uint16_t subtileLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
-
-    if (subtileLanguageCode != 0xFFFF && nav)
-        dvdnav_spu_language_select(nav, (char *)&subtileLanguageCode);
-
     SetCurrentNavSubpStreamUsrLocked(true);
+    SelectSubpStream();
     UpdateTrackInfo();
     ReportSubtitleTrack();
 
@@ -3464,6 +3516,33 @@ int cDvdPlayer::LogicalAudioStream(int Physical) const
     return -1;
 }
 
+int cDvdPlayer::LogicalSubpStream(int Physical) const
+{
+    // As for the audio streams, dvdnav_get_spu_logical_stream() maps a logical
+    // subpicture stream to its physical one - for a 4:3 picture, or a 16:9 one
+    // on a 16:9 TV - so search for the inverse, the current stream first: two
+    // logical streams can share a physical one.
+    if (!nav || Physical < 0)
+        return -1;
+    if (currentNavSubpStream >= 0 && dvdnav_get_spu_logical_stream(nav, currentNavSubpStream & SubpStreamMask) == Physical)
+        return currentNavSubpStream & SubpStreamMask;
+    for (int logical = 0; logical < MaxSubpStreams; logical++) {
+        if (dvdnav_get_spu_logical_stream(nav, logical) == Physical)
+            return logical;
+    }
+    return -1;
+}
+
+int cDvdPlayer::PhysicalSubpStream(int Logical) const
+{
+    // As libdvdnav maps it for a 4:3 picture, or a 16:9 one on a 16:9 TV: the
+    // SPU decoder's scale mode stays normal, VDR sets no other.
+    if (!nav || Logical < 0)
+        return -1;
+    int physical = dvdnav_get_spu_logical_stream(nav, Logical & SubpStreamMask);
+    return physical >= 0 ? physical & SubpStreamMask : -1;
+}
+
 uint16_t cDvdPlayer::GetAudioTrackLanguageCode(int Channel) const
 {
     uint16_t audioStreamLanguageCode = 0xFFFF;
@@ -3509,10 +3588,8 @@ cString cDvdPlayer::SubtitleTrackDescription(int Channel, const char *LanguageNa
     // differ only in their code extension - forced subtitles for foreign
     // dialogue, captions for the hearing impaired, a director's commentary.
     // Mark those, so VDR's subtitle menu tells them apart.
-    int logical = nav ? dvdnav_get_spu_logical_stream(nav, Channel) : -1;
-    int stream = (logical >= 0 ? logical : Channel) & SubpStreamMask; // as in GetSubtitleLanguageCode()
     subp_attr_t attr;
-    if (!nav || dvdnav_get_spu_attr(nav, stream, &attr) != DVDNAV_STATUS_OK)
+    if (!nav || Channel < 0 || dvdnav_get_spu_attr(nav, Channel & SubpStreamMask, &attr) != DVDNAV_STATUS_OK)
         return cString(LanguageName);
     const char *ext = attr.code_extension == 9 ? tr("DVD$forced") :
                       attr.code_extension >= 5 && attr.code_extension <= 7 ? tr("DVD$captions") :
@@ -3524,10 +3601,10 @@ cString cDvdPlayer::SubtitleTrackDescription(int Channel, const char *LanguageNa
 
 uint16_t cDvdPlayer::GetSubtitleLanguageCode(int Channel) const
 {
+    // Channel is a logical stream: libdvdnav keeps the attributes by those.
     uint16_t subtitleStreamLanguageCode = 0xFFFF;
-    if (nav) {
-        int logchan = dvdnav_get_spu_logical_stream(nav, Channel);
-        subtitleStreamLanguageCode = dvdnav_spu_stream_to_lang(nav, (logchan >= 0 ? logchan : Channel) & SubpStreamMask);
+    if (nav && Channel >= 0) {
+        subtitleStreamLanguageCode = dvdnav_spu_stream_to_lang(nav, Channel & SubpStreamMask);
         subtitleStreamLanguageCode = subtitleStreamLanguageCode >> 8 | (subtitleStreamLanguageCode & 0xFF) << 8;
     }
     return subtitleStreamLanguageCode;
@@ -3636,10 +3713,12 @@ void cDvdPlayer::UpdateTrackInfo(void)
         else
             snprintf(audio, sizeof(audio), "%s %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "", audioTypeDescr);
 
-        int subtitleStreamLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
+        // As in VDR's menu, forced subtitles only count as none.
+        int shownSubpStream = SubtitlesShown(currentNavSubpStream) ? currentNavSubpStream : -1;
+        int subtitleStreamLanguageCode = GetSubtitleLanguageCode(shownSubpStream);
         char subtitleLanguageStr[3] = {(char)subtitleStreamLanguageCode, (char)(subtitleStreamLanguageCode >> 8), 0};
         if (GetSubtitleStreamNumbers() > 2)
-            snprintf(subtitle, sizeof(subtitle), "%s %d/%d", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "", GetCurrentNavSubpStreamIdx(), GetSubtitleStreamNumbers() - 1);
+            snprintf(subtitle, sizeof(subtitle), "%s %d/%d", subtitleStreamLanguageCode !=0xFFFF ? subtitleLanguageStr : "", SearchSubpStream(shownSubpStream), GetSubtitleStreamNumbers() - 1);
         else if (GetSubtitleStreamNumbers() > 1)
             snprintf(subtitle, sizeof(subtitle), "%s", subtitleStreamLanguageCode != 0xFFFF ? subtitleLanguageStr : "n.a.");
         else

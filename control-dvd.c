@@ -180,7 +180,7 @@ void cDvdPlayerControl::Hide(void)
 
 void cDvdPlayerControl::HideOwnOsd(void)
 {
-    DEBUG_SHOW("DVD-Ctrl: HideOwnOsd: visible=%d\n", visible);
+    DEBUG_SHOW("DVD-Ctrl: HideOwnOsd: visible=%d\n", visible.load());
 
     if (visible) {
         OsdClose();
@@ -529,7 +529,7 @@ bool cDvdPlayerControl::DvdNavigation(eKeys Key)
 void cDvdPlayerControl::UpdateShow(bool force)
 {
     DEBUG_SHOW("DVD-Ctrl: updateShow: force=%d, visible=%d, modeOnly=%d\n",
-        force, visible, modeOnly);
+        force, visible.load(), modeOnly);
     if (visible || force) {
         if (timeoutShow && time(NULL) > timeoutShow) {
             Hide();
