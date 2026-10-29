@@ -287,6 +287,9 @@ public:
 
     // -- control stuff --
     void setController(cDvdPlayerControl *ctrl);
+    // The thread holds its lock from checking that no other OSD is open to
+    // drawing the subpicture.
+    cThread *Thread(void) { return this; }
     bool IsDvdNavigationForced() const;
     void DrawSPU();
     void HideSPU();
