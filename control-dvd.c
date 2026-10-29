@@ -21,13 +21,6 @@
 
 bool cDvdPlayerControl::dvd_active = false;
 
-#define DEBUG_KEY(...)
-#define DEBUG_SHOW(...)
-#define DEBUG_OSDCTRL(...)
-//#define DEBUG_KEY(...) (printf(__VA_ARGS__), fflush(NULL))
-//#define DEBUG_SHOW(...) (printf(__VA_ARGS__), fflush(NULL))
-//#define DEBUG_OSDCTRL(...) (printf(__VA_ARGS__), fflush(NULL))
-
 // --- cDvdPlayerControl -----------------------------------------------------
 
 cDvdPlayerControl::cDvdPlayerControl(void) : cControl(player = new cDvdPlayer())
@@ -99,11 +92,6 @@ void cDvdPlayerControl::SkipSeconds(int Seconds)
         player->SkipSeconds(Seconds);
 }
 
-int cDvdPlayerControl::SkipFrames(int Frames)
-{
-    return player ? player->SkipFrames(Frames) : -1;
-}
-
 bool cDvdPlayerControl::GetIndex(int &Current, int &Total, bool SnapToIFrame)
 {
     return player ? player->GetIndex(Current, Total, SnapToIFrame) : false;
@@ -128,18 +116,18 @@ void cDvdPlayerControl::OsdClose()
 void cDvdPlayerControl::OsdOpen(void)
 {
     if (visible) {
-        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: allready visible\n");
+        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: already visible\n");
         return;
     }
 
     if (OsdTaken((void *)this)) {
         if (player) {
-            DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> HideSPU ... \n");
+            DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: already open -> HideSPU\n");
             player->HideSPU();
         }
     }
     if (!TakeOsd((void *)this)) {
-        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> !visible, osdTaken\n");
+        DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: already open -> !visible, osdTaken\n");
         visible = false;
     } else {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: visible\n");
@@ -167,7 +155,7 @@ void cDvdPlayerControl::Hide(void)
 {
     DEBUG_SHOW("DVD-Ctrl: Hide\n");
 
-    TakeOsd((void *)(-1)); // somebody else (external) might take the osd ..
+    TakeOsd((void *)(-1)); // released: another OSD may open now
     if (player)
         player->HideSPU();
     HideOwnOsd();
@@ -190,7 +178,7 @@ bool cDvdPlayerControl::TakeOsd(void *owner)
 {
     if (owner == (void *)-1 || !OsdTaken(owner) || osdTaker == (void *)-1) {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
-        osdTaker = owner; // not taken by other: new owner
+        osdTaker = owner;
         return true;
     } else {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) not taken! %p \n", owner, osdTaker.load());
@@ -202,7 +190,7 @@ bool cDvdPlayerControl::OsdTaken(void *me)
 {
     if (osdTaker && !cOsd::IsOpen()) {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) !IsOpen->taker:=NULL\n", me);
-        osdTaker = NULL; // update info ..
+        osdTaker = NULL; // the owner's OSD has been closed
     }
     DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) != %p := %d \n", me, osdTaker.load(), osdTaker != me);
     return osdTaker != NULL && osdTaker != me;
@@ -223,10 +211,9 @@ void cDvdPlayerControl::ShowMode(void)
             bool NormalPlay = (Play && Speed == -1);
             if (!visible) {
                 if (NormalPlay)
-                    return; // no need to do indicate ">" unless there was a different mode displayed before
+                    return; // no need to indicate ">" unless a different mode was shown before
                 modeOnly = true;
-                // open small display
-                OsdOpen();
+                OsdOpen(); // the small display
             }
             if (!visible)
                 return;

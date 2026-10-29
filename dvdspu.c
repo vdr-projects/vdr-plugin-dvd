@@ -90,7 +90,7 @@
 
 #include "dvdspu.h"
 
-//----------- cSPUdata -----------------------------------
+// --- simpleFIFO ------------------------------------------------------------
 
 simpleFIFO::simpleFIFO(int Size)
 {
@@ -150,7 +150,7 @@ int simpleFIFO::Get(uint8_t *Data, int Count)
     return Count;
 }
 
-// ---------- cSPUassembler -----------------------------------
+// --- cSPUassembler ---------------------------------------------------------
 
 cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE)
 {

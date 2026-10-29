@@ -33,7 +33,6 @@
 class cDvdPlayer;
 
 #include "dvdspu.h"
-#include "ca52.h"
 
 class IntegerListObject : public cListObject {
 private:
@@ -53,13 +52,12 @@ class cDvdPlayer : public cPlayer, cThread {
 private:
     enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
     enum ePlayDirs { pdForward, pdBackward };
-    enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2, pktIFrame = 4, pktSpu = 8 };
+    enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2 };
 
     cDvdPlayerControl *controller;
 
     cSPUassembler SPUassembler;
     cSpuDecoder *SPUdecoder;
-    A52decoder a52dec;
 
     cIframeAssembler *iframeAssembler;
     int IframeCnt;
@@ -92,7 +90,6 @@ private:
     int currentNavSubpPhysical; // the physical stream shown for it, -1 = none
     uint32_t subpPhysicalSeen;  // physical streams whose packets turned up
     bool currentNavSubpStreamUsrLocked;
-    bool changeNavSubpStreamOnceInSameCell;
 
     cList<IntegerListObject> navSubpStreamSeen;
     void clearSeenSubpStream(void);
@@ -175,17 +172,20 @@ private:
     void ReplaceInfoString(char *&Str, char *New);
     void UpdateTrackInfo(void);
 
-    //player stuff
+    // Playback
     void StillSkip(void);
+    void ForgetButtons(void);
+    bool PartPlay(int Title, int Part);
+    int MenuCall(DVDMenuID_t Menu);
+    int CurrentTitle(void);
     void TrickSpeed(int Increment);
     void Empty(bool emptyDeviceToo = true);
     void PlayFromBlock(int64_t Block);
 
-    //dvd stuff
+    // Menu buttons, still pictures and the aspect ratio
     void ClearButtonHighlight(void);
     void UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt);
     void DoScaleMode(int &vaspect);
-    cSpuDecoder::eScaleMode getSPUScaleMode();
     void SendIframe(bool doSend);
 
     int playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
@@ -218,32 +218,18 @@ private:
     uint16_t GetSubtitleLanguageCode(int Channel) const;
     int GetSubtitleStreamNumbers(void) const;
 
-    //resuming
-    /**
-     * the resume database
-     */
+    // Resuming
     cDVDPlayerResume *resume;
-    /**
-     * GetDVDResumeKey():
-     * computes a (hopefully) unique id for storing the resume data of the current disc.
-     *
-     * this get returns a new allocated memory area ..
-     * must be freed by callee ..
-     */
+    // The disc's key in the resume file, allocated: the caller frees it. NULL
+    // if libdvdnav can't tell the number of titles.
     char *GetDVDResumeKey() const;
-    /**
-     * SaveResume():
-     * handles everything to save the current position on the disc for later resuming.
-     */
+    // Stores the position in the title (not in a menu) in the resume file.
     void SaveResume();
-    /**
-     * LoadResume():
-     * loads the resume data for the current disc and stores it in the given arguments.
-     * returns false if no resume data for the disc can be found or and error occured while loading.
-     */
+    // The position the resume file has for the disc, 30 seconds back; false
+    // if it has none.
     bool LoadResume(int &title, int &chapter, int64_t &second);
 
-protected: //Player
+protected:
     virtual void Activate(bool On);
     virtual void Action(void);
     void DeviceReset(void);
@@ -253,13 +239,9 @@ protected: //Player
     int emptyCount; // Empty() calls, for WaitDeviceDrained()
 
 public:
-    /**
-     * returns the CurrentFrame and TotalFrame of the actual PGC !
-     * the timebase is accurate (BlockNumber/Ticks), but the resulting
-     * "frame" number is calculated using the magic number FRAMESPERSEC ;-)
-     *
-     * optional snap to the next IFrame (not functional now)
-     */
+    // The position in the program chain and its length, in frames at
+    // FramesPerSecond(): from the block numbers, as if all blocks played
+    // equally long. SnapToIFrame has no effect.
     bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame);
     bool GetReplayMode(bool &Play, bool &Forward, int &Speed);
     void SetAudioTrack(eTrackType Type, const tTrackId *TrackId);
@@ -285,7 +267,7 @@ public:
     void GetAudioLanguageStr(const char **AudioLanguageStr) const;
     void GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const;
 
-    // -- control stuff --
+    // For the control
     void setController(cDvdPlayerControl *ctrl);
     bool IsDvdNavigationForced() const;
     void DrawSPU();
@@ -298,95 +280,40 @@ public:
     void Forward(void);
     void Backward(void);
 
-    /**
-     * these getter returns a new allocated memory area ..
-     * must be freed by callee ..
-     */
+    // Allocated copies: the caller frees them.
     char *GetTitleString(void) const;
     char *GetTitleInfoString(void) const;
     char *GetAspectString(void) const;
 
-    /**
-     * returns the PGC (e.g. whole title) lenght in ticks
-     *
-     * 90000 ticks are 1 second, acording to MPEG !
-     */
+    // The length of the program chain (mostly the whole title) in PTS ticks,
+    // 90000 a second.
     int64_t GetPGCLengthInTicks(void);
 
-    /**
-     * returns the Ticks and TotalTicks according to the given
-     * BlockNum, TotalBlockNum of the actual PGC !
-     *
-     * the TotalBlockNum of the actual PGC is fetched !
-     *
-     * 90000 ticks are 1 second, acording to MPEG !
-     */
+    // The time of a block of the program chain and the chain's length, in
+    // ticks, as if all blocks played equally long.
     void BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks);
 
-    /**
-     * returns the CurrentBlockNum and TotalBlockNum according to the given
-     * Ticks, TotalTicks of the actual PGC !
-     *
-     * the TotalTicks of the actual PGC is fetched !
-     *
-     * 90000 ticks are 1 second, acording to MPEG !
-     */
+    // The reverse: the block at a time and the program chain's number of
+    // blocks.
     void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum);
 
     bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec);
     void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks);
 
-    /**
-     * we assume FRAMESPERSEC !
-     */
-    int SkipFrames(int Frames);
     void SkipSeconds(int Seconds);
-
-    /**
-     * set the position of the actual PGC to the given Seconds
-     */
+    // Plays the program chain from the given second on.
     void Goto(int Seconds);
 
+    // The Goto functions return the angle, title or chapter they went to, -1
+    // if none. The Next and Previous ones wrap around, from the last to the
+    // first and back.
     int GotoAngle(int Angle);
-
-    /**
-     * jump to the next Angle (rotate)
-     */
     void NextAngle(void);
-
-    /**
-     * jump to the next Title (rotate)
-     */
-    void NextTitle(void);
-
-    /**
-     * goto to the Title
-     *
-     * return set title ..
-     */
-    // GotoTitle now optionally takes a chapter to seek to in the given title
     int GotoTitle(int Title, int Chapter = 1);
-
-    /**
-     * jump to the previous Title (rotate)
-     */
+    void NextTitle(void);
     void PreviousTitle(void);
-
-    /**
-     * goto to the Part
-     *
-     * return set Part ..
-     */
     int GotoPart(int Part);
-
-    /**
-     * jump to the next Part (rotate)
-     */
     void NextPart(void);
-
-    /**
-     * jump to the previous Part (rotate)
-     */
     void PreviousPart(void);
 
     int GetCurrentNavSubpStream(void) const;
@@ -408,15 +335,10 @@ public:
 
     bool IsInMenuDomain() const;
 
-    // -- callbacks --
+    // The PTS of a packet passed on: the SPU decoder's time.
     void seenAPTS(uint64_t pts);
     void seenVPTS(uint64_t pts);
 
-    int cbPlayAudio(uchar *Data, int Length);
-
-    /**
-     * 90000 ticks are 1 second, acording to MPEG !
-     */
     static int64_t PTSTicksToSec(int64_t ticks) { return ticks / 90000L; }
 };
 
@@ -431,17 +353,7 @@ inline bool cDvdPlayer::IsInMenuDomain() const
     return menuButtons;
 }
 
-inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
-{
-    if (ringBuffer) {
-        cFrame *cbFrame = new cFrame(Data, Length, ftDolby);
-        if (cbFrame && !ringBuffer->Put(cbFrame))
-            DELETENULL(cbFrame);
-    }
-    return Length;
-}
-
-// --- navigation stuff ---
+// Moving between a menu's buttons
 
 inline void cDvdPlayer::selectUpButton(void)
 {
@@ -479,4 +391,4 @@ inline void cDvdPlayer::selectRightButton(void)
     }
 }
 
-#endif //__PLAYER_DVD_H
+#endif // __PLAYER_DVD_H

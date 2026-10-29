@@ -77,8 +77,6 @@ private:
 
 public:
     bool Active(void);
-    bool Start(const char *FileName);
-    // Starts replaying the given file.
     void Stop(void);
     // Stops the current replay session (if any).
     void Pause(void);
@@ -89,18 +87,14 @@ public:
     // Runs the current replay session forward at a higher speed.
     void Backward(void);
     // Runs the current replay session backwards at a higher speed.
-    int SkipFrames(int Frames);
-    // Returns the new index into the current replay session after skipping
-    // the given number of frames (no actual repositioning is done!).
-    // The sign of 'Frames' determines the direction in which to skip.
     void SkipSeconds(int Seconds);
     // Skips the given number of seconds in the current replay session.
     // The sign of 'Seconds' determines the direction in which to skip.
     // Use a very large negative value to go all the way back to the
-    // beginning of the recording.
+    // beginning of the program chain.
     bool GetIndex(int &Current, int &Total, bool SnapToIFrame = false);
-    // Returns the current and total frame index, optionally snapped to the
-    // nearest I-frame.
+    // Returns the current and total frame index of the program chain.
+    // SnapToIFrame has no effect.
     bool GetReplayMode(bool &Play, bool &Forward, int &Speed);
     // Returns the current replay mode (if applicable).
     // 'Play' tells whether we are playing or pausing, 'Forward' tells whether

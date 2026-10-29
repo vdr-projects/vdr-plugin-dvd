@@ -1,4 +1,3 @@
-
 #ifndef _MPEGTYPES_H
 #define _MPEGTYPES_H
 
@@ -18,7 +17,6 @@
 #define GOP_START       0xb8
 
 #define I_FRAME 0x01
-#define P_FRAME 0x02
 #define B_FRAME 0x03
 
 #define aAC3  0x80
@@ -26,4 +24,4 @@
 #define aLPCM 0xA0
 #define aMPEG 0xC0
 
-#endif
+#endif // _MPEGTYPES_H

@@ -10,6 +10,7 @@ VDR Plugin 'dvd' Revision History
     - remove dead code: #if 0 blocks, QNX and the bitstreamout, reelbox and xine plugins, unused functions and members
     - build without warnings with `make DEV_WARNINGS=1` (-pedantic-errors -Wall -Wextra -Wconversion and more, as in vaapivideo), also with every debug switch
     - format the sources consistently (.clang-format)
+    - remove the AC-3 decoder (liba52) and its "Gain (analog)" setup: decoding the audio is the output device's job
     - default to /dev/cdrom and start without a drive
     - require VDR 2.6.6 and drop pre-2.6.6 compatibility code (i18n to ASCII)
     - convert the message catalogues to UTF-8, unify the headers, fix the Russian translation and add Spanish, Finnish, French, Italian and Dutch
