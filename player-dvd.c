@@ -663,6 +663,40 @@ void cDvdPlayer::StillSkip()
     }
 }
 
+// After a jump of the player's own, libdvdnav keeps the PCI of the last NAV
+// packet until it reads the first one of the jump's target. A button of the
+// menu left, activated meanwhile, ran in the target's domain: its JumpTT
+// from a title failed an assertion in libdvdnav's VM and aborted VDR.
+void cDvdPlayer::ForgetButtons(void)
+{
+    current_pci = NULL;
+    menuButtons = false;
+}
+
+// Unlike libdvdnav's other jumps, dvdnav_part_play() keeps the still of the
+// cell it leaves: out of a still menu, libdvdnav reported that still again
+// and again and the title never started. dvdnav_still_skip() would skip the
+// still at the end of the target's first cell instead, the jump to the top
+// of the program dvdnav_part_play() went to clears it.
+bool cDvdPlayer::PartPlay(int Title, int Part)
+{
+    if (dvdnav_part_play(nav, Title, Part) != DVDNAV_STATUS_OK)
+        return false;
+    dvdnav_top_pg_search(nav);
+    ForgetButtons();
+    return true;
+}
+
+// dvdnav_menu_call() leaves a still itself. dvdnav_still_skip() before it
+// skipped the still of the menu called, which a still menu ends with.
+int cDvdPlayer::MenuCall(DVDMenuID_t Menu)
+{
+    if (!nav || dvdnav_menu_call(nav, Menu) != DVDNAV_STATUS_OK)
+        return 0;
+    ForgetButtons();
+    return 1;
+}
+
 #ifdef DVDDEBUG
 static const char *dvd_ev[] = {"BLOCK_OK",
                                "NOP",
@@ -2497,8 +2531,7 @@ int cDvdPlayer::GotoAngle(int Angle)
     DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
     Empty();
 
-    if (stillTimer == 0)
-        dvdnav_angle_change(nav, Angle);
+    dvdnav_angle_change(nav, Angle);
 
     Play();
 
@@ -2542,32 +2575,40 @@ int cDvdPlayer::GotoTitle(int Title, int Chapter /*= 1*/)
     if (Chapter <= 0)
         Chapter = chapterNumber;
 
-    if (stillTimer == 0)
-        dvdnav_part_play(nav, Title, Chapter);
+    PartPlay(Title, Chapter);
 
     Play();
 
     return Title;
 }
 
+// The current title, 0 in a menu. Until libdvdnav has opened a title set it
+// can't tell, in the menu of a disc that starts there: the title number was
+// left unset, and Yellow and Green went to a title the stack chose, or none.
+int cDvdPlayer::CurrentTitle(void)
+{
+    int title, part;
+    return dvdnav_current_title_info(nav, &title, &part) == DVDNAV_STATUS_OK ? title : 0;
+}
+
 void cDvdPlayer::NextTitle(void)
 {
-    int titleNumber, chapterNumber, titleNumbers;
+    int titleNumbers = 0;
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    int titleNumber = CurrentTitle();
     dvdnav_get_number_of_titles(nav, &titleNumbers);
     GotoTitle(titleNumber < titleNumbers ? titleNumber + 1 : 1);
 }
 
 void cDvdPlayer::PreviousTitle()
 {
-    int titleNumber, chapterNumber, titleNumbers;
+    int titleNumbers = 0;
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
+    int titleNumber = CurrentTitle();
     dvdnav_get_number_of_titles(nav, &titleNumbers);
     GotoTitle(titleNumber > 1 ? titleNumber - 1 : titleNumbers);
 }
@@ -2580,19 +2621,22 @@ int cDvdPlayer::GotoPart(int Part)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return -1;
+
+    // A menu is title 0, which has no chapters: libdvdnav left
+    // chapterNumbers unset.
+    if (dvdnav_current_title_info(nav, &titleNumber, &chapterNumber) != DVDNAV_STATUS_OK || titleNumber < 1 ||
+        dvdnav_get_number_of_parts(nav, titleNumber, &chapterNumbers) != DVDNAV_STATUS_OK)
+        return -1;
+
     DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
     Empty();
-
-    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
-    dvdnav_get_number_of_parts(nav, titleNumber, &chapterNumbers);
 
     if (Part > chapterNumbers)
         Part = 1;
     if (Part <= 0)
         Part = chapterNumbers;
 
-    if (stillTimer == 0)
-        dvdnav_part_play(nav, titleNumber, Part);
+    PartPlay(titleNumber, Part);
     Play();
     return Part;
 }
@@ -2603,8 +2647,8 @@ void cDvdPlayer::NextPart(void)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
-    GotoPart(++chapterNumber);
+    if (dvdnav_current_title_info(nav, &titleNumber, &chapterNumber) == DVDNAV_STATUS_OK)
+        GotoPart(chapterNumber + 1);
 }
 
 void cDvdPlayer::PreviousPart(void)
@@ -2613,8 +2657,8 @@ void cDvdPlayer::PreviousPart(void)
     LOCK_THREAD;
     if (!DVDActiveAndRunning())
         return;
-    dvdnav_current_title_info(nav, &titleNumber, &chapterNumber);
-    GotoPart(--chapterNumber);
+    if (dvdnav_current_title_info(nav, &titleNumber, &chapterNumber) == DVDNAV_STATUS_OK)
+        GotoPart(chapterNumber - 1);
 }
 
 void cDvdPlayer::clearSeenSubpStream()
@@ -3283,9 +3327,8 @@ int cDvdPlayer::callRootMenu(void)
     DEBUGDVD("cDvdPlayer::callRootMenu()\n");
 
     LOCK_THREAD;
-    StillSkip();
     SetCurrentNavAudioTrackUsrLocked(false);
-    return nav ? dvdnav_menu_call(nav, DVD_MENU_Root) : 0;
+    return MenuCall(DVD_MENU_Root);
 }
 
 int cDvdPlayer::callTitleMenu(void)
@@ -3293,9 +3336,8 @@ int cDvdPlayer::callTitleMenu(void)
     DEBUGDVD("cDvdPlayer::callTitleMenu()\n");
 
     LOCK_THREAD;
-    StillSkip();
     SetCurrentNavAudioTrackUsrLocked(false);
-    return nav ? dvdnav_menu_call(nav, DVD_MENU_Title) : 0;
+    return MenuCall(DVD_MENU_Title);
 }
 
 int cDvdPlayer::callSubpMenu(void)
@@ -3303,8 +3345,7 @@ int cDvdPlayer::callSubpMenu(void)
     DEBUGDVD("cDvdPlayer::callSubpMenu()\n");
 
     LOCK_THREAD;
-    StillSkip();
-    return nav ? dvdnav_menu_call(nav, DVD_MENU_Subpicture) : 0;
+    return MenuCall(DVD_MENU_Subpicture);
 }
 
 int cDvdPlayer::callAudioMenu(void)
@@ -3312,7 +3353,6 @@ int cDvdPlayer::callAudioMenu(void)
     DEBUGDVD("cDvdPlayer::callAudioMenu()\n");
 
     LOCK_THREAD;
-    StillSkip();
     SetCurrentNavAudioTrackUsrLocked(false);
-    return nav ? dvdnav_menu_call(nav, DVD_MENU_Audio) : 0;
+    return MenuCall(DVD_MENU_Audio);
 }
