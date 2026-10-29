@@ -91,10 +91,10 @@ public:
     // Skips the given number of seconds in the current replay session.
     // The sign of 'Seconds' determines the direction in which to skip.
     // Use a very large negative value to go all the way back to the
-    // beginning of the recording.
+    // beginning of the program chain.
     bool GetIndex(int &Current, int &Total, bool SnapToIFrame = false);
-    // Returns the current and total frame index, optionally snapped to the
-    // nearest I-frame.
+    // Returns the current and total frame index of the program chain.
+    // SnapToIFrame has no effect.
     bool GetReplayMode(bool &Play, bool &Forward, int &Speed);
     // Returns the current replay mode (if applicable).
     // 'Play' tells whether we are playing or pausing, 'Forward' tells whether

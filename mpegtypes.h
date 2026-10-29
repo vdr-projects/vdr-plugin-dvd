@@ -1,4 +1,3 @@
-
 #ifndef _MPEGTYPES_H
 #define _MPEGTYPES_H
 
@@ -25,4 +24,4 @@
 #define aLPCM 0xA0
 #define aMPEG 0xC0
 
-#endif
+#endif // _MPEGTYPES_H

@@ -11,6 +11,7 @@
 #ifndef __COMMON_DVD_H
 #define __COMMON_DVD_H
 
+// Debug output on stdout, one switch per area.
 //#define CTRLDEBUG
 //#define DVDDEBUG
 //#define PTSDEBUG
@@ -22,6 +23,11 @@
 //#define SUBPDEBUG
 //#define IFRAMEDEBUG
 //#define IFRAMEDEBUG2
+//#define KEYDEBUG
+//#define SHOWDEBUG
+//#define OSDCTRLDEBUG
+// Writes the I-frame of each still picture to /tmp/dvd.iframe.NNN.asm.pes.
+//#define IFRAMEWRITE
 
 #ifdef DVDDEBUG
 #define DEBUGDVD(...) printf(__VA_ARGS__)
@@ -79,6 +85,22 @@
 #define DEBUG_PTS2(...) printf(__VA_ARGS__)
 #else
 #define DEBUG_PTS2(...)
+#endif
+
+#ifdef KEYDEBUG
+#define DEBUG_KEY(...) (printf(__VA_ARGS__), fflush(NULL))
+#else
+#define DEBUG_KEY(...)
+#endif
+#ifdef SHOWDEBUG
+#define DEBUG_SHOW(...) (printf(__VA_ARGS__), fflush(NULL))
+#else
+#define DEBUG_SHOW(...)
+#endif
+#ifdef OSDCTRLDEBUG
+#define DEBUG_OSDCTRL(...) (printf(__VA_ARGS__), fflush(NULL))
+#else
+#define DEBUG_OSDCTRL(...)
 #endif
 
 #endif // __COMMON_DVD_H

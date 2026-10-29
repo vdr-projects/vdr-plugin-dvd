@@ -52,7 +52,6 @@ static int SetupValue(const char *Value, int Min, int Max, int Default)
 
 bool cDVDSetup::SetupParse(const char *Name, const char *Value)
 {
-    // Parse your own setup parameters and store their values.
     if (!strcasecmp(Name, "MenuLanguage"))
         MenuLanguage = SetupValue(Value, 0, ISO639codes - 1, MenuLanguage);
     else if (!strcasecmp(Name, "AudioLanguage"))

@@ -49,4 +49,4 @@ public:
     int Put(const uint8_t *Data, int Count, uint64_t Pts);
 };
 
-#endif
+#endif // __DVDSPU_H__

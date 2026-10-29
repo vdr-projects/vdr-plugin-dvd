@@ -21,4 +21,4 @@ public:
     static bool DriveExists(void);
 };
 
-#endif //__VDR_DVDDEV_H
+#endif // __VDR_DVDDEV_H
