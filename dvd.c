@@ -14,7 +14,7 @@
 #error "VDR 2.6.6+ required (APIVERSNUM >= 20606)"
 #endif
 
-static const char *VERSION = "0.4.0 devel";
+static const char *VERSION = "1.0.0 RC1";
 static const char *DESCRIPTION = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
 static const char *MAINMENUENTRY = trNOOP("Plugin.DVD$DVD");
 
