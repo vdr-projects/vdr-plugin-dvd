@@ -99,11 +99,6 @@ void cDvdPlayerControl::SkipSeconds(int Seconds)
         player->SkipSeconds(Seconds);
 }
 
-int cDvdPlayerControl::SkipFrames(int Frames)
-{
-    return player ? player->SkipFrames(Frames) : -1;
-}
-
 bool cDvdPlayerControl::GetIndex(int &Current, int &Total, bool SnapToIFrame)
 {
     return player ? player->GetIndex(Current, Total, SnapToIFrame) : false;

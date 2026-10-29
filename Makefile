@@ -59,11 +59,7 @@ INCLUDES += -I$(call PKGCFG,incdir)
 DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 DEFINES += -D__STDC_LIMIT_MACROS
 
-LIBS = -ldvdnav -la52
-
-ifdef DJBFFT
-LIBS   += -L/usr/lib/djbfft/lib -ldjbfft
-endif
+LIBS = -ldvdnav
 
 ifdef DBG
 CXXFLAGS += -g -ggdb -O0
@@ -78,8 +74,7 @@ endif
 
 ### The object files (add further files here):
 
-OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o     \
-       ca52.o setup-dvd.o
+OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o setup-dvd.o
 
 ### The main target:
 

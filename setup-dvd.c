@@ -40,7 +40,6 @@ cDVDSetup::cDVDSetup(void)
     ShowSubtitles = 0;
     HideMainMenu = 0;
     ReadAHead = 0;
-    Gain = 4;
 }
 
 // Value if it is one the setup menu offers, else Default: the languages
@@ -69,7 +68,7 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name, "ReadAHead"))
         ReadAHead = atoi(Value);
     else if (!strcasecmp(Name, "Gain"))
-        Gain = atoi(Value);
+        ; // removed with the AC-3 decoder; ignored, or VDR logs it as an error
     else
         return false;
     return true;
@@ -88,7 +87,6 @@ cMenuSetupDVD::cMenuSetupDVD(void)
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"), &data.ShowSubtitles));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"), &data.HideMainMenu));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"), &data.ReadAHead));
-    Add(new cMenuEditIntItem(tr("Setup.DVD$Gain (analog)"), &data.Gain, 0, 10));
 }
 
 void cMenuSetupDVD::Store(void)
@@ -101,5 +99,4 @@ void cMenuSetupDVD::Store(void)
     SetupStore("ShowSubtitles", DVDSetup.ShowSubtitles);
     SetupStore("HideMainMenu", DVDSetup.HideMainMenu);
     SetupStore("ReadAHead", DVDSetup.ReadAHead);
-    SetupStore("Gain", DVDSetup.Gain);
 }

@@ -77,8 +77,6 @@ private:
 
 public:
     bool Active(void);
-    bool Start(const char *FileName);
-    // Starts replaying the given file.
     void Stop(void);
     // Stops the current replay session (if any).
     void Pause(void);
@@ -89,10 +87,6 @@ public:
     // Runs the current replay session forward at a higher speed.
     void Backward(void);
     // Runs the current replay session backwards at a higher speed.
-    int SkipFrames(int Frames);
-    // Returns the new index into the current replay session after skipping
-    // the given number of frames (no actual repositioning is done!).
-    // The sign of 'Frames' determines the direction in which to skip.
     void SkipSeconds(int Seconds);
     // Skips the given number of seconds in the current replay session.
     // The sign of 'Seconds' determines the direction in which to skip.
