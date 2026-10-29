@@ -33,7 +33,6 @@
 class cDvdPlayer;
 
 #include "dvdspu.h"
-#include "ca52.h"
 
 class IntegerListObject : public cListObject {
 private:
@@ -53,13 +52,12 @@ class cDvdPlayer : public cPlayer, cThread {
 private:
     enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
     enum ePlayDirs { pdForward, pdBackward };
-    enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2, pktIFrame = 4, pktSpu = 8 };
+    enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2 };
 
     cDvdPlayerControl *controller;
 
     cSPUassembler SPUassembler;
     cSpuDecoder *SPUdecoder;
-    A52decoder a52dec;
 
     cIframeAssembler *iframeAssembler;
     int IframeCnt;
@@ -92,7 +90,6 @@ private:
     int currentNavSubpPhysical; // the physical stream shown for it, -1 = none
     uint32_t subpPhysicalSeen;  // physical streams whose packets turned up
     bool currentNavSubpStreamUsrLocked;
-    bool changeNavSubpStreamOnceInSameCell;
 
     cList<IntegerListObject> navSubpStreamSeen;
     void clearSeenSubpStream(void);
@@ -185,7 +182,6 @@ private:
     void ClearButtonHighlight(void);
     void UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt);
     void DoScaleMode(int &vaspect);
-    cSpuDecoder::eScaleMode getSPUScaleMode();
     void SendIframe(bool doSend);
 
     int playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio);
@@ -336,10 +332,6 @@ public:
     bool GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec);
     void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks);
 
-    /**
-     * we assume FRAMESPERSEC !
-     */
-    int SkipFrames(int Frames);
     void SkipSeconds(int Seconds);
 
     /**
@@ -412,8 +404,6 @@ public:
     void seenAPTS(uint64_t pts);
     void seenVPTS(uint64_t pts);
 
-    int cbPlayAudio(uchar *Data, int Length);
-
     /**
      * 90000 ticks are 1 second, acording to MPEG !
      */
@@ -429,16 +419,6 @@ inline bool cDvdPlayer::IsInMenuDomain() const
     // current_pci->hli.hl_gi.hli_ss as of the last NAV packet; current_pci
     // points into nav, which the player thread closes when it ends
     return menuButtons;
-}
-
-inline int cDvdPlayer::cbPlayAudio(uchar *Data, int Length)
-{
-    if (ringBuffer) {
-        cFrame *cbFrame = new cFrame(Data, Length, ftDolby);
-        if (cbFrame && !ringBuffer->Put(cbFrame))
-            DELETENULL(cbFrame);
-    }
-    return Length;
 }
 
 // --- navigation stuff ---

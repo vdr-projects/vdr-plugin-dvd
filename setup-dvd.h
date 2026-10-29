@@ -22,7 +22,6 @@ public:
     int ShowSubtitles;
     int HideMainMenu;
     int ReadAHead;
-    int Gain;
 
 public:
     cDVDSetup(void);
@@ -44,7 +43,6 @@ public:
 extern cDVDSetup DVDSetup;
 
 extern const char *ISO639code[];
-extern const int ISO639codes;
 extern const char *DvdLanguageCode[][2];
 extern const int DvdLanguageCodes;
 

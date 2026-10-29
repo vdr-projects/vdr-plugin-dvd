@@ -19,15 +19,13 @@ Requirements
 
 VDR       >= 2.6.6   https://www.tvdr.de/
 libdvdnav >= 5.0.0   https://www.videolan.org/developers/libdvdnav.html
-liba52    >= 0.7.4   https://sourceforge.net/projects/liba52/
 libdvdcss (optional) https://www.videolan.org/developers/libdvdcss.html
 
-Tested with VDR 2.8.3, libdvdnav 7.0.0, libdvdread 7.0.1, libdvdcss 1.5.0
-and liba52 0.7.4. VDR versions before 2.6.6 are no longer supported.
+Tested with VDR 2.8.4, libdvdnav 7.0.0, libdvdread 7.0.1 and libdvdcss
+1.5.0. VDR versions before 2.6.6 are no longer supported.
 
 Build and install the plugin like any other VDR plugin. The Makefile links
-with -ldvdnav and -la52, so the development files of both libraries must be
-installed.
+with -ldvdnav, so the development files of libdvdnav must be installed.
 
 libdvdcss is needed for CSS encrypted discs only. libdvdread, which
 libdvdnav uses, loads it at runtime; the plugin doesn't link with it.
@@ -53,10 +51,10 @@ means being a member of the "cdrom" group.
 Audio
 =====
 
-With VDR 2.8.3 and newer, the plugin passes the disc's audio (AC-3, DTS,
-LPCM, MPEG) to the output device as it is, and the device decodes it. With
-older VDR versions and "Use Dolby Digital" off in VDR's setup, the plugin
-decodes AC-3 itself with liba52; DTS is not played then.
+The plugin passes the disc's audio (AC-3, DTS, LPCM, MPEG) to the output
+device as it is, and the device decodes it, as it does for TV and
+recordings. VDR versions before 2.8.3 drop AC-3 and DTS with "Use Dolby
+Digital" off in VDR's setup, so leave it on there.
 
 
 Keys during playback
@@ -128,8 +126,6 @@ Display subtitles            show subtitles a disc switches on by itself
                              always shown
 Hide Mainmenu Entry          hide "DVD" in VDR's main menu
 ReadAHead                    libdvdnav's read-ahead cache (default: no)
-Gain (analog)                volume of AC-3 audio the plugin decodes
-                             itself, see "Audio" (0-10, default: 4)
 
 
 Resume
