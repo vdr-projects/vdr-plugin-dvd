@@ -174,6 +174,10 @@ private:
 
     //player stuff
     void StillSkip(void);
+    void ForgetButtons(void);
+    bool PartPlay(int Title, int Part);
+    int MenuCall(DVDMenuID_t Menu);
+    int CurrentTitle(void);
     void TrickSpeed(int Increment);
     void Empty(bool emptyDeviceToo = true);
     void PlayFromBlock(int64_t Block);
