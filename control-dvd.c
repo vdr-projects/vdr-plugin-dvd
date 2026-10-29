@@ -132,6 +132,10 @@ void cDvdPlayerControl::OsdOpen(void)
         return;
     }
 
+    // Under the player's lock, which its thread holds from checking that no
+    // other OSD is open to drawing the subpicture: the display opened in
+    // between, and the subpicture or the display got a dummy OSD from VDR.
+    cThreadLock PlayerLock(player ? player->Thread() : NULL);
     if (OsdTaken((void *)this)) {
         if (player) {
             DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: AllreadyOpen -> HideSPU ... \n");
