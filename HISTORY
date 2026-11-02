@@ -1,7 +1,7 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-2026-10-29 Version 1.0.0
+2026-11-02 Version 1.0.0
     - tell logical and physical subpicture streams apart
     - reset the device at the first audio pack only at the start
     - don't empty the player for a title with a single angle
