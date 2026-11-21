@@ -96,7 +96,7 @@ simpleFIFO::simpleFIFO(int Size)
 {
     size = Size;
     head = tail = 0;
-    buffer = (uint8_t *)malloc((size_t)size);
+    buffer = static_cast<uint8_t *>(malloc((size_t)size));
 }
 
 simpleFIFO::~simpleFIFO()
@@ -158,9 +158,9 @@ cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE)
     stream = -1;
 }
 
-void cSPUassembler::Clear(void)
+void cSPUassembler::Reset(void)
 {
-    simpleFIFO::Clear();
+    Clear();
     stream = -1;
 }
 
@@ -170,7 +170,7 @@ int cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts
     // before, don't belong to the next unit: appended to them it came out
     // garbled, and so did every unit after it.
     if (Stream != stream) {
-        Clear();
+        Reset();
         stream = Stream;
     }
     // The first packet of a unit has its PTS. Not that of the last packet

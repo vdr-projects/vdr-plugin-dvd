@@ -1,0 +1,27 @@
+# Checks of the plugin's sources; run with
+#   clang-tidy *.c -- -x c++ -std=c++17 -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"dvd"' \
+#       $(pkg-config --cflags vdr dvdnav)
+# Not checked: the signedness of bitwise operands in the MPEG and DVD
+# structures' byte arithmetic, and signed chars, as libdvdnav returns its
+# stream numbers as int8_t, -1 for none.
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-reserved-identifier,
+  -bugprone-macro-parentheses,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-switch-missing-default-case,
+  -bugprone-throwing-static-initialization,
+  -bugprone-multi-level-implicit-pointer-conversion,
+  -bugprone-signed-bitwise,
+  -bugprone-signed-char-misuse,
+  -bugprone-unchecked-string-to-number-conversion,
+  google-explicit-constructor,
+  modernize-use-override,
+  performance-*,
+  -performance-enum-size
+WarningsAsErrors: ''
+HeaderFilterRegex: '(^|/)(common-dvd|control-dvd|dvd|dvddev|dvdspu|mpegtypes|player-dvd|setup-dvd|tools-dvd)\.h$'

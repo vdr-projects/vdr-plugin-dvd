@@ -55,12 +55,12 @@ public:
     int getCmdOffs(void) const { return ((operator[](2)) << 8) | operator[](3); };
     uint64_t getPts(void) const { return pts; };
 
-    void Clear(void);
+    void Reset(void);
     // A packet of Stream that isn't put: the unit it belongs to stays incomplete.
     void Skip(int Stream)
     {
         if (Stream == stream)
-            Clear();
+            Reset();
     }
     int Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream);
 };

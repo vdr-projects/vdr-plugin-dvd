@@ -34,7 +34,7 @@ private:
     cDVDSetup data;
 
 protected:
-    virtual void Store(void);
+    void Store(void) override;
 
 public:
     cMenuSetupDVD(void);
