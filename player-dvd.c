@@ -976,11 +976,13 @@ void cDvdPlayer::Action(void)
         // Fast forward beyond the device's speeds: skip ahead.
         if (playDir == pdForward && playMode == pmFast && skipPlayVideo && cntVidBlocksPlayed > 0 &&
             fastWindFactor > 1) {
-            uint32_t pos, len;
+            uint32_t pos = 0, len = 0;
             int64_t pgcPosTicks = 0, pgcPosTicksIncr = 0;
 
+            // Without a position (libdvdnav has no program chain yet) the
+            // skip went to wherever the unset block number pointed.
             dvdnav_set_PGC_positioning_flag(nav, 1);
-            dvdnav_get_position(nav, &pos, &len);
+            bool posOk = dvdnav_get_position(nav, &pos, &len) == DVDNAV_STATUS_OK;
 
             pgcPosTicks = (int64_t)pos * pgcTicksPerBlock;
 
@@ -989,7 +991,7 @@ void cDvdPlayer::Action(void)
 
             // pgcTicksPerBlock is 0 if the program chain's playback time is
             // shorter than its number of blocks, or 0 itself.
-            if (pgcPosTicks + pgcPosTicksIncr < pgcTotalTicks && pgcTicksPerBlock > 0) {
+            if (posOk && pgcPosTicks + pgcPosTicksIncr < pgcTotalTicks && pgcTicksPerBlock > 0) {
                 DEBUG_CONTROL("dvd %d %4.4u fwd get block: %4.4ldb %10.10ldt %lds\n", playDir == pdBackward,
                               cntVidBlocksPlayed, (long)pos, (long)pgcPosTicks, (long)(pgcPosTicks / 90000L));
 
@@ -1052,11 +1054,11 @@ void cDvdPlayer::Action(void)
             }
             cntVidBlocksPlayed = 0;
         } else if (playMode == pmFast || playMode == pmSlow) {
-            uint32_t pos, len;
+            uint32_t pos = 0, len = 0;
             int64_t pgcPosTicks = 0;
 
             dvdnav_set_PGC_positioning_flag(nav, 1);
-            dvdnav_get_position(nav, &pos, &len);
+            bool posOk = dvdnav_get_position(nav, &pos, &len) == DVDNAV_STATUS_OK;
 
             pgcPosTicks = (int64_t)pos * pgcTicksPerBlock;
 
@@ -1065,7 +1067,7 @@ void cDvdPlayer::Action(void)
                           (int)(pgcPosTicks / 90000L));
 
             // At the last block go back 10 s instead of running past the end.
-            if (playDir == pdForward && pos + 1 == len && pgcPosTicks > 90000L * 10L && pgcTicksPerBlock > 0) {
+            if (posOk && playDir == pdForward && pos + 1 == len && pgcPosTicks > 90000L * 10L && pgcTicksPerBlock > 0) {
                 pgcPosTicks -= 90000L * 10L;
                 if (dvdnav_sector_search(nav, pgcPosTicks / pgcTicksPerBlock, SEEK_SET) != DVDNAV_STATUS_OK)
                     esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
