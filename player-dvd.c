@@ -299,7 +299,6 @@ cDvdPlayer::cDvdPlayer(void) : cThread("dvd-plugin")
     nav = 0;
     iframeAssembler = new cIframeAssembler(KILOBYTE(CIF_MAXSIZE));
     IframeCnt = 0;
-    event_buf = new uint8_t[4096];
     current_pci = 0;
     prev_e_ptm = 0;
     ptm_offs = 0;
@@ -362,7 +361,6 @@ cDvdPlayer::~cDvdPlayer()
 {
     DEBUGDVD("destructor cDvdPlayer::~cDvdPlayer()\n");
     Detach();
-    delete[] event_buf;
     delete iframeAssembler;
     delete ringBuffer;
     if (titleinfo_str)
@@ -682,58 +680,50 @@ char *cDvdPlayer::GetDVDResumeKey() const
 
 void cDvdPlayer::SaveResume()
 {
-    if (resume) {
-        int currentTitle, currentChapter;
-        // A menu is title 0, which can't be resumed.
-        if (dvdnav_current_title_info(nav, &currentTitle, &currentChapter) && (0 != currentTitle)) {
-            int64_t currentSec, totalSec;
-            GetPositionInSec(currentSec, totalSec);
-            char *key = GetDVDResumeKey();
-            if (key) {
-                DEBUGDVD("resume->SetResume(\"%s\", %d, %d, %lld)\n", key, currentTitle, currentChapter,
-                         (long long)currentSec);
-                resume->SetResume(key, currentTitle, currentChapter, currentSec);
-                free(key);
-            } else {
-                DEBUGDVD("resume: ERROR computing resume key for this dvd!\n");
-            }
-        } else {
-            DEBUGDVD("resume: ERROR fetching current title and chapter (maybe in menus?).\n");
-        }
+    int currentTitle, currentChapter;
+    // A menu is title 0, which can't be resumed.
+    if (dvdnav_current_title_info(nav, &currentTitle, &currentChapter) != DVDNAV_STATUS_OK || currentTitle == 0) {
+        DEBUGDVD("resume: ERROR fetching current title and chapter (maybe in menus?).\n");
+        return;
     }
+    char *key = GetDVDResumeKey();
+    if (!key) {
+        DEBUGDVD("resume: ERROR computing resume key for this dvd!\n");
+        return;
+    }
+    int64_t currentSec, totalSec;
+    GetPositionInSec(currentSec, totalSec);
+    DEBUGDVD("resume->SetResume(\"%s\", %d, %d, %lld)\n", key, currentTitle, currentChapter, (long long)currentSec);
+    resume->SetResume(key, currentTitle, currentChapter, currentSec);
+    free(key);
 }
 
 bool cDvdPlayer::LoadResume(int &title, int &chapter, int64_t &second)
 {
-    bool retval = false;
-    if (resume) {
-        char *key = GetDVDResumeKey();
-        if (key) {
-            DEBUGDVD("resume->GetResume(\"%s\", ...): ", key);
-            if (resume->GetResume(key, title, chapter, second)) {
-                DEBUGDVD("%d:%d:%lld\n", title, chapter, (long long)second);
-                // Some seconds back, as VDR resumes a recording.
-                int ResumeRewind = 30;
-                if (second > ResumeRewind) {
-                    second -= ResumeRewind;
-                }
-                retval = true;
-            } else {
-                DEBUGDVD("<none>\n");
-                retval = false;
-            }
-            free(key);
-        } else {
-            DEBUGDVD("resume: ERROR computing resume key for this dvd.\n");
-        }
+    char *key = GetDVDResumeKey();
+    if (!key) {
+        DEBUGDVD("resume: ERROR computing resume key for this dvd.\n");
+        return false;
     }
-    return retval;
+    DEBUGDVD("resume->GetResume(\"%s\", ...): ", key);
+    bool found = resume->GetResume(key, title, chapter, second);
+    free(key);
+    if (!found) {
+        DEBUGDVD("<none>\n");
+        return false;
+    }
+    DEBUGDVD("%d:%d:%lld\n", title, chapter, (long long)second);
+    // Some seconds back, as VDR resumes a recording.
+    const int ResumeRewind = 30;
+    if (second > ResumeRewind)
+        second -= ResumeRewind;
+    return true;
 }
 
 void cDvdPlayer::Action(void)
 {
     playerThreadId = cThread::ThreadId();
-    memset(event_buf, 0, sizeof(uint8_t) * 4096);
+    memset(event_buf, 0, sizeof(event_buf));
 
     unsigned char *write_blk = NULL;
     int blk_size = 0;
@@ -1602,9 +1592,9 @@ static const char *TrackLanguage(uint16_t LanguageCode, char *Language)
         Language[0] = 0;
         return NULL;
     }
-    for (int i = 0; i < DvdLanguageCodes; i++) {
-        if (!strcasecmp(Language, DvdLanguageCode[i][0]))
-            return DvdLanguageCode[i][1];
+    for (int i = 0; i < ISO639codes; i++) {
+        if (!strcasecmp(Language, ISO639code[i]))
+            return DvdLanguageName[i];
     }
     return NULL;
 }
