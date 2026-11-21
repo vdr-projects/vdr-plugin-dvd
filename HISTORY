@@ -1,7 +1,13 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-2026-11-02 Version 1.0.0
+2026-11-21 Version 1.0.0
+    - name the C++ sources .cpp, clang deprecates compiling .c files as C++
+    - check the position before a skip in fast forward
+    - bound the number of the highlighted button
+    - drop broken and incomplete subpicture units
+    - pass the language codes to libdvdnav as characters
+    - clean up what clang-tidy (.clang-tidy) and cppcheck report
     - tell logical and physical subpicture streams apart
     - reset the device at the first audio pack only at the start
     - don't empty the player for a title with a single angle
