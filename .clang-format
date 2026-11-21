@@ -1,4 +1,4 @@
-# Style of the plugin's sources; apply with `clang-format -i *.c *.h`.
+# Style of the plugin's sources; apply with `clang-format -i *.cpp *.h`.
 BasedOnStyle: LLVM
 Language: Cpp
 Standard: c++17

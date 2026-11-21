@@ -1,5 +1,5 @@
 # Checks of the plugin's sources; run with
-#   clang-tidy *.c -- -x c++ -std=c++17 -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"dvd"' \
+#   clang-tidy *.cpp -- -std=c++17 -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"dvd"' \
 #       $(pkg-config --cflags vdr dvdnav)
 # Not checked: the signedness of bitwise operands in the MPEG and DVD
 # structures' byte arithmetic, and signed chars, as libdvdnav returns its
