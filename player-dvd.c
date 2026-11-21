@@ -563,6 +563,7 @@ void cDvdPlayer::Empty(bool emptyDeviceToo)
     DELETENULL(rframe);
     pframe = NULL;
     ringBuffer->Clear();
+    SPUassembler.Clear();
     cntVidBlocksPlayed = 0;
     cntAudBlocksPlayed = 0;
 
@@ -1576,9 +1577,18 @@ void cDvdPlayer::SendIframe(bool doSend)
 
 void cDvdPlayer::playSPU(int spuId)
 {
+    // Where a broken unit ends is unknown: drop what there is. With a size
+    // of 0 the unit took nothing from the FIFO, which stayed stuck, and the
+    // SPU decoder read its header from an empty buffer.
+    if (!SPUassembler.valid()) {
+        DEBUG_SUBP_ID("playSPU: broken SPU, size %d, control at %d: dropped\n", SPUassembler.getSize(),
+                      SPUassembler.getCmdOffs());
+        SPUassembler.Clear();
+        return;
+    }
     int spuSize = SPUassembler.getSize();
     uint8_t *buffer = new uint8_t[size_t(spuSize)];
-    SPUassembler.Get(buffer, SPUassembler.getSize());
+    SPUassembler.Get(buffer, spuSize);
     // Without allowedShow, the SPU decoder shows the forced subpictures only,
     // such as a menu's buttons.
     bool allowedShow = IsDvdNavigationForced() || SubtitlesShown(spuId);
@@ -1898,8 +1908,10 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
             lastFrameType = PRIVATE_STREAM2;
 
             // no sound, no spu in trick mode
-            if (noAudio)
+            if (noAudio) {
+                SPUassembler.Clear();
                 return playedPacket;
+            }
 
             // skip the packet's start code, stream id and length
             data += 6;
@@ -1951,19 +1963,20 @@ int cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAud
                         notifySeenSubpStream(logical);
                 }
 
-                if (OsdInUse()) // another OSD is open
+                // The physical stream selects the packets, the logical one
+                // tells playSPU() with bit 7 whether only forced subtitles show.
+                // Not while another OSD is open.
+                if (OsdInUse() || currentNavSubpPhysical == -1 || subtitleIndex != currentNavSubpPhysical) {
+                    SPUassembler.Skip(subtitleIndex);
                     break;
+                }
 
                 data++;
                 datalen -= 10; // 3 (mandatory header) + 6 (PS header)
 
-                // The physical stream selects the packets, the logical one
-                // tells playSPU() with bit 7 whether only forced subtitles show.
-                if (currentNavSubpPhysical != -1 && subtitleIndex == currentNavSubpPhysical) {
-                    SPUassembler.Put(data, datalen, pktpts);
-                    if (SPUdecoder && SPUassembler.ready())
-                        playSPU(currentNavSubpStream);
-                }
+                SPUassembler.Put(data, datalen, ptsFlag, pktpts, subtitleIndex);
+                if (SPUdecoder && SPUassembler.ready())
+                    playSPU(currentNavSubpStream);
             } else {
                 DEBUGDVD("PRIVATE_STREAM2 unhandled (a)id: %d 0x%X\n", (int)(*data), (int)(*data));
             }

@@ -96,7 +96,7 @@ simpleFIFO::simpleFIFO(int Size)
 {
     size = Size;
     head = tail = 0;
-    buffer = (uint8_t *)malloc(2 * (size_t)size);
+    buffer = (uint8_t *)malloc((size_t)size);
 }
 
 simpleFIFO::~simpleFIFO()
@@ -155,11 +155,27 @@ int simpleFIFO::Get(uint8_t *Data, int Count)
 cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE)
 {
     pts = 0;
+    stream = -1;
 }
 
-int cSPUassembler::Put(const uint8_t *Data, int Count, uint64_t Pts)
+void cSPUassembler::Clear(void)
 {
-    if (Pts > 0)
+    simpleFIFO::Clear();
+    stream = -1;
+}
+
+int cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream)
+{
+    // The packets of a unit that a seek cut off, or of the stream shown
+    // before, don't belong to the next unit: appended to them it came out
+    // garbled, and so did every unit after it.
+    if (Stream != stream) {
+        Clear();
+        stream = Stream;
+    }
+    // The first packet of a unit has its PTS. Not that of the last packet
+    // with a PTS, which can be an audio packet's.
+    if (HasPts)
         pts = Pts;
     return simpleFIFO::Put(Data, Count);
 }

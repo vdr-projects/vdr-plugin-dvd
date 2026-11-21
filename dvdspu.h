@@ -25,10 +25,13 @@ private:
     int size;
 
 public:
-    simpleFIFO(int Size);
+    explicit simpleFIFO(int Size);
+    simpleFIFO(const simpleFIFO &) = delete;
+    simpleFIFO &operator=(const simpleFIFO &) = delete;
     ~simpleFIFO();
     int Put(const uint8_t *Data, int Count);
     int Get(uint8_t *Data, int Count);
+    void Clear(void) { head = tail = 0; }
 
     int Free(void) const { return ((size + tail) - head - 1) % size; };
     int Available(void) const { return ((head + size) - tail) % size; };
@@ -38,15 +41,28 @@ public:
 class cSPUassembler : public simpleFIFO {
 private:
     uint64_t pts;
+    int stream;
 
 public:
     cSPUassembler();
 
-    bool ready(void) { return ((Available() > 2) && (Available() >= getSize())); };
-    int getSize(void) { return ((operator[](0)) << 8) | operator[](1); };
-    uint64_t getPts(void) { return pts; };
+    // A unit starts with its size and the offset of its control sequence,
+    // which ends with at least its delay, the next one's offset and the end
+    // command.
+    bool ready(void) const { return Available() >= 4 && (Available() >= getSize() || !valid()); };
+    bool valid(void) const { return getSize() >= 4 && getCmdOffs() >= 4 && getCmdOffs() + 5 <= getSize(); }
+    int getSize(void) const { return ((operator[](0)) << 8) | operator[](1); };
+    int getCmdOffs(void) const { return ((operator[](2)) << 8) | operator[](3); };
+    uint64_t getPts(void) const { return pts; };
 
-    int Put(const uint8_t *Data, int Count, uint64_t Pts);
+    void Clear(void);
+    // A packet of Stream that isn't put: the unit it belongs to stays incomplete.
+    void Skip(int Stream)
+    {
+        if (Stream == stream)
+            Clear();
+    }
+    int Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream);
 };
 
 #endif // __DVDSPU_H__
