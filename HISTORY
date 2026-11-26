@@ -2,6 +2,19 @@ VDR Plugin 'dvd' Revision History
 ---------------------------------
 
 2026-11-26 Version 1.0.0
+    - check the sources with the clang-tidy checks of vdr-plugin-vaapivideo, every finding is
+      an error (`make lint`)
+    - report an unknown command line option through getopt, don't flush stdio's streams
+    - debug output: don't read past an audio track's language code or the names of the
+      libdvdnav events
+    - scoped enums, file-local names in anonymous namespaces, std::array instead of C arrays
+    - own the memory and the strings with RAII, read the resume file with std::getline() and
+      std::from_chars(), keep the old resume file if writing the new one fails
+    - initialize the members where they are declared
+    - C++ casts, constants and functions instead of macros, the modernize and readability
+      fixes of clang-tidy
+    - format the sources like vdr-plugin-vaapivideo (`make indent`)
+    - include what each file uses
     - name the C++ sources .cpp, clang deprecates compiling .c files as C++ (thanks to dnehring7)
     - check the position before a skip in fast forward (thanks to dnehring7)
     - bound the number of the highlighted button (thanks to dnehring7)
