@@ -9,6 +9,25 @@
  */
 
 #include "dvd.h"
+#include "control-dvd.h"
+#include "dvddev.h"
+#include "setup-dvd.h"
+
+// C++ Standard Library
+#include <cstddef>
+#include <cstdio>
+
+// POSIX
+#include <getopt.h>
+
+// VDR
+#include <vdr/config.h>
+#include <vdr/i18n.h>
+#include <vdr/menuitems.h>
+#include <vdr/osdbase.h>
+#include <vdr/player.h>
+#include <vdr/plugin.h>
+#include <vdr/tools.h>
 
 #if APIVERSNUM < 20606
 #error "VDR 2.6.6+ required (APIVERSNUM >= 20606)"

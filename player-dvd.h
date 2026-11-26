@@ -8,12 +8,23 @@
  *
  */
 
-#ifndef __PLAYER_DVD_H
-#define __PLAYER_DVD_H
+#ifndef VDR_DVD_PLAYER_DVD_H
+#define VDR_DVD_PLAYER_DVD_H
 
-#include <stdarg.h>
+#include "common-dvd.h"
+#include "dvdspu.h"
+
+// C++ Standard Library
+#include <atomic>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+
+// libdvdnav
+#include <dvdnav/dvd_types.h>
 #include <dvdnav/dvdnav.h>
 #include <dvdnav/dvdnav_events.h>
+#include <dvdread/nav_types.h>
 
 // dvdnav.h includes version.h since libdvdnav 6.1.0. Before, there was no
 // DVDNAV_VERSION_CODE, and 5.x had no DVDNAV_VERSION either (0 in #if).
@@ -21,18 +32,15 @@
 #define DVDNAV_VERSION_CODE(major, minor, micro) ((major) * 10000 + (minor) * 100 + (micro))
 #endif
 
-#include <atomic>
+// VDR
 #include <vdr/device.h>
 #include <vdr/player.h>
 #include <vdr/ringbuffer.h>
+#include <vdr/spu.h>
 #include <vdr/thread.h>
-#include <vdr/dvbspu.h>
-
-#include "common-dvd.h"
+#include <vdr/tools.h>
 
 class cDvdPlayer;
-
-#include "dvdspu.h"
 
 class IntegerListObject : public cListObject {
 private:
@@ -393,4 +401,4 @@ inline void cDvdPlayer::selectRightButton(void)
     }
 }
 
-#endif // __PLAYER_DVD_H
+#endif // VDR_DVD_PLAYER_DVD_H

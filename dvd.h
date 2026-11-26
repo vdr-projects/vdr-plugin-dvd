@@ -8,14 +8,13 @@
  *
  */
 
+#ifndef VDR_DVD_DVD_H
+#define VDR_DVD_DVD_H
+
+// VDR
+#include <vdr/menuitems.h>
+#include <vdr/osdbase.h>
 #include <vdr/plugin.h>
-#include <vdr/i18n.h>
-#include <getopt.h>
-#include "dvddev.h"
-#include "tools-dvd.h"
-#include "player-dvd.h"
-#include "control-dvd.h"
-#include "setup-dvd.h"
 
 // --- cPluginDvd ------------------------------------------------------------
 
@@ -30,3 +29,5 @@ public:
     cMenuSetupPage *SetupMenu(void) override;
     bool SetupParse(const char *Name, const char *Value) override;
 };
+
+#endif // VDR_DVD_DVD_H

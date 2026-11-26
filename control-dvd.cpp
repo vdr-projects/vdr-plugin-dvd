@@ -8,15 +8,31 @@
  *
  */
 
-#include <assert.h>
-#include <utility>
-#include <vdr/i18n.h>
-#include <vdr/thread.h>
-#include <vdr/skins.h>
-
-#include "tools-dvd.h"
-#include "player-dvd.h"
 #include "control-dvd.h"
+#include "common-dvd.h"
+#include "player-dvd.h"
+
+// C++ Standard Library
+#include <cassert>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <utility>
+
+// VDR
+#include <vdr/config.h>
+#include <vdr/i18n.h>
+#include <vdr/keys.h>
+#include <vdr/osd.h>
+#include <vdr/osdbase.h>
+#include <vdr/player.h>
+#include <vdr/recording.h>
+#include <vdr/skins.h>
+#include <vdr/status.h>
+#include <vdr/thread.h>
+#include <vdr/tools.h>
 
 #define MODETIMEOUT 3 // seconds
 

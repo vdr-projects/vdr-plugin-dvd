@@ -8,8 +8,11 @@
  *
  */
 
-#ifndef __COMMON_DVD_H
-#define __COMMON_DVD_H
+#ifndef VDR_DVD_COMMON_DVD_H
+#define VDR_DVD_COMMON_DVD_H
+
+// C++ Standard Library
+#include <cstdio>
 
 // Debug output on stdout, one switch per area.
 //#define CTRLDEBUG
@@ -103,4 +106,4 @@
 #define DEBUG_OSDCTRL(...)
 #endif
 
-#endif // __COMMON_DVD_H
+#endif // VDR_DVD_COMMON_DVD_H

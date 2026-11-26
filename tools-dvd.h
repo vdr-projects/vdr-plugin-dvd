@@ -8,14 +8,11 @@
  *
  */
 
-#ifndef __TOOLS_DVD_H
-#define __TOOLS_DVD_H
+#ifndef VDR_DVD_TOOLS_DVD_H
+#define VDR_DVD_TOOLS_DVD_H
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
-
-#include "mpegtypes.h"
+// C++ Standard Library
+#include <cstdint>
 
 class cPStream {
 public:
@@ -47,4 +44,4 @@ public:
     }
 };
 
-#endif // __TOOLS_DVD_H
+#endif // VDR_DVD_TOOLS_DVD_H

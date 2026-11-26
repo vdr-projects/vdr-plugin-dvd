@@ -8,9 +8,10 @@
  *
  */
 
-#ifndef __SETUP_DVD_H
-#define __SETUP_DVD_H
+#ifndef VDR_DVD_SETUP_DVD_H
+#define VDR_DVD_SETUP_DVD_H
 
+// VDR
 #include <vdr/menuitems.h>
 
 class cDVDSetup {
@@ -46,4 +47,4 @@ extern const char *ISO639code[];
 extern const char *DvdLanguageName[]; // of each code
 extern const int ISO639codes;
 
-#endif // __SETUP_DVD_H
+#endif // VDR_DVD_SETUP_DVD_H

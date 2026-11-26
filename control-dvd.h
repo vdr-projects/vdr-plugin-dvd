@@ -8,13 +8,21 @@
  *
  */
 
-#ifndef __CONTROL_DVD_H
-#define __CONTROL_DVD_H
+#ifndef VDR_DVD_CONTROL_DVD_H
+#define VDR_DVD_CONTROL_DVD_H
 
+// C++ Standard Library
 #include <atomic>
-#include <vdr/status.h>
+#include <ctime>
+
+// VDR
+#include <vdr/keys.h>
+#include <vdr/osdbase.h>
 #include <vdr/player.h>
-#include <vdr/thread.h>
+#include <vdr/skins.h>
+#include <vdr/tools.h>
+
+class cDvdPlayer;
 
 enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
 
@@ -98,4 +106,4 @@ public:
     // Positions to the given second of the current program chain.
 };
 
-#endif // __CONTROL_DVD_H
+#endif // VDR_DVD_CONTROL_DVD_H

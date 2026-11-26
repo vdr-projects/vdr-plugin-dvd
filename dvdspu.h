@@ -10,10 +10,11 @@
  *
  */
 
-#ifndef __DVDSPU_H__
-#define __DVDSPU_H__
+#ifndef VDR_DVD_DVDSPU_H
+#define VDR_DVD_DVDSPU_H
 
-#include <inttypes.h>
+// C++ Standard Library
+#include <cstdint>
 
 #define SPU_BUFFER_SIZE (128 * 1024)
 
@@ -65,4 +66,4 @@ public:
     int Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream);
 };
 
-#endif // __DVDSPU_H__
+#endif // VDR_DVD_DVDSPU_H

@@ -8,20 +8,47 @@
  *
  */
 
-#include <ctype.h>
-#include <sys/time.h>
-#include <vdr/i18n.h>
-#include <vdr/thread.h>
-#include <vdr/device.h>
-#include <vdr/plugin.h>
-#include <vdr/videodir.h>
-
+#include "player-dvd.h"
 #include "common-dvd.h"
+#include "control-dvd.h"
 #include "dvddev.h"
+#include "mpegtypes.h"
 #include "setup-dvd.h"
 #include "tools-dvd.h"
-#include "player-dvd.h"
-#include "control-dvd.h"
+
+// C++ Standard Library
+#include <cctype>
+#include <cerrno>
+#include <cinttypes>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+// POSIX
+#include <strings.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+// libdvdnav
+#include <dvdnav/dvd_types.h>
+#include <dvdnav/dvdnav.h>
+#include <dvdnav/dvdnav_events.h>
+#include <dvdread/dvd_reader.h>
+#include <dvdread/ifo_types.h>
+#include <dvdread/nav_types.h>
+
+// VDR
+#include <vdr/config.h>
+#include <vdr/device.h>
+#include <vdr/i18n.h>
+#include <vdr/ringbuffer.h>
+#include <vdr/skins.h>
+#include <vdr/thread.h>
+#include <vdr/tools.h>
+#include <vdr/videodir.h>
 
 // 100 ms each: a device that takes no data for 10 seconds in normal play.
 #define POLLTIMEOUTS_BEFORE_DEVICECLEAR 100

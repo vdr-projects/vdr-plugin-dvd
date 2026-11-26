@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef __VDR_DVDDEV_H
-#define __VDR_DVDDEV_H
+#ifndef VDR_DVD_DVDDEV_H
+#define VDR_DVD_DVDDEV_H
 
 class cDVD {
 private:
@@ -21,4 +21,4 @@ public:
     static bool DriveExists(void);
 };
 
-#endif // __VDR_DVDDEV_H
+#endif // VDR_DVD_DVDDEV_H

@@ -1,5 +1,5 @@
-#ifndef _MPEGTYPES_H
-#define _MPEGTYPES_H
+#ifndef VDR_DVD_MPEGTYPES_H
+#define VDR_DVD_MPEGTYPES_H
 
 #define SC_PICTURE 0x00
 
@@ -24,4 +24,4 @@
 #define aLPCM 0xA0
 #define aMPEG 0xC0
 
-#endif // _MPEGTYPES_H
+#endif // VDR_DVD_MPEGTYPES_H

@@ -7,11 +7,17 @@
  * GNU GENERAL PUBLIC LICENSE. Read the file COPYING for details.
  */
 
-#include <errno.h>
-#include <stdlib.h>
-#include <vdr/menuitems.h>
-
 #include "setup-dvd.h"
+
+// C++ Standard Library
+#include <cerrno>
+#include <cstdlib>
+
+// POSIX
+#include <strings.h>
+
+// VDR
+#include <vdr/i18n.h>
 
 cDVDSetup DVDSetup;
 

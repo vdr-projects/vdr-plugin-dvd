@@ -84,11 +84,12 @@
  * sven goethel sgoethel@jausoft.com
  */
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "dvdspu.h"
+
+// C++ Standard Library
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 
 // --- simpleFIFO ------------------------------------------------------------
 
