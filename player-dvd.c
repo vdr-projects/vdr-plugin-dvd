@@ -2538,8 +2538,10 @@ void cDvdPlayer::SelectSubpStream(void)
     // tell libdvdnav the language for the titles to come.
     currentNavSubpPhysical = PhysicalSubpStream(currentNavSubpStream);
     uint16_t subtitleLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
-    if (subtitleLanguageCode != 0xFFFF && nav)
-        dvdnav_spu_language_select(nav, (char *)&subtitleLanguageCode);
+    if (subtitleLanguageCode != 0xFFFF && nav) {
+        char code[3] = {char(subtitleLanguageCode & 0xFF), char(subtitleLanguageCode >> 8), 0};
+        dvdnav_spu_language_select(nav, code);
+    }
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
     // And the disc's subpicture stream register, as a player's subtitle button
     // sets it and as for the audio track: with the language alone the disc
@@ -2737,7 +2739,8 @@ void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer)
         uint16_t audioTrackLangCode = GetAudioTrackLanguageCode(currentNavAudioTrack);
 
         if (audioTrackLangCode != 0xFFFF) {
-            dvdnav_audio_language_select(nav, (char *)&audioTrackLangCode);
+            char code[3] = {char(audioTrackLangCode & 0xFF), char(audioTrackLangCode >> 8), 0};
+            dvdnav_audio_language_select(nav, code);
         }
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
         // And the disc's audio stream register, as a player's Audio button
