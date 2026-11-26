@@ -37,10 +37,14 @@ bool cDvdPlayerControl::dvd_active = false;
 
 // --- cDvdPlayerControl -----------------------------------------------------
 
+namespace {
+
 // Its address marks the OSD as released by the control: OsdTaken() counts it
 // as taken, by an OSD VDR may have opened, until VDR has none open.
-static char osdReleasedTag;
-static void *const OsdReleased = &osdReleasedTag;
+const char osdReleasedTag = 0;
+const void *const OsdReleased = &osdReleasedTag;
+
+} // namespace
 
 cDvdPlayerControl::cDvdPlayerControl() : cDvdPlayerControl(new cDvdPlayer()) {}
 
@@ -134,7 +138,7 @@ void cDvdPlayerControl::HideOwnOsd() {
     }
 }
 
-auto cDvdPlayerControl::TakeOsd(void *owner) -> bool {
+auto cDvdPlayerControl::TakeOsd(const void *owner) -> bool {
     if (owner == OsdReleased || !OsdTaken(owner) || osdTaker == OsdReleased) {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
         osdTaker = owner;
@@ -157,7 +161,7 @@ auto cDvdPlayerControl::OsdTaken(const void *me) -> bool {
 auto cDvdPlayerControl::OsdVisible(const void *me) -> bool { return visible || OsdTaken(me); }
 
 void cDvdPlayerControl::ShowMode() {
-    if (Setup.ShowReplayMode && inputActive == NoneInput) {
+    if (Setup.ShowReplayMode && inputActive == InputProcessType::None) {
         bool Playing = false;
         bool Forwards = false;
         int Speed = 0;
@@ -259,13 +263,13 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val) {
         case kUp:
         case kDown:
             player->GotoTitle(val);
-            inputActive = NoneInput;
+            inputActive = InputProcessType::None;
             break;
         default:
-            inputActive = NoneInput;
+            inputActive = InputProcessType::None;
             break;
     }
-    if (inputActive == NoneInput) {
+    if (inputActive == InputProcessType::None) {
         if (inputHide) {
             Hide();
         } else {
@@ -287,7 +291,7 @@ void cDvdPlayerControl::TrackSearch() {
     }
     timeoutShow = 0;
     InputIntDisplay(inputIntMsg, inputIntVal);
-    inputActive = TrackSearchInput;
+    inputActive = InputProcessType::TrackSearch;
 }
 
 void cDvdPlayerControl::TimeSearchDisplay() {
@@ -333,7 +337,7 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key) {
                 Seconds = min(Total - Current - STAY_SECONDS_OFF_END, Seconds);
             }
             SkipSeconds(Seconds * dir);
-            inputActive = NoneInput;
+            inputActive = InputProcessType::None;
             break;
         }
         case kPlay:
@@ -343,13 +347,13 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key) {
         case kOk:
             Seconds = min(Total - STAY_SECONDS_OFF_END, Seconds);
             Goto(Seconds);
-            inputActive = NoneInput;
+            inputActive = InputProcessType::None;
             break;
         default:
-            inputActive = NoneInput;
+            inputActive = InputProcessType::None;
             break;
     }
-    if (inputActive == NoneInput) {
+    if (inputActive == InputProcessType::None) {
         if (inputHide) {
             Hide();
         } else {
@@ -370,7 +374,7 @@ void cDvdPlayerControl::TimeSearch() {
     }
     timeoutShow = 0;
     TimeSearchDisplay();
-    inputActive = TimeSearchInput;
+    inputActive = InputProcessType::TimeSearch;
 }
 
 auto cDvdPlayerControl::DvdNavigation(eKeys Key) -> bool {
@@ -471,12 +475,12 @@ auto cDvdPlayerControl::ProcessKey(eKeys Key) -> eOSState {
 
     const bool DisplayedFrames = displayFrames;
     displayFrames = false;
-    if (inputActive != NoneInput && Key != kNone) {
+    if (inputActive != InputProcessType::None && Key != kNone) {
         switch (inputActive) {
-            case TimeSearchInput:
+            case InputProcessType::TimeSearch:
                 TimeSearchProcess(Key);
                 break;
-            case TrackSearchInput:
+            case InputProcessType::TrackSearch:
                 InputIntProcess(Key, inputIntMsg, inputIntVal);
                 break;
             default:

@@ -60,9 +60,12 @@ class cDVDPlayerResume;
 
 class cDvdPlayer : public cPlayer, cThread {
   private:
-    enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
-    enum ePlayDirs { pdForward, pdBackward };
-    enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2 };
+    enum class ePlayMode : uint8_t { Play, Pause, Slow, Fast, Still };
+    enum class ePlayDir : uint8_t { Forward, Backward };
+    // the bits of what playPacket() played
+    static constexpr int pktNone = 0;
+    static constexpr int pktVideo = 1;
+    static constexpr int pktAudio = 2;
 
     cDvdPlayerControl *controller{nullptr};
 
@@ -158,8 +161,8 @@ class cDvdPlayer : public cPlayer, cThread {
     cStringList navLogged; // the notes NavLog() logged
     auto NavLogFirst(const char *Msg) -> bool;
 #endif
-    std::atomic<ePlayModes> playMode{pmPlay}; // the thread's loop checks it without the lock
-    ePlayDirs playDir{pdForward};
+    std::atomic<ePlayMode> playMode{ePlayMode::Play}; // the thread's loop checks it without the lock
+    ePlayDir playDir{ePlayDir::Forward};
     int trickSpeed;
 
     static constexpr const char *dummy_title = "DVD Title";

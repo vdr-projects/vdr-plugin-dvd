@@ -20,18 +20,23 @@
 #include <vdr/i18n.h>
 #include <vdr/menuitems.h>
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) -- VDR plugin model, like VDR's Setup
 cDVDSetup DVDSetup;
 
 // --- cDVDSetup -----------------------------------------------------------
 
+namespace {
+
 // Value if it is one the setup menu offers, else Default: the languages
 // index ISO639code, the region code is a shift count.
-static auto SetupValue(const char *Value, int Min, int Max, int Default) -> int {
+auto SetupValue(const char *Value, int Min, int Max, int Default) -> int {
     char *end = nullptr;
     errno = 0;
     const long v = strtol(Value, &end, 10);
     return end != Value && !*end && !errno && Min <= v && v <= Max ? static_cast<int>(v) : Default;
 }
+
+} // namespace
 
 auto cDVDSetup::SetupParse(const char *Name, const char *Value) -> bool {
     if (!strcasecmp(Name, "MenuLanguage")) {

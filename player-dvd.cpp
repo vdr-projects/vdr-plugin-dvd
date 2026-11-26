@@ -116,6 +116,8 @@ void cIframeAssembler::Put(const unsigned char *Data, int Length) {
 
 // --- cResumeEntry ------------------------------------------------------------
 
+namespace {
+
 // The resume file and its entries come from the mplayer plugin.
 class cResumeEntry : public cListObject {
   public:
@@ -126,7 +128,7 @@ class cResumeEntry : public cListObject {
 };
 
 // A line of the resume file, "title:chapter:second:key"; false if it is none.
-static auto ParseResume(std::string_view Line, cResumeEntry &Entry) -> bool {
+auto ParseResume(std::string_view Line, cResumeEntry &Entry) -> bool {
     const char *p = Line.data();
     const char *end = p + Line.size();
     const auto field = [&p, end](auto &Value) {
@@ -143,6 +145,8 @@ static auto ParseResume(std::string_view Line, cResumeEntry &Entry) -> bool {
     Entry.key.assign(p, end);
     return true;
 }
+
+} // namespace
 
 // --- cDVDPlayerResume ----------------------------------------------------------
 
@@ -266,10 +270,31 @@ auto cDVDPlayerResume::FindResume(const char *key) -> cResumeEntry * {
 
 // The two letters of a language code of libdvdnav's, the first in the low
 // byte as the player keeps it, and a terminating 0.
+namespace {
+
 using LanguageLetters = std::array<char, 3>;
-static auto Letters(uint16_t LanguageCode) -> LanguageLetters {
+auto Letters(uint16_t LanguageCode) -> LanguageLetters {
     return {static_cast<char>(LanguageCode & 0xFF), static_cast<char>(LanguageCode >> 8), 0};
 }
+
+// The ISO 639-1 code a DVD gives for a track's language in Language, empty
+// if there is none, and the language's name, or NULL.
+auto TrackLanguage(uint16_t LanguageCode, LanguageLetters &Language) -> const char * {
+    Language = Letters(LanguageCode);
+    if (LanguageCode == 0xFFFF || !isalpha(static_cast<unsigned char>(Language.at(0))) ||
+        !isalpha(static_cast<unsigned char>(Language.at(1)))) {
+        Language.at(0) = 0;
+        return nullptr;
+    }
+    for (size_t i = 0; i < ISO639code.size(); i++) {
+        if (!strcasecmp(Language.data(), ISO639code.at(i))) {
+            return DvdLanguageName.at(i);
+        }
+    }
+    return nullptr;
+}
+
+} // namespace
 
 // The ring buffer of the packets for the device.
 constexpr int VIDEOBUFSIZE = MEGABYTE(1);
@@ -321,47 +346,48 @@ void cDvdPlayer::TrickSpeed(int Increment) {
         fastWindFactor = 1;
         trickSpeed = nts;
 
-        if (playMode == pmFast) {
+        if (playMode == ePlayMode::Fast) {
             Play();
         } else {
             Pause();
         }
     } else if (speed != 0) {
         fastWindFactor = 1;
-        if (playDir == pdBackward && DVDSetup.ReadAHead > 0) {
+        if (playDir == ePlayDir::Backward && DVDSetup.ReadAHead > 0) {
             dvdnav_set_readahead_flag(nav, 0);
         }
         trickSpeed = nts;
-        const int Mult = (playMode == pmSlow) ? 1 : SPEED_MULT;
+        const int Mult = (playMode == ePlayMode::Slow) ? 1 : SPEED_MULT;
         int sp = (speed > 0) ? Mult / speed : -speed * Mult;
 
         if (sp > MAX_VIDEO_SLOWMOTION) {
             sp = MAX_VIDEO_SLOWMOTION;
         }
 
-        if (playDir == pdBackward) {
-            fastWindFactor = (playMode == pmSlow) ? trickSpeed - NORMAL_SPEED : trickSpeed - NORMAL_SPEED + 1;
-            if (playMode == pmSlow) {
+        if (playDir == ePlayDir::Backward) {
+            fastWindFactor = (playMode == ePlayMode::Slow) ? trickSpeed - NORMAL_SPEED : trickSpeed - NORMAL_SPEED + 1;
+            if (playMode == ePlayMode::Slow) {
                 sp = 2;
             }
         }
-        DeviceTrickSpeed(sp, playDir == pdForward);
+        DeviceTrickSpeed(sp, playDir == ePlayDir::Forward);
     } else if (nts > 0 && nts - NORMAL_SPEED <= MAX_MAX_SPEEDS) {
         fastWindFactor = 1;
         trickSpeed = nts;
-        if (playDir == pdBackward) {
-            if (playMode == pmSlow) {
+        if (playDir == ePlayDir::Backward) {
+            if (playMode == ePlayMode::Slow) {
                 fastWindFactor = trickSpeed - NORMAL_SPEED;
             } else {
                 fastWindFactor = (trickSpeed - NORMAL_SPEED - MAX_SPEEDS + 1) * 2;
             }
-        } else if (playDir == pdForward && playMode == pmFast) {
+        } else if (playDir == ePlayDir::Forward && playMode == ePlayMode::Fast) {
             fastWindFactor = (trickSpeed - NORMAL_SPEED - MAX_SPEEDS + 1) * 2;
         }
     }
 
     DEBUG_CONTROL("dvd TRICKSPEED: %d (%d), fastWindFactor=%d fwd=%d, slow=%d, fast=%d\n", trickSpeed, Increment,
-                  fastWindFactor, playDir == pdForward, playMode == pmSlow, playMode == pmFast);
+                  fastWindFactor, playDir == ePlayDir::Forward, playMode == ePlayMode::Slow,
+                  playMode == ePlayMode::Fast);
 }
 
 void cDvdPlayer::DeviceReset() {
@@ -412,7 +438,7 @@ auto cDvdPlayer::WaitDeviceDrained() -> bool {
     while (!DeviceDrain()) {
         const uint64_t now = DeviceGetSTC();
         // A frozen device plays nothing out until it runs again.
-        if (now != stc || playMode != pmPlay) {
+        if (now != stc || playMode != ePlayMode::Play) {
             stc = now;
             stcMoved.Set();
         } else if (stcMoved.Elapsed() > DRAINSTALLMS) {
@@ -727,7 +753,7 @@ void cDvdPlayer::Action() {
         }
         sleept = 0;
         SwitchRequestedAudioTrack(); // also while paused
-        if (playMode == pmPause || playMode == pmStill) {
+        if (playMode == ePlayMode::Pause || playMode == ePlayMode::Still) {
             cCondWait::SleepMs(10);
             continue;
         }
@@ -737,7 +763,7 @@ void cDvdPlayer::Action() {
             // Only in normal play: in slow motion a device takes data at a
             // fraction of the normal rate, and after a jump or a trick mode
             // it may not take any while it plays out what it holds.
-            if (playMode == pmPlay && ++PollTimeouts == POLLTIMEOUTS_BEFORE_DEVICECLEAR) {
+            if (playMode == ePlayMode::Play && ++PollTimeouts == POLLTIMEOUTS_BEFORE_DEVICECLEAR) {
                 dsyslog("dvd-plugin: clearing device because of consecutive poll timeouts %d",
                         POLLTIMEOUTS_BEFORE_DEVICECLEAR);
                 DEBUG_CONTROL("clearing device because of consecutive poll timeouts %d\n",
@@ -768,7 +794,7 @@ void cDvdPlayer::Action() {
             }
         }
 
-        trickMode = playMode == pmFast || (playMode == pmSlow && playDir == pdBackward);
+        trickMode = playMode == ePlayMode::Fast || (playMode == ePlayMode::Slow && playDir == ePlayDir::Backward);
 
         if (pframe) {
             int res = blk_size;
@@ -888,7 +914,7 @@ void cDvdPlayer::Action() {
         }
 
         // Fast forward beyond the device's speeds: skip ahead.
-        if (playDir == pdForward && playMode == pmFast && skipPlayVideo && cntVidBlocksPlayed > 0 &&
+        if (playDir == ePlayDir::Forward && playMode == ePlayMode::Fast && skipPlayVideo && cntVidBlocksPlayed > 0 &&
             fastWindFactor > 1) {
             uint32_t pos = 0;
             uint32_t len = 0;
@@ -908,7 +934,7 @@ void cDvdPlayer::Action() {
             // pgcTicksPerBlock is 0 if the program chain's playback time is
             // shorter than its number of blocks, or 0 itself.
             if (posOk && pgcPosTicks + pgcPosTicksIncr < pgcTotalTicks && pgcTicksPerBlock > 0) {
-                DEBUG_CONTROL("dvd %d %4.4u fwd get block: %4.4ldb %10.10ldt %lds\n", playDir == pdBackward,
+                DEBUG_CONTROL("dvd %d %4.4u fwd get block: %4.4ldb %10.10ldt %lds\n", playDir == ePlayDir::Backward,
                               cntVidBlocksPlayed, static_cast<long>(pos), static_cast<long>(pgcPosTicks),
                               (pgcPosTicks / 90000L));
 
@@ -931,7 +957,7 @@ void cDvdPlayer::Action() {
         }
 
         // Backward, fast or slow: jump back.
-        else if (playDir == pdBackward && skipPlayVideo && cntVidBlocksPlayed > 0 && fastWindFactor != 1) {
+        else if (playDir == ePlayDir::Backward && skipPlayVideo && cntVidBlocksPlayed > 0 && fastWindFactor != 1) {
             uint32_t pos = 0;
             uint32_t posdiff = 0;
             uint32_t len = 0;
@@ -974,11 +1000,11 @@ void cDvdPlayer::Action() {
                     esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
                 }
             } else {
-                DEBUG_CONTROL("dvd %d %4.4u bwd get block: %4.4ldb d%4.4ldb, slo=%d\n", playDir == pdBackward,
+                DEBUG_CONTROL("dvd %d %4.4u bwd get block: %4.4ldb d%4.4ldb, slo=%d\n", playDir == ePlayDir::Backward,
                               cntVidBlocksPlayed, static_cast<long>(pos), static_cast<long>(posdiff), slomoloop);
             }
             cntVidBlocksPlayed = 0;
-        } else if (playMode == pmFast || playMode == pmSlow) {
+        } else if (playMode == ePlayMode::Fast || playMode == ePlayMode::Slow) {
             uint32_t pos = 0;
             uint32_t len = 0;
             int64_t pgcPosTicks = 0;
@@ -988,12 +1014,13 @@ void cDvdPlayer::Action() {
 
             pgcPosTicks = static_cast<int64_t>(pos) * pgcTicksPerBlock;
 
-            DEBUG_CONTROL("dvd %d %4.4u any get block: %4.4ldb %10.10ldt %lds, sec=%d\n", playDir == pdBackward,
+            DEBUG_CONTROL("dvd %d %4.4u any get block: %4.4ldb %10.10ldt %lds, sec=%d\n", playDir == ePlayDir::Backward,
                           cntVidBlocksPlayed, static_cast<long>(pos), static_cast<long>(pgcPosTicks),
                           (pgcPosTicks / 90000L), static_cast<int>(pgcPosTicks / 90000L));
 
             // At the last block go back 10 s instead of running past the end.
-            if (posOk && playDir == pdForward && pos + 1 == len && pgcPosTicks > 90000L * 10L && pgcTicksPerBlock > 0) {
+            if (posOk && playDir == ePlayDir::Forward && pos + 1 == len && pgcPosTicks > 90000L * 10L &&
+                pgcTicksPerBlock > 0) {
                 pgcPosTicks -= 90000L * 10L;
                 if (dvdnav_sector_search(nav, pgcPosTicks / pgcTicksPerBlock, SEEK_SET) != DVDNAV_STATUS_OK) {
                     esyslog("ERROR: dvd-plugin dvd error dvdnav_sector_search: %s", dvdnav_err_to_string(nav));
@@ -1035,7 +1062,7 @@ void cDvdPlayer::Action() {
         if (event == DVDNAV_BLOCK_OK || event == DVDNAV_NAV_PACKET) {
             ReadErrors = 0;
         }
-        noAudio = playMode != pmPlay;
+        noAudio = playMode != ePlayMode::Play;
 
         switch (event) {
             case DVDNAV_BLOCK_OK:
@@ -1171,7 +1198,7 @@ void cDvdPlayer::Action() {
                 // Let the device play out what it holds of the title set that ends,
                 // or the clip in front of the next one - such as a menu's way into
                 // the film - lost its end. Not after a jump: that emptied the player.
-                if (playMode == pmPlay && (cntVidBlocksPlayed > 0 || cntAudBlocksPlayed > 0)) {
+                if (playMode == ePlayMode::Play && (cntVidBlocksPlayed > 0 || cntAudBlocksPlayed > 0)) {
                     WaitDeviceDrained();
                 }
                 if (cntVidBlocksPlayed > 0) {
@@ -1551,23 +1578,6 @@ void cDvdPlayer::playSPU(int spuId) {
     if (IsInMenuDomain()) {
         seenVPTS(pktpts); // in a title the video's PTS follow
     }
-}
-
-// The ISO 639-1 code a DVD gives for a track's language in Language, empty
-// if there is none, and the language's name, or NULL.
-static auto TrackLanguage(uint16_t LanguageCode, LanguageLetters &Language) -> const char * {
-    Language = Letters(LanguageCode);
-    if (LanguageCode == 0xFFFF || !isalpha(static_cast<unsigned char>(Language.at(0))) ||
-        !isalpha(static_cast<unsigned char>(Language.at(1)))) {
-        Language.at(0) = 0;
-        return nullptr;
-    }
-    for (size_t i = 0; i < ISO639code.size(); i++) {
-        if (!strcasecmp(Language.data(), ISO639code.at(i))) {
-            return DvdLanguageName.at(i);
-        }
-    }
-    return nullptr;
 }
 
 void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id) {
@@ -1995,15 +2005,15 @@ void cDvdPlayer::Pause() {
     if (!DVDActiveAndRunning()) {
         return;
     }
-    if (playMode == pmPause || playMode == pmStill) {
+    if (playMode == ePlayMode::Pause || playMode == ePlayMode::Still) {
         Play();
     } else {
-        if (playMode == pmFast || (playMode == pmSlow && playDir == pdBackward)) {
+        if (playMode == ePlayMode::Fast || (playMode == ePlayMode::Slow && playDir == ePlayDir::Backward)) {
             DEBUG_NAV("%s:%d: empty\n", __FILE__, __LINE__);
             Empty();
         }
         DeviceFreeze();
-        playMode = pmPause;
+        playMode = ePlayMode::Pause;
     }
 }
 
@@ -2027,8 +2037,9 @@ void cDvdPlayer::Play() {
     if (!DVDActiveAndRunning()) {
         return;
     }
-    if (playMode != pmPlay) {
-        if (playMode == pmStill || playMode == pmFast || (playMode == pmSlow && playDir == pdBackward)) {
+    if (playMode != ePlayMode::Play) {
+        if (playMode == ePlayMode::Still || playMode == ePlayMode::Fast ||
+            (playMode == ePlayMode::Slow && playDir == ePlayDir::Backward)) {
             if (DVDSetup.ReadAHead > 0) {
                 dvdnav_set_readahead_flag(nav, DVDSetup.ReadAHead);
             }
@@ -2038,8 +2049,8 @@ void cDvdPlayer::Play() {
             ReplayFromPicture(); // an audio track chosen while paused
         }
         DevicePlay();
-        playMode = pmPlay;
-        playDir = pdForward;
+        playMode = ePlayMode::Play;
+        playDir = ePlayDir::Forward;
     }
 }
 
@@ -2049,40 +2060,40 @@ void cDvdPlayer::Forward() {
         return;
     }
     switch (playMode.load()) {
-        case pmFast:
+        case ePlayMode::Fast:
             if (Setup.MultiSpeedMode) {
-                TrickSpeed(playDir == pdForward ? 1 : -1);
+                TrickSpeed(playDir == ePlayDir::Forward ? 1 : -1);
                 break;
             }
-            if (playDir == pdForward) {
+            if (playDir == ePlayDir::Forward) {
                 Play();
                 break;
             }
             // fall through
-        case pmPlay:
+        case ePlayMode::Play:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
             DeviceMute();
-            playMode = pmFast;
-            playDir = pdForward;
+            playMode = ePlayMode::Fast;
+            playDir = ePlayDir::Forward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? 1 : MAX_SPEEDS);
             break;
-        case pmSlow:
+        case ePlayMode::Slow:
             if (Setup.MultiSpeedMode) {
-                TrickSpeed(playDir == pdForward ? -1 : 1);
+                TrickSpeed(playDir == ePlayDir::Forward ? -1 : 1);
                 break;
             }
-            if (playDir == pdForward) {
+            if (playDir == ePlayDir::Forward) {
                 Pause();
                 break;
             }
             // fall through
-        case pmStill:
-        case pmPause:
+        case ePlayMode::Still:
+        case ePlayMode::Pause:
             DeviceMute();
-            playMode = pmSlow;
-            playDir = pdForward;
+            playMode = ePlayMode::Slow;
+            playDir = ePlayDir::Forward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? -1 : -MAX_SPEEDS);
             break;
@@ -2095,42 +2106,42 @@ void cDvdPlayer::Backward() {
         return;
     }
     switch (playMode.load()) {
-        case pmFast:
+        case ePlayMode::Fast:
             if (Setup.MultiSpeedMode) {
-                TrickSpeed(playDir == pdBackward ? 1 : -1);
+                TrickSpeed(playDir == ePlayDir::Backward ? 1 : -1);
                 break;
             }
-            if (playDir == pdBackward) {
+            if (playDir == ePlayDir::Backward) {
                 Play();
                 break;
             }
             // fall through
-        case pmPlay:
+        case ePlayMode::Play:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
             DeviceMute();
-            playMode = pmFast;
-            playDir = pdBackward;
+            playMode = ePlayMode::Fast;
+            playDir = ePlayDir::Backward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? 1 : MAX_SPEEDS);
             break;
-        case pmSlow:
+        case ePlayMode::Slow:
             if (Setup.MultiSpeedMode) {
-                TrickSpeed(playDir == pdBackward ? -1 : 1);
+                TrickSpeed(playDir == ePlayDir::Backward ? -1 : 1);
                 break;
             }
-            if (playDir == pdBackward) {
+            if (playDir == ePlayDir::Backward) {
                 Pause();
                 break;
             }
             // fall through
-        case pmStill:
-        case pmPause:
+        case ePlayMode::Still:
+        case ePlayMode::Pause:
             DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
             Empty();
             DeviceMute();
-            playMode = pmSlow;
-            playDir = pdBackward;
+            playMode = ePlayMode::Slow;
+            playDir = ePlayDir::Backward;
             trickSpeed = NORMAL_SPEED;
             TrickSpeed(Setup.MultiSpeedMode ? -1 : -MAX_SPEEDS);
             break;
@@ -2732,9 +2743,9 @@ void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer) {
         // The viewer's choice, not VDR passing on the player's own (as VDR's
         // player does it): the new track starts with the picture on screen.
         if (previous != id && ByViewer && !IsInMenuDomain()) {
-            if (playMode == pmPlay) {
+            if (playMode == ePlayMode::Play) {
                 ReplayFromPicture();
-            } else if (playMode == pmPause) {
+            } else if (playMode == ePlayMode::Pause) {
                 replayFromPictureOnPlay = true;
             }
         }
@@ -3049,9 +3060,9 @@ void cDvdPlayer::SetAspectString() {
 }
 
 auto cDvdPlayer::GetReplayMode(bool &Playing, bool &Forwards, int &Speed) -> bool {
-    Playing = (playMode == pmPlay || playMode == pmFast);
-    Forwards = (playDir == pdForward);
-    if (playMode == pmFast || playMode == pmSlow) {
+    Playing = (playMode == ePlayMode::Play || playMode == ePlayMode::Fast);
+    Forwards = (playDir == ePlayDir::Forward);
+    if (playMode == ePlayMode::Fast || playMode == ePlayMode::Slow) {
         Speed = Setup.MultiSpeedMode ? abs(trickSpeed - NORMAL_SPEED) : 0;
     } else {
         Speed = -1;

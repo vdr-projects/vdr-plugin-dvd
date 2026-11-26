@@ -42,6 +42,7 @@ class cMenuSetupDVD : public cMenuSetupPage {
     cMenuSetupDVD();
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) -- VDR plugin model, like VDR's Setup
 extern cDVDSetup DVDSetup;
 
 // The DVD stores a two-letter ISO 639-1 language code with each stream. These

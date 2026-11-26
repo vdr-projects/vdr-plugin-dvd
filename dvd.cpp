@@ -33,9 +33,15 @@
 #error "VDR 2.6.6+ required (APIVERSNUM >= 20606)"
 #endif
 
+// NOLINTNEXTLINE(misc-use-anonymous-namespace) -- the Makefile greps this line for the version (VDR's plugin template)
 static const char *VERSION = "1.0.0 RC3";
-static const char *DESCRIPTION = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
-static const char *MAINMENUENTRY = trNOOP("Plugin.DVD$DVD");
+
+namespace {
+
+const char *const DESCRIPTION = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
+const char *const MAINMENUENTRY = trNOOP("Plugin.DVD$DVD");
+
+} // namespace
 
 // --- cPluginDvd ------------------------------------------------------------
 

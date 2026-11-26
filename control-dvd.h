@@ -13,6 +13,7 @@
 
 // C++ Standard Library
 #include <atomic>
+#include <cstdint>
 #include <ctime>
 
 // VDR
@@ -24,7 +25,7 @@
 
 class cDvdPlayer;
 
-enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
+enum class InputProcessType : uint8_t { None, TimeSearch, TrackSearch };
 
 class cDvdPlayerControl : public cControl {
     friend class cDvdPlayer;
@@ -38,8 +39,8 @@ class cDvdPlayerControl : public cControl {
     bool lastPlay{false};
     bool modeOnly{false};
     bool shown{false};
-    std::atomic<bool> visible{false};      // the player thread asks OsdVisible() for each SPU
-    std::atomic<void *> osdTaker{nullptr}; // the player thread takes the OSD for the SPU
+    std::atomic<bool> visible{false};            // the player thread asks OsdVisible() for each SPU
+    std::atomic<const void *> osdTaker{nullptr}; // the player thread takes the OSD for the SPU
     int inputIntVal{0};
     int lastCurrent{-1};
     int lastTotal{-1};
@@ -48,7 +49,7 @@ class cDvdPlayerControl : public cControl {
     int timeSearchTime{0};
     cString shownTitle;    // in the replay display
     cString reportedTitle; // to cStatus while the display is closed
-    InputProcessType inputActive{NoneInput};
+    InputProcessType inputActive{InputProcessType::None};
     time_t timeoutShow{0};
     const char *inputIntMsg{nullptr};
     void InputIntDisplay(const char *msg, int val);
@@ -81,7 +82,7 @@ class cDvdPlayerControl : public cControl {
     auto DvdNavigation(eKeys Key) -> bool;
     auto OsdVisible(const void *me) -> bool;
     auto OsdTaken(const void *me) -> bool;
-    auto TakeOsd(void *obj) -> bool;
+    auto TakeOsd(const void *owner) -> bool;
 
   protected:
     void HideOwnOsd();
