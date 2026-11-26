@@ -1478,13 +1478,14 @@ void cDvdPlayer::UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt)
         // need for the right highlight.
         bool libdvd_workaround = false;
 
-        if (current_pci->hli.hl_gi.btngr_ns) {
-            int btns_per_group = 36 / current_pci->hli.hl_gi.btngr_ns;
+        // Button 0 is none: with it, or a number beyond its group, the index
+        // went before or past the group's buttons.
+        int btns_per_group = current_pci->hli.hl_gi.btngr_ns ? 36 / current_pci->hli.hl_gi.btngr_ns : 0;
+        if (buttonN >= 1 && buttonN <= btns_per_group) {
             btni_t *button_ptr = NULL;
             int modeMask = 1 << SPUdecoder->getScaleMode();
 
-            if (!button_ptr && current_pci->hli.hl_gi.btngr_ns >= 1 &&
-                (current_pci->hli.hl_gi.btngr1_dsp_ty & modeMask))
+            if (current_pci->hli.hl_gi.btngr1_dsp_ty & modeMask)
                 button_ptr = &current_pci->hli.btnit[0 * btns_per_group + buttonN - 1];
             if (!button_ptr && current_pci->hli.hl_gi.btngr_ns >= 2 &&
                 (current_pci->hli.hl_gi.btngr2_dsp_ty & modeMask))
