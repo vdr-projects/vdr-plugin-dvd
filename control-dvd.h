@@ -64,6 +64,8 @@ class cDvdPlayerControl : public cControl {
     void TimeSearch();
     void TrackSearch();
     void UpdateShow(bool force = false);
+    // cControl owns the player, the control keeps its type.
+    explicit cDvdPlayerControl(cDvdPlayer *Player);
 
   public:
     cDvdPlayerControl();

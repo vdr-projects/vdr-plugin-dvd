@@ -27,7 +27,7 @@ cDVDSetup DVDSetup;
 // handling uses three-letter codes and does not cover this.
 const char *ISO639code[] = {"en", "de", "sl", "it", "nl", "pt", "fr", "no", "fi", "pl", "es",
                             "el", "sv", "ro", "hu", "ca", "ru", "hr", "et", "da", "cs", "tr"};
-const int ISO639codes = int(sizeof(ISO639code) / sizeof(ISO639code[0]));
+const int ISO639codes = static_cast<int>(sizeof(ISO639code) / sizeof(ISO639code[0]));
 
 const char *DvdLanguageName[] = {"English",  "Deutsch",   "Slovenski", "Italiano", "Nederlands", "Portugues",
                                  "Francais", "Norsk",     "Suomi",     "Polski",   "Espanol",    "Greek",
@@ -53,7 +53,7 @@ static auto SetupValue(const char *Value, int Min, int Max, int Default) -> int 
     char *end;
     errno = 0;
     const long v = strtol(Value, &end, 10);
-    return end != Value && !*end && !errno && Min <= v && v <= Max ? int(v) : Default;
+    return end != Value && !*end && !errno && Min <= v && v <= Max ? static_cast<int>(v) : Default;
 }
 
 auto cDVDSetup::SetupParse(const char *Name, const char *Value) -> bool {

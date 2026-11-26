@@ -97,7 +97,7 @@
 simpleFIFO::simpleFIFO(int Size) {
     size = Size;
     head = tail = 0;
-    buffer = static_cast<uint8_t *>(malloc((size_t)size));
+    buffer = static_cast<uint8_t *>(malloc(static_cast<size_t>(size)));
 }
 
 simpleFIFO::~simpleFIFO() { free(buffer); }
@@ -114,13 +114,13 @@ auto simpleFIFO::Put(const uint8_t *Data, int Count) -> int {
             Count = free;
         }
         if (Count >= rest) {
-            memcpy(buffer + head, Data, (size_t)rest);
+            memcpy(buffer + head, Data, static_cast<size_t>(rest));
             if (Count - rest) {
-                memcpy(buffer, Data + rest, (size_t)(Count - rest));
+                memcpy(buffer, Data + rest, static_cast<size_t>(Count - rest));
             }
             head = Count - rest;
         } else {
-            memcpy(buffer + head, Data, (size_t)Count);
+            memcpy(buffer + head, Data, static_cast<size_t>(Count));
             head += Count;
         }
     }
@@ -139,13 +139,13 @@ auto simpleFIFO::Get(uint8_t *Data, int Count) -> int {
             Count = cont;
         }
         if (Count >= rest) {
-            memcpy(Data, buffer + tail, (size_t)rest);
+            memcpy(Data, buffer + tail, static_cast<size_t>(rest));
             if (Count - rest) {
-                memcpy(Data + rest, buffer, (size_t)(Count - rest));
+                memcpy(Data + rest, buffer, static_cast<size_t>(Count - rest));
             }
             tail = Count - rest;
         } else {
-            memcpy(Data, buffer + tail, (size_t)Count);
+            memcpy(Data, buffer + tail, static_cast<size_t>(Count));
             tail += Count;
         }
     }

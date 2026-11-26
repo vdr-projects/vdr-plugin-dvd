@@ -45,8 +45,9 @@ bool cDvdPlayerControl::dvd_active = false;
 static char osdReleasedTag;
 static void *const OsdReleased = &osdReleasedTag;
 
-cDvdPlayerControl::cDvdPlayerControl()
-    : cControl(new cDvdPlayer()), player(static_cast<cDvdPlayer *>(cControl::player)) {
+cDvdPlayerControl::cDvdPlayerControl() : cDvdPlayerControl(new cDvdPlayer()) {}
+
+cDvdPlayerControl::cDvdPlayerControl(cDvdPlayer *Player) : cControl(Player), player(Player) {
     assert(dvd_active == false);
     dvd_active = true;
     visible = modeOnly = shown = displayFrames = false;
@@ -322,10 +323,10 @@ void cDvdPlayerControl::TrackSearch() {
 }
 
 void cDvdPlayerControl::TimeSearchDisplay() {
-    const char h10 = char('0' + (timeSearchTime >> 24));
-    const char h1 = char('0' + ((timeSearchTime & 0x00FF0000) >> 16));
-    const char m10 = char('0' + ((timeSearchTime & 0x0000FF00) >> 8));
-    const char m1 = char('0' + (timeSearchTime & 0x000000FF));
+    const char h10 = static_cast<char>('0' + (timeSearchTime >> 24));
+    const char h1 = static_cast<char>('0' + ((timeSearchTime & 0x00FF0000) >> 16));
+    const char m10 = static_cast<char>('0' + ((timeSearchTime & 0x0000FF00) >> 8));
+    const char m1 = static_cast<char>('0' + (timeSearchTime & 0x000000FF));
     const char ch10 = timeSearchPos > 3 ? h10 : '-';
     const char ch1 = timeSearchPos > 2 ? h1 : '-';
     const char cm10 = timeSearchPos > 1 ? m10 : '-';
@@ -337,8 +338,8 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key) {
     constexpr int STAY_SECONDS_OFF_END = 10;
     int Seconds = ((timeSearchTime >> 24) * 36000) + (((timeSearchTime & 0x00FF0000) >> 16) * 3600) +
                   (((timeSearchTime & 0x0000FF00) >> 8) * 600) + ((timeSearchTime & 0x000000FF) * 60);
-    const int Current = int(lastCurrent / FramesPerSecond());
-    const int Total = int(lastTotal / FramesPerSecond());
+    const int Current = static_cast<int>(lastCurrent / FramesPerSecond());
+    const int Total = static_cast<int>(lastTotal / FramesPerSecond());
     switch (Key) {
         case k0:
         case k1:
@@ -522,7 +523,7 @@ auto cDvdPlayerControl::ProcessKey(eKeys Key) -> eOSState {
 
     if (player->IsInMenuDomain() || forceDvdNavigation) {
 
-        switch (int(Key)) {
+        switch (static_cast<int>(Key)) {
             case kRed:
                 forceDvdNavigation = false;
                 break;
@@ -560,7 +561,7 @@ auto cDvdPlayerControl::ProcessKey(eKeys Key) -> eOSState {
                 break;
         }
     } else {
-        switch (int(Key)) {
+        switch (static_cast<int>(Key)) {
             // Positioning:
             case kPlay:
             case kUp:
@@ -599,7 +600,7 @@ auto cDvdPlayerControl::ProcessKey(eKeys Key) -> eOSState {
     if (state == osUnknown) {
         state = osContinue;
 
-        switch (int(Key)) {
+        switch (static_cast<int>(Key)) {
             // Positioning:
             case kRed:
                 TimeSearch();
@@ -618,7 +619,7 @@ auto cDvdPlayerControl::ProcessKey(eKeys Key) -> eOSState {
             default: {
                 DoShowMode = false;
                 displayFrames = DisplayedFrames;
-                switch (int(Key)) {
+                switch (static_cast<int>(Key)) {
                     // Menu control:
                     case kOk:
                         if (visible && !modeOnly) {
