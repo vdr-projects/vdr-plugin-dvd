@@ -14,6 +14,7 @@
 #include "setup-dvd.h"
 
 // C++ Standard Library
+#include <array>
 #include <cstdio>
 
 // POSIX
@@ -48,14 +49,14 @@ auto cPluginDvd::CommandLineHelp() -> const char * {
     return "  -C DEV,   --dvd=DEV      use DEV as the DVD device (default: /dev/cdrom)\n";
 }
 
-auto cPluginDvd::ProcessArgs(int argc, char *argv[]) -> bool {
-    static struct option long_options[] = {
+auto cPluginDvd::ProcessArgs(int argc, char **argv) -> bool {
+    static constexpr std::array<option, 2> long_options{{
         {"dvd", required_argument, nullptr, 'C'},
         {nullptr, 0, nullptr, 0},
-    };
+    }};
 
     int c = 0;
-    while ((c = getopt_long(argc, argv, "C:", long_options, nullptr)) != -1) {
+    while ((c = getopt_long(argc, argv, "C:", long_options.data(), nullptr)) != -1) {
         switch (c) {
             case 'C':
                 cDVD::SetDeviceName(optarg);

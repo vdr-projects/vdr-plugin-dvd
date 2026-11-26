@@ -23,7 +23,7 @@ class cPluginDvd : public cPlugin {
     auto Version() -> const char * override;
     auto Description() -> const char * override;
     auto CommandLineHelp() -> const char * override;
-    auto ProcessArgs(int argc, char *argv[]) -> bool override;
+    auto ProcessArgs(int argc, char **argv) -> bool override;
     auto MainMenuEntry() -> const char * override;
     auto MainMenuAction() -> cOsdMenu * override;
     auto SetupMenu() -> cMenuSetupPage * override;

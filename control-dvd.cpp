@@ -14,7 +14,6 @@
 
 // C++ Standard Library
 #include <cassert>
-#include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <utility>
@@ -236,9 +235,7 @@ auto cDvdPlayerControl::ShowProgress(bool Initial) -> bool {
 }
 
 void cDvdPlayerControl::InputIntDisplay(const char *msg, int val) {
-    char buf[120];
-    snprintf(buf, sizeof(buf), "%s %d", msg, val);
-    displayReplay->SetJump(buf);
+    displayReplay->SetJump(cString::sprintf("%s %d", msg, val));
 }
 
 void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val) {

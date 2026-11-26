@@ -11,6 +11,10 @@
 #ifndef VDR_DVD_SETUP_DVD_H
 #define VDR_DVD_SETUP_DVD_H
 
+// C++ Standard Library
+#include <array>
+#include <cstddef>
+
 // VDR
 #include <vdr/menuitems.h>
 
@@ -40,8 +44,21 @@ class cMenuSetupDVD : public cMenuSetupPage {
 
 extern cDVDSetup DVDSetup;
 
-extern const char *ISO639code[];
-extern const char *DvdLanguageName[]; // of each code
-extern const int ISO639codes;
+// The DVD stores a two-letter ISO 639-1 language code with each stream. These
+// are the codes offered as the preferred languages and passed to libdvdnav,
+// plus the language names shown in VDR's menus (ASCII). VDR's own language
+// handling uses three-letter codes and does not cover this.
+inline constexpr std::array ISO639code{"en", "de", "sl", "it", "nl", "pt", "fr", "no", "fi", "pl", "es",
+                                       "el", "sv", "ro", "hu", "ca", "ru", "hr", "et", "da", "cs", "tr"};
+inline constexpr int ISO639codes = static_cast<int>(ISO639code.size());
+
+inline constexpr std::array DvdLanguageName{"English",  "Deutsch",   "Slovenski", "Italiano", "Nederlands", "Portugues",
+                                            "Francais", "Norsk",     "Suomi",     "Polski",   "Espanol",    "Greek",
+                                            "Svenska",  "Romaneste", "Magyar",    "Catala",   "Russian",    "Hrvatski",
+                                            "Eesti",    "Dansk",     "Czech",     "Turkce"};
+static_assert(DvdLanguageName.size() == ISO639code.size(), "a name for each code");
+
+// The code of a language setup value, which SetupParse() keeps in range.
+[[nodiscard]] inline auto LanguageCode(int Index) -> const char * { return ISO639code.at(static_cast<size_t>(Index)); }
 
 #endif // VDR_DVD_SETUP_DVD_H

@@ -283,7 +283,7 @@ constexpr int NORMAL_SPEED = 10;         // the index of the '1' entry in the fo
 constexpr int MAX_SPEEDS = 3;            // the offset of the maximum speed from normal speed in either direction
 constexpr int MAX_MAX_SPEEDS = MAX_SPEEDS * MAX_SPEEDS; // the offset of the maximum speed skipping blocks
 constexpr int SPEED_MULT = 12;                          // the speed multiplier
-int cDvdPlayer::Speeds[] = {0, 0, 0, 0, 0, 0, 0, -2, -4, -8, 1, 2, 4, 12, 0, 0, 0, 0, 0, 0, 0};
+constexpr std::array<int, 21> Speeds{0, 0, 0, 0, 0, 0, 0, -2, -4, -8, 1, 2, 4, 12, 0, 0, 0, 0, 0, 0, 0};
 
 cDvdPlayer::cDvdPlayer()
     : cThread("dvd-plugin"), iframeAssembler(std::make_unique<cIframeAssembler>(KILOBYTE(CIF_MAXSIZE))),
@@ -315,7 +315,9 @@ void cDvdPlayer::TrickSpeed(int Increment) {
     cntVidBlocksPlayed = 0;
     cntAudBlocksPlayed = 0;
 
-    if (nts > 0 && nts - NORMAL_SPEED <= MAX_SPEEDS && Speeds[nts] == 1) {
+    // 0 beyond MAX_SPEEDS
+    const int speed = nts > 0 && nts - NORMAL_SPEED <= MAX_SPEEDS ? Speeds.at(static_cast<size_t>(nts)) : 0;
+    if (speed == 1) {
         fastWindFactor = 1;
         trickSpeed = nts;
 
@@ -324,14 +326,14 @@ void cDvdPlayer::TrickSpeed(int Increment) {
         } else {
             Pause();
         }
-    } else if (nts > 0 && nts - NORMAL_SPEED <= MAX_SPEEDS && Speeds[nts]) {
+    } else if (speed != 0) {
         fastWindFactor = 1;
         if (playDir == pdBackward && DVDSetup.ReadAHead > 0) {
             dvdnav_set_readahead_flag(nav, 0);
         }
         trickSpeed = nts;
         const int Mult = (playMode == pmSlow) ? 1 : SPEED_MULT;
-        int sp = (Speeds[nts] > 0) ? Mult / Speeds[nts] : -Speeds[nts] * Mult;
+        int sp = (speed > 0) ? Mult / speed : -speed * Mult;
 
         if (sp > MAX_VIDEO_SLOWMOTION) {
             sp = MAX_VIDEO_SLOWMOTION;
@@ -637,7 +639,7 @@ auto cDvdPlayer::LoadResume(int &title, int &chapter, int64_t &second) -> bool {
 
 void cDvdPlayer::Action() {
     playerThreadId = cThread::ThreadId();
-    memset(event_buf, 0, sizeof(event_buf));
+    event_buf.fill(0);
 
     const unsigned char *write_blk = nullptr;
     int blk_size = 0;
@@ -669,12 +671,12 @@ void cDvdPlayer::Action() {
         dvdnav_set_region_mask(nav, 0xffff);
     }
     // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast) -- C-API: libdvdnav takes char *, it only reads the codes
-    dvdnav_menu_language_select(nav, const_cast<char *>(ISO639code[DVDSetup.MenuLanguage]));
-    dvdnav_audio_language_select(nav, const_cast<char *>(ISO639code[DVDSetup.AudioLanguage]));
-    dvdnav_spu_language_select(nav, const_cast<char *>(ISO639code[DVDSetup.SpuLanguage]));
+    dvdnav_menu_language_select(nav, const_cast<char *>(LanguageCode(DVDSetup.MenuLanguage)));
+    dvdnav_audio_language_select(nav, const_cast<char *>(LanguageCode(DVDSetup.AudioLanguage)));
+    dvdnav_spu_language_select(nav, const_cast<char *>(LanguageCode(DVDSetup.SpuLanguage)));
     // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
-    DEBUGDVD("Default-Langs: menu=%s, audio=%s, spu=%s\n", ISO639code[DVDSetup.MenuLanguage],
-             ISO639code[DVDSetup.AudioLanguage], ISO639code[DVDSetup.SpuLanguage]);
+    DEBUGDVD("Default-Langs: menu=%s, audio=%s, spu=%s\n", LanguageCode(DVDSetup.MenuLanguage),
+             LanguageCode(DVDSetup.AudioLanguage), LanguageCode(DVDSetup.SpuLanguage));
     if (IsAttached()) {
         LOCK_THREAD; // HideSPU() and DrawSPU() use it from the control's thread
         SPUdecoder = cDevice::PrimaryDevice()->GetSpuDecoder();
@@ -999,7 +1001,7 @@ void cDvdPlayer::Action() {
             }
         }
 
-        uint8_t *cache_ptr = event_buf;
+        uint8_t *cache_ptr = event_buf.data();
         int32_t event = 0;
         int32_t len = 0;
 
@@ -1008,7 +1010,7 @@ void cDvdPlayer::Action() {
         const dvdnav_status_t navStatus = dvdnav_get_next_cache_block(nav, &cache_ptr, &event, &len);
         if (navFailed) {
             // the event comes from a VM that can't be asked anything anymore
-            if (navStatus == DVDNAV_STATUS_OK && cache_ptr != nullptr && cache_ptr != event_buf) {
+            if (navStatus == DVDNAV_STATUS_OK && cache_ptr != nullptr && cache_ptr != event_buf.data()) {
                 dvdnav_free_cache_block(nav, cache_ptr);
             }
             break;
@@ -1286,7 +1288,7 @@ void cDvdPlayer::Action() {
             DEBUGDVD("got event (%d)%s, len %d\n", event, dvd_ev[event], len);
         }
 #endif
-        if (cache_ptr != nullptr && cache_ptr != event_buf) {
+        if (cache_ptr != nullptr && cache_ptr != event_buf.data()) {
             dvdnav_free_cache_block(nav, cache_ptr);
         }
         if (trackInfoTimeout.TimedOut()) {
@@ -1327,8 +1329,9 @@ void cDvdPlayer::Action() {
 
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
 void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args) {
-    char msg[256];
-    vsnprintf(msg, sizeof(msg), Format, Args);
+    std::array<char, 256> buffer{};
+    vsnprintf(buffer.data(), buffer.size(), Format, Args);
+    const char *msg = buffer.data();
     auto *player = static_cast<cDvdPlayer *>(Player);
     // libdvdnav repeats its notes: on a disc without menus in the menu
     // language every jump to a menu brought "Language 'de' not found, using
@@ -1559,9 +1562,9 @@ static auto TrackLanguage(uint16_t LanguageCode, LanguageLetters &Language) -> c
         Language.at(0) = 0;
         return nullptr;
     }
-    for (int i = 0; i < ISO639codes; i++) {
-        if (!strcasecmp(Language.data(), ISO639code[i])) {
-            return DvdLanguageName[i];
+    for (size_t i = 0; i < ISO639code.size(); i++) {
+        if (!strcasecmp(Language.data(), ISO639code.at(i))) {
+            return DvdLanguageName.at(i);
         }
     }
     return nullptr;
@@ -1577,11 +1580,11 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
     // language and description without a lock: write them only once.
     const auto track = static_cast<eTrackType>(Type + Index);
     if (track > ttNone && track < ttMaxTrackTypes) {
-        if (announcedLanguageCode[track] == languageCode) {
+        if (announcedLanguageCode.at(track) == languageCode) {
             DeviceSetAvailableTrack(Type, Index, Id);
             return;
         }
-        announcedLanguageCode[track] = languageCode;
+        announcedLanguageCode.at(track) = languageCode;
     }
     LanguageLetters language{};
     const char *languageName = TrackLanguage(languageCode, language);
@@ -2587,9 +2590,7 @@ void cDvdPlayer::clearSeenAudioTrack() {
     DeviceClrAvailableTracks();
     cDevice::PrimaryDevice()->SetKeepTracks(true);
     currentAudioTrack = ttNone; // VDR's clear resets it
-    for (int i = 0; i < ttMaxTrackTypes; i++) {
-        announcedLanguageCode[i] = -1;
-    }
+    announcedLanguageCode.fill(-1);
 }
 
 void cDvdPlayer::setAllAudioTracks() {
@@ -2752,7 +2753,7 @@ void cDvdPlayer::NoteVobu(const pci_t *Pci) {
         dvdnav_current_title_program(nav, &title, &pgcN, &pgN) != DVDNAV_STATUS_OK) {
         return;
     }
-    cVobuPosition &vobu = vobuHistory[vobuHistoryNext];
+    cVobuPosition &vobu = vobuHistory.at(static_cast<size_t>(vobuHistoryNext));
     // The player adds ptm_offs to every PTS it passes on.
     vobu.start = Pci->pci_gi.vobu_s_ptm + static_cast<uint32_t>(ptm_offs);
     vobu.end = Pci->pci_gi.vobu_e_ptm + static_cast<uint32_t>(ptm_offs);
@@ -2779,7 +2780,8 @@ auto cDvdPlayer::ReplayFromPicture() -> bool {
         return false;
     }
     for (int i = 1; i <= vobuHistoryCount; i++) {
-        const cVobuPosition &vobu = vobuHistory[(vobuHistoryNext - i + VobuHistorySize) % VobuHistorySize];
+        const cVobuPosition &vobu =
+            vobuHistory.at(static_cast<size_t>((vobuHistoryNext - i + VobuHistorySize) % VobuHistorySize));
         // modulo 2^32, as PTS wrap
         if (vobu.title == title && vobu.pgcN == pgcN &&
             static_cast<uint32_t>(stc) - vobu.start < vobu.end - vobu.start) {
@@ -2863,14 +2865,14 @@ auto cDvdPlayer::AudioTrackDescription(int Channel, const char *LanguageName) co
     // code, so tell the tracks apart by their codec, channel layout and, for
     // commentary or audio-description tracks, a marker - a disc often carries
     // two tracks in the same language that only these distinguish.
-    static const char *const Codec[8] = {"AC3", nullptr, "MPEG", "MPEG", "LPCM", nullptr, "DTS", nullptr};
+    static constexpr std::array<const char *, 8> Codec{"AC3", nullptr, "MPEG", "MPEG", "LPCM", nullptr, "DTS", nullptr};
     const int logical = LogicalAudioStream(Channel);
     audio_attr_t attr;
     if (logical < 0 || dvdnav_get_audio_attr(nav, static_cast<uint8_t>(logical), &attr) != DVDNAV_STATUS_OK) {
         return {LanguageName}; // cString(NULL) keeps whatever VDR already has
     }
     cString d(LanguageName ? LanguageName : "");
-    if (const char *c = Codec[attr.audio_format & 0x07]) {
+    if (const char *c = Codec.at(attr.audio_format & 0x07U)) {
         d = cString::sprintf("%s%s%s", *d, **d ? " " : "", c);
     }
     const int channels = attr.channels + 1; // the field holds the count minus one

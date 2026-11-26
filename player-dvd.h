@@ -15,6 +15,7 @@
 #include "dvdspu.h"
 
 // C++ Standard Library
+#include <array>
 #include <atomic>
 #include <cstdarg>
 #include <cstddef>
@@ -70,7 +71,7 @@ class cDvdPlayer : public cPlayer, cThread {
 
     std::unique_ptr<cIframeAssembler> iframeAssembler;
     int IframeCnt{0};
-    uint8_t event_buf[4096]{}; // for dvdnav_get_next_cache_block(), at least a block
+    std::array<uint8_t, 4096> event_buf{}; // for dvdnav_get_next_cache_block(), at least a block
 
     std::unique_ptr<cRingBufferFrame> ringBuffer;
     cFrame *rframe{nullptr};
@@ -123,8 +124,8 @@ class cDvdPlayer : public cPlayer, cThread {
         uint32_t block;      // position in the program chain
         int32_t title, pgcN;
     };
-    enum { VobuHistorySize = 32 }; // > 10 s, more than any device holds
-    cVobuPosition vobuHistory[VobuHistorySize]{};
+    static constexpr int VobuHistorySize = 32; // > 10 s, more than any device holds
+    std::array<cVobuPosition, VobuHistorySize> vobuHistory{};
     int vobuHistoryCount{0};
     int vobuHistoryNext{0};
     bool replayFromPictureOnPlay{false};
@@ -147,7 +148,6 @@ class cDvdPlayer : public cPlayer, cThread {
     auto SearchAudioStream(int AudioStreamId) const -> int;
     void SetCurrentNavAudioTrackType(int atype);
 
-    static int Speeds[];
     std::atomic<bool> running{false};
     std::atomic<bool> active{true};
     std::atomic<bool> navFailed{false}; // see NavLog()
@@ -203,8 +203,8 @@ class cDvdPlayer : public cPlayer, cThread {
 
     auto playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio) -> int;
     void SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id);
-    int announcedLanguageCode[ttMaxTrackTypes]{}; // per track, -1 = not announced
-    eTrackType currentAudioTrack{ttNone};         // VDR's current audio track, as set by the player or VDR
+    std::array<int, ttMaxTrackTypes> announcedLanguageCode{}; // per track, -1 = not announced
+    eTrackType currentAudioTrack{ttNone};                     // VDR's current audio track, as set by the player or VDR
     // An audio track VDR selects from another thread, for the player thread
     // to switch to, see SetAudioTrack():
     cMutex audioTrackRequestMutex;

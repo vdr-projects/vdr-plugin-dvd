@@ -22,20 +22,6 @@
 
 cDVDSetup DVDSetup;
 
-// The DVD stores a two-letter ISO 639-1 language code with each stream. These
-// are the codes offered as the preferred languages and passed to libdvdnav,
-// plus the language names shown in VDR's menus (ASCII). VDR's own language
-// handling uses three-letter codes and does not cover this.
-const char *ISO639code[] = {"en", "de", "sl", "it", "nl", "pt", "fr", "no", "fi", "pl", "es",
-                            "el", "sv", "ro", "hu", "ca", "ru", "hr", "et", "da", "cs", "tr"};
-const int ISO639codes = static_cast<int>(sizeof(ISO639code) / sizeof(ISO639code[0]));
-
-const char *DvdLanguageName[] = {"English",  "Deutsch",   "Slovenski", "Italiano", "Nederlands", "Portugues",
-                                 "Francais", "Norsk",     "Suomi",     "Polski",   "Espanol",    "Greek",
-                                 "Svenska",  "Romaneste", "Magyar",    "Catala",   "Russian",    "Hrvatski",
-                                 "Eesti",    "Dansk",     "Czech",     "Turkce"};
-static_assert(sizeof(DvdLanguageName) == sizeof(ISO639code), "a name for each code");
-
 // --- cDVDSetup -----------------------------------------------------------
 
 // Value if it is one the setup menu offers, else Default: the languages
@@ -74,9 +60,12 @@ auto cDVDSetup::SetupParse(const char *Name, const char *Value) -> bool {
 
 cMenuSetupDVD::cMenuSetupDVD() : data(DVDSetup) {
     SetSection(tr("Plugin.DVD$DVD"));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"), &data.MenuLanguage, ISO639codes, ISO639code));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"), &data.AudioLanguage, ISO639codes, ISO639code));
-    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage, ISO639codes, ISO639code));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"), &data.MenuLanguage, ISO639codes,
+                              ISO639code.data()));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"), &data.AudioLanguage, ISO639codes,
+                              ISO639code.data()));
+    Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred subtitle language"), &data.SpuLanguage, ISO639codes,
+                              ISO639code.data()));
     Add(new cMenuEditIntItem(tr("Setup.DVD$Player region code"), &data.PlayerRCE, 0, 8));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Display subtitles"), &data.ShowSubtitles));
     Add(new cMenuEditBoolItem(tr("Setup.DVD$Hide Mainmenu Entry"), &data.HideMainMenu));
