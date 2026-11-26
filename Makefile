@@ -158,10 +158,37 @@ indent:
 		echo "clang-format not found, skipping formatting"; \
 	fi
 
+### Static analysis (the checks are in .clang-tidy):
+
+# Without the GCC flags clang does not know.
+CLANG_CXXFLAGS = $(filter-out -Wno-complain-wrong-lang -specs=% -grecord-gcc-switches -fanalyzer,$(CXXFLAGS))
+
+# Override with `make lint NJOBS=N`.
+NJOBS ?= $(shell nproc 2>/dev/null || echo 1)
+
+# A stamp per source, so that only what changed is checked again.
+LINT_STAMPS = $(SOURCES:%.cpp=.lint/%.stamp)
+
+.PHONY: lint
+lint:
+	@if ! command -v clang-tidy >/dev/null 2>&1; then \
+		echo "clang-tidy not found"; \
+		exit 0; \
+	fi; \
+	echo "Running clang-tidy analysis (NJOBS=$(NJOBS))..."; \
+	$(MAKE) --no-print-directory -j$(NJOBS) $(LINT_STAMPS)
+
+# Any header, the checks or the flags changed: check again.
+.lint/%.stamp: %.cpp $(HEADERS) .clang-tidy Makefile
+	@mkdir -p $(dir $@)
+	@clang-tidy $< --quiet -- $(CLANG_CXXFLAGS) $(DEFINES) $(INCLUDES)
+	@touch $@
+
 retain-sym:
 	echo "VDRPluginCreator" > retain-sym
 
 clean:
 	@-rm -f $(PODIR)/*.mo $(PODIR)/*.pot
 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+	@-rm -rf .lint
 

@@ -1,27 +1,57 @@
-# Checks of the plugin's sources; run with
-#   clang-tidy *.cpp -- -std=c++17 -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"dvd"' \
-#       $(pkg-config --cflags vdr dvdnav)
-# Not checked: the signedness of bitwise operands in the MPEG and DVD
-# structures' byte arithmetic, and signed chars, as libdvdnav returns its
-# stream numbers as int8_t, -1 for none.
+# Checks of the plugin's sources, the ones of vdr-plugin-vaapivideo; run with
+# `make lint`.
+
+HeaderFilterRegex: '(^|/)(common-dvd|control-dvd|dvd|dvddev|dvdspu|mpegtypes|player-dvd|setup-dvd|tools-dvd)\.h$'
+SystemHeaders: false
+WarningsAsErrors: '*'
+FormatStyle: file
+
+# Off, and why:
+#   bugprone-easily-swappable-parameters -- adjacent ints (title/part, x/y) are libdvdnav's and VDR's own shape.
+#   bugprone-signed-bitwise -- the MPEG and DVD structures' bytes promote to int and are masked with int
+#     literals; a cast at every mask would bury the bit layout.
+#   cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers -- stream ids, start codes and bit
+#     layouts are their own documentation; naming every field offset would not make them clearer.
+#   cppcoreguidelines-owning-memory -- VDR's API takes ownership of raw new'd objects (menus, OSDs, items).
+#   cppcoreguidelines-pro-bounds-array-to-pointer-decay, -pro-bounds-constant-array-index,
+#   -pro-bounds-pointer-arithmetic -- PES parsing and libdvdnav's C structures index raw buffers.
+#   cppcoreguidelines-pro-type-vararg -- VDR's syslog macros and cString::sprintf are printf-style.
+#   readability-function-cognitive-complexity -- the player loop and the key handling read best whole.
+#   readability-identifier-length -- x/y/w/h, pts and loop counters are clearer short.
+#   readability-trailing-comma -- a trailing comma makes clang-format put each element of a braced list
+#     on its own line.
 Checks: >
   -*,
-  clang-analyzer-*,
   bugprone-*,
-  -bugprone-easily-swappable-parameters,
-  -bugprone-narrowing-conversions,
-  -bugprone-reserved-identifier,
-  -bugprone-macro-parentheses,
-  -bugprone-assignment-in-if-condition,
-  -bugprone-switch-missing-default-case,
-  -bugprone-throwing-static-initialization,
-  -bugprone-multi-level-implicit-pointer-conversion,
-  -bugprone-signed-bitwise,
-  -bugprone-signed-char-misuse,
-  -bugprone-unchecked-string-to-number-conversion,
-  google-explicit-constructor,
-  modernize-use-override,
+  cert-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
   performance-*,
-  -performance-enum-size
-WarningsAsErrors: ''
-HeaderFilterRegex: '(^|/)(common-dvd|control-dvd|dvd|dvddev|dvdspu|mpegtypes|player-dvd|setup-dvd|tools-dvd)\.h$'
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-signed-bitwise,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-vararg,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-trailing-comma
+
+CheckOptions:
+  # Variables in an anonymous namespace are file-local state, not globals.
+  cppcoreguidelines-avoid-non-const-global-variables.AllowInternalLinkage: true
+  # Plain structs (all members public) are aggregates, not classes with invariants.
+  misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
+  # Private glibc headers behind <getopt.h>: no IWYU mapping to the public header. dvdnav.h includes
+  # dvdnav/version.h only since libdvdnav 6.1.0, the plugin builds with 5.0.0, too.
+  misc-include-cleaner.IgnoreHeaders: 'getopt\.h;bits/getopt_.*\.h;dvdnav/version\.h'
+  # if (!ptr) and if (count) are idiomatic; value conversions (bool b = ptr) still need an explicit test.
+  readability-implicit-bool-conversion.AllowIntegerConditions: true
+  readability-implicit-bool-conversion.AllowPointerConditions: true
