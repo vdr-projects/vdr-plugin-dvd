@@ -39,7 +39,7 @@ private:
     int value;
 
 public:
-    IntegerListObject(int i) { value = i; }
+    explicit IntegerListObject(int i) : value(i) {}
 
     int getValue() const { return value; }
 };
@@ -184,7 +184,7 @@ private:
 
     // Menu buttons, still pictures and the aspect ratio
     void ClearButtonHighlight(void);
-    void UpdateButtonHighlight(dvdnav_highlight_event_t *hlevt);
+    void UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt);
     void DoScaleMode(int &vaspect);
     void SendIframe(bool doSend);
 
@@ -230,22 +230,21 @@ private:
     bool LoadResume(int &title, int &chapter, int64_t &second);
 
 protected:
-    virtual void Activate(bool On);
-    virtual void Action(void);
+    void Activate(bool On) override;
+    void Action(void) override;
     void DeviceReset(void);
-    void DeviceClear(void);
-    void DevicePlay(void);
+    void ClearDevice(void);
     bool WaitDeviceDrained(void);
-    int emptyCount; // Empty() calls, for WaitDeviceDrained()
+    int emptyCount; // Empty() calls, for WaitDeviceDrained(); under the thread lock
 
 public:
     // The position in the program chain and its length, in frames at
     // FramesPerSecond(): from the block numbers, as if all blocks played
     // equally long. SnapToIFrame has no effect.
-    bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame);
-    bool GetReplayMode(bool &Play, bool &Forward, int &Speed);
-    void SetAudioTrack(eTrackType Type, const tTrackId *TrackId);
-    virtual void SetSubtitleTrack(eTrackType Type, const tTrackId *TrackId);
+    bool GetIndex(int &CurrentFrame, int &TotalFrame, bool SnapToIFrame) override;
+    bool GetReplayMode(bool &Playing, bool &Forwards, int &Speed) override;
+    void SetAudioTrack(eTrackType Type, const tTrackId *TrackId) override;
+    void SetSubtitleTrack(eTrackType Type, const tTrackId *TrackId) override;
 
 protected:
     void seenSpuPts(uint64_t pts);
@@ -260,7 +259,7 @@ public:
     static const int SubpStreamMask;
 
     cDvdPlayer(void);
-    virtual ~cDvdPlayer();
+    ~cDvdPlayer() override;
     bool Active(void) const { return active; }
     bool DVDActiveAndRunning(void) const { return active && nav != NULL && running; }
     bool DVDRemoveable(void) const { return !active && !running; }

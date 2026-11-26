@@ -21,12 +21,12 @@
 
 class cPluginDvd : public cPlugin {
 public:
-    virtual const char *Version(void);
-    virtual const char *Description(void);
-    virtual const char *CommandLineHelp(void);
-    virtual bool ProcessArgs(int argc, char *argv[]);
-    virtual const char *MainMenuEntry(void);
-    virtual cOsdMenu *MainMenuAction(void);
-    virtual cMenuSetupPage *SetupMenu(void);
-    virtual bool SetupParse(const char *Name, const char *Value);
+    const char *Version(void) override;
+    const char *Description(void) override;
+    const char *CommandLineHelp(void) override;
+    bool ProcessArgs(int argc, char *argv[]) override;
+    const char *MainMenuEntry(void) override;
+    cOsdMenu *MainMenuAction(void) override;
+    cMenuSetupPage *SetupMenu(void) override;
+    bool SetupParse(const char *Name, const char *Value) override;
 };

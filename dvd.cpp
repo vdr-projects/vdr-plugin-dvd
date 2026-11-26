@@ -14,7 +14,7 @@
 #error "VDR 2.6.6+ required (APIVERSNUM >= 20606)"
 #endif
 
-static const char *VERSION = "1.0.0 RC2";
+static const char *VERSION = "1.0.0 RC3";
 static const char *DESCRIPTION = trNOOP("Plugin.DVD$turn VDR into an (almost) full featured DVD player");
 static const char *MAINMENUENTRY = trNOOP("Plugin.DVD$DVD");
 
@@ -67,9 +67,12 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[])
 
 cOsdMenu *cPluginDvd::MainMenuAction(void)
 {
+    // VDR owns the control, which the analyzer can't see.
+    // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
     if (!cDvdPlayerControl::DVDActive())
         cControl::Launch(new cDvdPlayerControl);
     return NULL;
+    // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 cMenuSetupPage *cPluginDvd::SetupMenu(void)

@@ -16,7 +16,7 @@ private:
     static const char *deviceName;
 
 public:
-    static void SetDeviceName(const char *DeviceName);
+    static void SetDeviceName(const char *Name);
     static const char *DeviceName(void);
     static bool DriveExists(void);
 };

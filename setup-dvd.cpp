@@ -7,6 +7,8 @@
  * GNU GENERAL PUBLIC LICENSE. Read the file COPYING for details.
  */
 
+#include <errno.h>
+#include <stdlib.h>
 #include <vdr/menuitems.h>
 
 #include "setup-dvd.h"
@@ -44,8 +46,10 @@ cDVDSetup::cDVDSetup(void)
 // index ISO639code, the region code is a shift count.
 static int SetupValue(const char *Value, int Min, int Max, int Default)
 {
-    int v = atoi(Value);
-    return Min <= v && v <= Max ? v : Default;
+    char *end;
+    errno = 0;
+    long v = strtol(Value, &end, 10);
+    return end != Value && !*end && !errno && Min <= v && v <= Max ? int(v) : Default;
 }
 
 bool cDVDSetup::SetupParse(const char *Name, const char *Value)
@@ -59,11 +63,11 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name, "PlayerRCE"))
         PlayerRCE = SetupValue(Value, 0, 8, PlayerRCE);
     else if (!strcasecmp(Name, "ShowSubtitles"))
-        ShowSubtitles = atoi(Value);
+        ShowSubtitles = SetupValue(Value, 0, 1, ShowSubtitles);
     else if (!strcasecmp(Name, "HideMainMenu"))
-        HideMainMenu = atoi(Value);
+        HideMainMenu = SetupValue(Value, 0, 1, HideMainMenu);
     else if (!strcasecmp(Name, "ReadAHead"))
-        ReadAHead = atoi(Value);
+        ReadAHead = SetupValue(Value, 0, 1, ReadAHead);
     else if (!strcasecmp(Name, "Gain"))
         ; // removed with the AC-3 decoder; ignored, or VDR logs it as an error
     else
@@ -73,9 +77,8 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
 
 // --- cMenuSetupDVD --------------------------------------------------------
 
-cMenuSetupDVD::cMenuSetupDVD(void)
+cMenuSetupDVD::cMenuSetupDVD(void) : data(DVDSetup)
 {
-    data = DVDSetup;
     SetSection(tr("Plugin.DVD$DVD"));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"), &data.MenuLanguage, ISO639codes, ISO639code));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"), &data.AudioLanguage, ISO639codes, ISO639code));
