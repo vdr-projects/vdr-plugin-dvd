@@ -55,7 +55,7 @@ auto cPluginDvd::ProcessArgs(int argc, char *argv[]) -> bool {
         {nullptr, 0, nullptr, 0},
     };
 
-    int c;
+    int c = 0;
     while ((c = getopt_long(argc, argv, "C:", long_options, nullptr)) != -1) {
         switch (c) {
             case 'C':

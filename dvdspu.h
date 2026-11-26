@@ -41,8 +41,8 @@ class simpleFIFO {
 
 class cSPUassembler : public simpleFIFO {
   private:
-    uint64_t pts;
-    int stream;
+    uint64_t pts{0};
+    int stream{-1};
 
   public:
     cSPUassembler();

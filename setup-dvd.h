@@ -16,16 +16,13 @@
 
 class cDVDSetup {
   public:
-    int MenuLanguage;
-    int AudioLanguage;
-    int SpuLanguage;
-    int PlayerRCE;
-    int ShowSubtitles;
-    int HideMainMenu;
-    int ReadAHead;
-
-  public:
-    cDVDSetup();
+    int MenuLanguage{0};
+    int AudioLanguage{0};
+    int SpuLanguage{0};
+    int PlayerRCE{2};
+    int ShowSubtitles{0};
+    int HideMainMenu{0};
+    int ReadAHead{0};
 
     auto SetupParse(const char *Name, const char *Value) -> bool;
 };

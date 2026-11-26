@@ -37,20 +37,10 @@ static_assert(sizeof(DvdLanguageName) == sizeof(ISO639code), "a name for each co
 
 // --- cDVDSetup -----------------------------------------------------------
 
-cDVDSetup::cDVDSetup() {
-    MenuLanguage = 0;
-    AudioLanguage = 0;
-    SpuLanguage = 0;
-    PlayerRCE = 2;
-    ShowSubtitles = 0;
-    HideMainMenu = 0;
-    ReadAHead = 0;
-}
-
 // Value if it is one the setup menu offers, else Default: the languages
 // index ISO639code, the region code is a shift count.
 static auto SetupValue(const char *Value, int Min, int Max, int Default) -> int {
-    char *end;
+    char *end = nullptr;
     errno = 0;
     const long v = strtol(Value, &end, 10);
     return end != Value && !*end && !errno && Min <= v && v <= Max ? static_cast<int>(v) : Default;

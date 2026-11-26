@@ -62,42 +62,44 @@ class cDvdPlayer : public cPlayer, cThread {
     enum ePlayDirs { pdForward, pdBackward };
     enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2 };
 
-    cDvdPlayerControl *controller;
+    cDvdPlayerControl *controller{nullptr};
 
     cSPUassembler SPUassembler;
-    cSpuDecoder *SPUdecoder;
+    cSpuDecoder *SPUdecoder{nullptr};
 
     cIframeAssembler *iframeAssembler;
-    int IframeCnt;
-    uint8_t event_buf[4096]; // for dvdnav_get_next_cache_block(), at least a block
+    int IframeCnt{0};
+    uint8_t event_buf[4096]{}; // for dvdnav_get_next_cache_block(), at least a block
 
     cRingBufferFrame *ringBuffer;
-    cFrame *rframe, *pframe;
+    cFrame *rframe{nullptr};
+    cFrame *pframe{nullptr};
 
-    dvdnav_cell_change_event_t lastCellEventInfo;
-    uint32_t pgcCurrentBlockNum, pgcTotalBlockNum;
-    int64_t pgcTotalTicks;
-    int64_t pgcTicksPerBlock;
+    dvdnav_cell_change_event_t lastCellEventInfo{};
+    uint32_t pgcCurrentBlockNum{1};
+    uint32_t pgcTotalBlockNum{1};
+    int64_t pgcTotalTicks{1};
+    int64_t pgcTicksPerBlock{1};
     auto UpdateBlockInfo() -> bool;
 
-    bool isInFeature;
-    int dvd_aspect;
-    int dvd_scaleperm;
+    bool isInFeature{false};
+    int dvd_aspect{0};
+    int dvd_scaleperm{0};
     void UpdateVTSInfo();
 
-    bool skipPlayVideo;
-    uchar videoPictureType; // of the last picture header, 0 = none since Empty()
-    int fastWindFactor;
-    uint32_t cntVidBlocksPlayed;
-    uint32_t cntAudBlocksPlayed;
+    bool skipPlayVideo{false};
+    uchar videoPictureType{0}; // of the last picture header, 0 = none since Empty()
+    int fastWindFactor{1};
+    uint32_t cntVidBlocksPlayed{0};
+    uint32_t cntAudBlocksPlayed{0};
 
     // Subpicture streams have a logical number, which the disc's attributes,
     // its menus and VDR's track list use, and a physical one in the VOB for
     // each display mode.
-    int currentNavSubpStream;   // logical, bit 7 set: forced subtitles only; -1 = none
-    int currentNavSubpPhysical; // the physical stream shown for it, -1 = none
-    uint32_t subpPhysicalSeen;  // physical streams whose packets turned up
-    bool currentNavSubpStreamUsrLocked;
+    int currentNavSubpStream{-1};   // logical, bit 7 set: forced subtitles only; -1 = none
+    int currentNavSubpPhysical{-1}; // the physical stream shown for it, -1 = none
+    uint32_t subpPhysicalSeen{0};   // physical streams whose packets turned up
+    bool currentNavSubpStreamUsrLocked{false};
 
     cList<IntegerListObject> navSubpStreamSeen;
     void clearSeenSubpStream();
@@ -108,11 +110,11 @@ class cDvdPlayer : public cPlayer, cThread {
     void SetSubpStream(int id);
     void SetCurrentNavSubpStreamUsrLocked(bool lock);
 
-    uint64_t stillTimer; // in time_ticks(), 0 = no still frame
-    dvdnav_t *nav;
-    pci_t *current_pci;
-    int prev_e_ptm;
-    int ptm_offs;
+    uint64_t stillTimer{0}; // in time_ticks(), 0 = no still frame
+    dvdnav_t *nav{nullptr};
+    pci_t *current_pci{nullptr};
+    int prev_e_ptm{0};
+    int ptm_offs{0};
 
     // The VOBUs read last, to find the one on screen: ReplayFromPicture().
     struct cVobuPosition {
@@ -121,20 +123,21 @@ class cDvdPlayer : public cPlayer, cThread {
         int32_t title, pgcN;
     };
     enum { VobuHistorySize = 32 }; // > 10 s, more than any device holds
-    cVobuPosition vobuHistory[VobuHistorySize];
-    int vobuHistoryCount, vobuHistoryNext;
-    bool replayFromPictureOnPlay;
+    cVobuPosition vobuHistory[VobuHistorySize]{};
+    int vobuHistoryCount{0};
+    int vobuHistoryNext{0};
+    bool replayFromPictureOnPlay{false};
     void NoteVobu(const pci_t *Pci);
     auto ReplayFromPicture() -> bool;
 
-    uint8_t stillFrame;
-    uint8_t lastFrameType;
-    uint64_t VideoPts;
-    uint64_t pktpts;
+    uint8_t stillFrame{0};
+    uint8_t lastFrameType{0};
+    uint64_t VideoPts{0};
+    uint64_t pktpts{0};
 
-    int currentNavAudioTrack;
-    int currentNavAudioTrackType; // aAC3, aDTS, aLPCM, aMPEG
-    bool currentNavAudioTrackUsrLocked;
+    int currentNavAudioTrack{-1};     // until libdvdnav announces the active stream
+    int currentNavAudioTrackType{-1}; // aAC3, aDTS, aLPCM, aMPEG
+    bool currentNavAudioTrackUsrLocked{false};
 
     cList<IntegerListObject> navAudioTracksSeen;
     void clearSeenAudioTrack();
@@ -144,9 +147,9 @@ class cDvdPlayer : public cPlayer, cThread {
     void SetCurrentNavAudioTrackType(int atype);
 
     static int Speeds[];
-    std::atomic<bool> running;
-    std::atomic<bool> active;
-    std::atomic<bool> navFailed; // see NavLog()
+    std::atomic<bool> running{false};
+    std::atomic<bool> active{true};
+    std::atomic<bool> navFailed{false}; // see NavLog()
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
     static void NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args)
         __attribute__((format(printf, 3, 0)));
@@ -154,15 +157,15 @@ class cDvdPlayer : public cPlayer, cThread {
     cStringList navLogged; // the notes NavLog() logged
     auto NavLogFirst(const char *Msg) -> bool;
 #endif
-    std::atomic<ePlayModes> playMode; // the thread's loop checks it without the lock
-    ePlayDirs playDir;
+    std::atomic<ePlayModes> playMode{pmPlay}; // the thread's loop checks it without the lock
+    ePlayDirs playDir{pdForward};
     int trickSpeed;
 
     static const char *dummy_title;
     static const char *dummy_n_a;
-    char *title_str;
-    char *titleinfo_str;
-    char *aspect_str;
+    char *title_str{nullptr};
+    char *titleinfo_str{nullptr};
+    char *aspect_str{nullptr};
     void SetTitleString();
     void SetTitleInfoString();
     void SetAspectString();
@@ -171,12 +174,13 @@ class cDvdPlayer : public cPlayer, cThread {
     // control polls it from VDR's main loop, which must not wait for the
     // thread's lock while the thread reads the disc or drains the device.
     mutable cMutex infoMutex;
-    bool infoPositionValid;
-    uint32_t infoCurrentBlock, infoTotalBlock;
-    int64_t infoPgcLength;
-    char infoAudio[100];
-    char infoSubtitle[100];
-    std::atomic<bool> menuButtons; // IsInMenuDomain()
+    bool infoPositionValid{false};
+    uint32_t infoCurrentBlock{0};
+    uint32_t infoTotalBlock{0};
+    int64_t infoPgcLength{0};
+    char infoAudio[100]{};
+    char infoSubtitle[100]{};
+    std::atomic<bool> menuButtons{false}; // IsInMenuDomain()
     void ReplaceInfoString(char *&Str, char *New);
     void UpdateTrackInfo();
 
@@ -198,14 +202,14 @@ class cDvdPlayer : public cPlayer, cThread {
 
     auto playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio) -> int;
     void SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id);
-    int announcedLanguageCode[ttMaxTrackTypes]; // per track, -1 = not announced
-    eTrackType currentAudioTrack;               // VDR's current audio track, as set by the player or VDR
+    int announcedLanguageCode[ttMaxTrackTypes]{}; // per track, -1 = not announced
+    eTrackType currentAudioTrack{ttNone};         // VDR's current audio track, as set by the player or VDR
     // An audio track VDR selects from another thread, for the player thread
     // to switch to, see SetAudioTrack():
     cMutex audioTrackRequestMutex;
-    eTrackType audioTrackRequest; // ttNone: none
-    bool audioTrackRequestByViewer;
-    std::atomic<tThreadId> playerThreadId;
+    eTrackType audioTrackRequest{ttNone}; // ttNone: none
+    bool audioTrackRequestByViewer{false};
+    std::atomic<tThreadId> playerThreadId{0};
     void SwitchAudioTrack(eTrackType Type, bool ByViewer);
     void SwitchRequestedAudioTrack();
     void playSPU(int spuId);
@@ -215,10 +219,10 @@ class cDvdPlayer : public cPlayer, cThread {
     auto TakeOsd() -> bool;
 
     static auto DolbyTrackIndex(int SubStreamId) -> int;
-    bool subtitleTrackSync; // the player announces or reports a subtitle track to VDR
+    bool subtitleTrackSync{false}; // the player announces or reports a subtitle track to VDR
     void AnnounceSubtitleTrack(int Stream);
     void ReportSubtitleTrack();
-    bool subpMenuChoice; // the viewer used a button of the disc's menus
+    bool subpMenuChoice{false}; // the viewer used a button of the disc's menus
     auto SubtitlesShown(int Stream) const -> bool;
     auto LogicalAudioStream(int Physical) const -> int;
     auto LogicalSubpStream(int Physical) const -> int;
@@ -247,7 +251,7 @@ class cDvdPlayer : public cPlayer, cThread {
     void DeviceReset();
     void ClearDevice();
     auto WaitDeviceDrained() -> bool;
-    int emptyCount; // Empty() calls, for WaitDeviceDrained(); under the thread lock
+    int emptyCount{0}; // Empty() calls, for WaitDeviceDrained(); under the thread lock
 
   public:
     // The position in the program chain and its length, in frames at
@@ -264,11 +268,11 @@ class cDvdPlayer : public cPlayer, cThread {
     void delay_ticks(uint64_t ticks);
 
   public:
-    static const int MaxAudioTracks;
-    static const int AudioTrackMask;
-    static const int AC3AudioTrackMask;
-    static const int MaxSubpStreams;
-    static const int SubpStreamMask;
+    static constexpr int MaxAudioTracks = 0x20;
+    static constexpr int AudioTrackMask = 0x1F;
+    static constexpr int AC3AudioTrackMask = 0x07;
+    static constexpr int MaxSubpStreams = 0x20;
+    static constexpr int SubpStreamMask = 0x1F;
 
     cDvdPlayer();
     ~cDvdPlayer() override;

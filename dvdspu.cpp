@@ -154,10 +154,7 @@ auto simpleFIFO::Get(uint8_t *Data, int Count) -> int {
 
 // --- cSPUassembler ---------------------------------------------------------
 
-cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE) {
-    pts = 0;
-    stream = -1;
-}
+cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE) {}
 
 void cSPUassembler::Reset() {
     Clear();

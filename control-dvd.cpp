@@ -50,16 +50,6 @@ cDvdPlayerControl::cDvdPlayerControl() : cDvdPlayerControl(new cDvdPlayer()) {}
 cDvdPlayerControl::cDvdPlayerControl(cDvdPlayer *Player) : cControl(Player), player(Player) {
     assert(dvd_active == false);
     dvd_active = true;
-    visible = modeOnly = shown = displayFrames = false;
-    osdTaker = nullptr;
-    lastCurrent = lastTotal = -1;
-    lastPlay = lastForward = false;
-    lastSpeed = -1;
-    displayReplay = nullptr;
-    timeoutShow = 0;
-    inputActive = NoneInput;
-    inputHide = true;
-    forceDvdNavigation = false;
     player->setController(this);
     cStatus::MsgReplaying(this, "DVD", nullptr, true);
 }
@@ -171,9 +161,9 @@ auto cDvdPlayerControl::OsdVisible(const void *me) -> bool { return visible || O
 
 void cDvdPlayerControl::ShowMode() {
     if (Setup.ShowReplayMode && inputActive == NoneInput) {
-        bool Playing;
-        bool Forwards;
-        int Speed;
+        bool Playing = false;
+        bool Forwards = false;
+        int Speed = 0;
         if (GetReplayMode(Playing, Forwards, Speed) &&
             (!visible || Playing != lastPlay || Forwards != lastForward || Speed != lastSpeed)) {
             const bool NormalPlay = (Playing && Speed == -1);
@@ -216,8 +206,8 @@ auto cDvdPlayerControl::GetDisplayHeaderLine() -> cString {
 }
 
 auto cDvdPlayerControl::ShowProgress(bool Initial) -> bool {
-    int Current;
-    int Total;
+    int Current = 0;
+    int Total = 0;
 
     if (GetIndex(Current, Total) && Total > 0) {
         DEBUG_SHOW("DVD-Ctrl: ShowProgress: ... \n");

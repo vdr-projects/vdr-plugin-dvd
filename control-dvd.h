@@ -31,26 +31,26 @@ class cDvdPlayerControl : public cControl {
 
   private:
     static bool dvd_active;
-    bool displayFrames;
-    bool forceDvdNavigation;
-    bool inputHide;
-    bool lastForward;
-    bool lastPlay;
-    bool modeOnly;
-    bool shown;
-    std::atomic<bool> visible;    // the player thread asks OsdVisible() for each SPU
-    std::atomic<void *> osdTaker; // the player thread takes the OSD for the SPU
-    int inputIntVal;
-    int lastCurrent;
-    int lastTotal;
-    int lastSpeed;
-    int timeSearchPos;
-    int timeSearchTime;
+    bool displayFrames{false};
+    bool forceDvdNavigation{false};
+    bool inputHide{true};
+    bool lastForward{false};
+    bool lastPlay{false};
+    bool modeOnly{false};
+    bool shown{false};
+    std::atomic<bool> visible{false};      // the player thread asks OsdVisible() for each SPU
+    std::atomic<void *> osdTaker{nullptr}; // the player thread takes the OSD for the SPU
+    int inputIntVal{0};
+    int lastCurrent{-1};
+    int lastTotal{-1};
+    int lastSpeed{-1};
+    int timeSearchPos{0};
+    int timeSearchTime{0};
     cString shownTitle;    // in the replay display
     cString reportedTitle; // to cStatus while the display is closed
-    InputProcessType inputActive;
-    time_t timeoutShow;
-    const char *inputIntMsg;
+    InputProcessType inputActive{NoneInput};
+    time_t timeoutShow{0};
+    const char *inputIntMsg{nullptr};
     void InputIntDisplay(const char *msg, int val);
     void InputIntProcess(eKeys Key, const char *msg, int &val);
     auto IsDvdNavigationForced() -> bool { return forceDvdNavigation; }
@@ -85,7 +85,7 @@ class cDvdPlayerControl : public cControl {
 
   private:
     cDvdPlayer *player; // cControl's, never NULL
-    cSkinDisplayReplay *displayReplay;
+    cSkinDisplayReplay *displayReplay{nullptr};
 
   public:
     auto Active() -> bool;
