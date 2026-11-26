@@ -88,6 +88,7 @@
 #include "dvdspu.h"
 
 // C++ Standard Library
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -102,9 +103,7 @@ auto simpleFIFO::Put(const uint8_t *Data, int Count) -> int {
         if (free <= 0) {
             return 0;
         }
-        if (free < Count) {
-            Count = free;
-        }
+        Count = std::min(Count, free);
         if (Count >= rest) {
             memcpy(buffer.data() + head, Data, static_cast<size_t>(rest));
             if (Count - rest) {
@@ -127,9 +126,7 @@ auto simpleFIFO::Get(uint8_t *Data, int Count) -> int {
         if (rest <= 0) {
             return 0;
         }
-        if (cont < Count) {
-            Count = cont;
-        }
+        Count = std::min(Count, cont);
         if (Count >= rest) {
             memcpy(Data, buffer.data() + tail, static_cast<size_t>(rest));
             if (Count - rest) {

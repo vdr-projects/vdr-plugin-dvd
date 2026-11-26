@@ -15,7 +15,6 @@
 
 // C++ Standard Library
 #include <array>
-#include <cstdio>
 
 // POSIX
 #include <getopt.h>
@@ -63,18 +62,15 @@ auto cPluginDvd::ProcessArgs(int argc, char **argv) -> bool {
 
     int c = 0;
     while ((c = getopt_long(argc, argv, "C:", long_options.data(), nullptr)) != -1) {
-        switch (c) {
-            case 'C':
-                cDVD::SetDeviceName(optarg);
-                // A USB drive may be plugged in later, and returning false
-                // here would keep VDR from starting at all.
-                if (!cDVD::DriveExists()) {
-                    isyslog("dvd: DVD drive %s not found (yet)", optarg);
-                }
-                break;
-            default:
-                fprintf(stderr, "arg char: %c\n", c);
-                return false;
+        if (c != 'C') {
+            esyslog("ERROR: dvd-plugin unknown command line option, see stderr");
+            return false;
+        }
+        cDVD::SetDeviceName(optarg);
+        // A USB drive may be plugged in later, and returning false here
+        // would keep VDR from starting at all.
+        if (!cDVD::DriveExists()) {
+            isyslog("dvd: DVD drive %s not found (yet)", optarg);
         }
     }
     return true;
@@ -94,4 +90,5 @@ auto cPluginDvd::SetupMenu() -> cMenuSetupPage * { return new cMenuSetupDVD; }
 
 auto cPluginDvd::SetupParse(const char *Name, const char *Value) -> bool { return DVDSetup.SetupParse(Name, Value); }
 
+// NOLINTNEXTLINE(misc-const-correctness) -- VDR's macro declares VDRPluginDestroyer(PluginClass *p)
 VDRPLUGINCREATOR(cPluginDvd); // Don't touch this!

@@ -49,7 +49,7 @@ const void *const OsdReleased = &osdReleasedTag;
 cDvdPlayerControl::cDvdPlayerControl() : cDvdPlayerControl(new cDvdPlayer()) {}
 
 cDvdPlayerControl::cDvdPlayerControl(cDvdPlayer *Player) : cControl(Player), player(Player) {
-    assert(dvd_active == false);
+    assert(!dvd_active); // NOLINT(misc-static-assert,cert-dcl03-c) -- a run-time state, clang-tidy folds it
     dvd_active = true;
     player->setController(this);
     cStatus::MsgReplaying(this, "DVD", nullptr, true);
@@ -59,7 +59,7 @@ cDvdPlayerControl::~cDvdPlayerControl() {
     cDvdPlayerControl::Hide();
     cStatus::MsgReplaying(this, nullptr, nullptr, false);
     Stop();
-    assert(dvd_active == true);
+    assert(dvd_active); // NOLINT(misc-static-assert,cert-dcl03-c) -- a run-time state, clang-tidy folds it
     dvd_active = false;
     delete player;
 }

@@ -54,7 +54,7 @@ class cDvdPlayerControl : public cControl {
     const char *inputIntMsg{nullptr};
     void InputIntDisplay(const char *msg, int val);
     void InputIntProcess(eKeys Key, const char *msg, int &val);
-    auto IsDvdNavigationForced() -> bool { return forceDvdNavigation; }
+    [[nodiscard]] auto IsDvdNavigationForced() const -> bool { return forceDvdNavigation; }
     void OsdOpen();
     void OsdClose();
     void ShowTimed(int Seconds = 0);

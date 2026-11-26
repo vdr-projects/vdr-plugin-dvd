@@ -58,6 +58,7 @@ class cDvdPlayerControl;
 class cIframeAssembler;
 class cDVDPlayerResume;
 
+// NOLINTNEXTLINE(misc-multiple-inheritance) -- standard VDR pattern; cf. cDvbPlayer in VDR core.
 class cDvdPlayer : public cPlayer, cThread {
   private:
     enum class ePlayMode : uint8_t { Play, Pause, Slow, Fast, Still };
@@ -201,7 +202,7 @@ class cDvdPlayer : public cPlayer, cThread {
     // Menu buttons, still pictures and the aspect ratio
     void ClearButtonHighlight();
     void UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt);
-    void DoScaleMode(int &vaspect);
+    void DoScaleMode(int &vaspect) const;
     void SendIframe(bool doSend);
 
     auto playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio) -> int;
@@ -249,13 +250,14 @@ class cDvdPlayer : public cPlayer, cThread {
     // if it has none.
     auto LoadResume(int &title, int &chapter, int64_t &second) -> bool;
 
+    void Action() override;
+    int emptyCount{0}; // Empty() calls, for WaitDeviceDrained(); under the thread lock
+
   protected:
     void Activate(bool On) override;
-    void Action() override;
     void DeviceReset();
     void ClearDevice();
     auto WaitDeviceDrained() -> bool;
-    int emptyCount{0}; // Empty() calls, for WaitDeviceDrained(); under the thread lock
 
   public:
     // The position in the program chain and its length, in frames at
@@ -268,8 +270,8 @@ class cDvdPlayer : public cPlayer, cThread {
 
   protected:
     void seenSpuPts(uint64_t pts);
-    auto time_ticks() -> uint64_t;
-    void delay_ticks(uint64_t ticks);
+    static auto time_ticks() -> uint64_t;
+    static void delay_ticks(uint64_t ticks);
 
   public:
     static constexpr int MaxAudioTracks = 0x20;
@@ -310,18 +312,18 @@ class cDvdPlayer : public cPlayer, cThread {
 
     // The length of the program chain (mostly the whole title) in PTS ticks,
     // 90000 a second.
-    auto GetPGCLengthInTicks() -> int64_t;
+    auto GetPGCLengthInTicks() const -> int64_t;
 
     // The time of a block of the program chain and the chain's length, in
     // ticks, as if all blocks played equally long.
-    void BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks);
+    void BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks) const;
 
     // The reverse: the block at a time and the program chain's number of
     // blocks.
-    void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum);
+    void PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum) const;
 
-    auto GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) -> bool;
-    void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks);
+    auto GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) const -> bool;
+    void GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) const;
 
     void SkipSeconds(int Seconds);
     // Plays the program chain from the given second on.

@@ -17,6 +17,7 @@
 #include "tools-dvd.h"
 
 // C++ Standard Library
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <cerrno>
@@ -33,10 +34,11 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 // POSIX
-#include <string.h>
+#include <string.h> // NOLINT(modernize-deprecated-headers) -- strdup() is POSIX, <cstring> need not have it
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -64,7 +66,9 @@ constexpr int POLLTIMEOUTS_BEFORE_DEVICECLEAR = 100;
 
 #ifdef CTRLDEBUG
 
-static void printCellInfo(const dvdnav_cell_change_event_t &lastCellEventInfo, int64_t pgcTicksPerBlock) {
+namespace {
+
+void printCellInfo(const dvdnav_cell_change_event_t &lastCellEventInfo, int64_t pgcTicksPerBlock) {
     const int cell_length_s = static_cast<int>(lastCellEventInfo.cell_length / 90000L);
     const int pg_length_s = static_cast<int>(lastCellEventInfo.pg_length / 90000L);
     const int pgc_length_s = static_cast<int>(lastCellEventInfo.pgc_length / 90000L);
@@ -80,6 +84,8 @@ static void printCellInfo(const dvdnav_cell_change_event_t &lastCellEventInfo, i
            static_cast<long>(lastCellEventInfo.pg_start), pg_start_s, static_cast<long>(pgcTicksPerBlock),
            (pgcTicksPerBlock / 90000L));
 }
+
+} // namespace
 
 #endif
 
@@ -131,7 +137,7 @@ class cResumeEntry : public cListObject {
 auto ParseResume(std::string_view Line, cResumeEntry &Entry) -> bool {
     const char *p = Line.data();
     const char *end = p + Line.size();
-    const auto field = [&p, end](auto &Value) {
+    const auto field = [&p, end](auto &Value) -> bool {
         const auto [next, error] = std::from_chars(p, end, Value);
         if (error != std::errc() || next == end || *next != ':') {
             return false;
@@ -358,11 +364,7 @@ void cDvdPlayer::TrickSpeed(int Increment) {
         }
         trickSpeed = nts;
         const int Mult = (playMode == ePlayMode::Slow) ? 1 : SPEED_MULT;
-        int sp = (speed > 0) ? Mult / speed : -speed * Mult;
-
-        if (sp > MAX_VIDEO_SLOWMOTION) {
-            sp = MAX_VIDEO_SLOWMOTION;
-        }
+        int sp = std::min((speed > 0) ? Mult / speed : -speed * Mult, MAX_VIDEO_SLOWMOTION);
 
         if (playDir == ePlayDir::Backward) {
             fastWindFactor = (playMode == ePlayMode::Slow) ? trickSpeed - NORMAL_SPEED : trickSpeed - NORMAL_SPEED + 1;
@@ -571,11 +573,18 @@ auto cDvdPlayer::MenuCall(DVDMenuID_t Menu) -> int {
 }
 
 #ifdef DVDDEBUG
-// The events by number: libdvdnav no longer sends 11, SEEK_DONE.
-static const char *dvd_ev[] = {
-    "BLOCK_OK",         "NOP",  "STILL_FRAME", "SPU_STREAM_CHANGE", "AUDIO_STREAM_CHANGE", "VTS_CHANGE",  "CELL_CHANGE",
-    "NAV_PACKET",       "STOP", "HIGHLIGHT",   "SPU_CLUT_CHANGE",   "SEEK_DONE",           "HOP_CHANNEL", "WAIT",
-    "TRICK_MODE_CHANGE"};
+namespace {
+
+// The name of a libdvdnav event; it no longer sends 11, SEEK_DONE.
+auto EventName(int32_t Event) -> const char * {
+    static constexpr std::array<const char *, 15> Names{{"BLOCK_OK", "NOP", "STILL_FRAME", "SPU_STREAM_CHANGE",
+                                                         "AUDIO_STREAM_CHANGE", "VTS_CHANGE", "CELL_CHANGE",
+                                                         "NAV_PACKET", "STOP", "HIGHLIGHT", "SPU_CLUT_CHANGE",
+                                                         "SEEK_DONE", "HOP_CHANNEL", "WAIT", "TRICK_MODE_CHANGE"}};
+    return Event >= 0 && static_cast<size_t>(Event) < Names.size() ? Names.at(static_cast<size_t>(Event)) : "?";
+}
+
+} // namespace
 #endif
 
 // stillFrame: the cell ends in a still picture, the VOBU is one.
@@ -594,7 +603,7 @@ void cDvdPlayer::delay_ticks(uint64_t ticks) {
     uint64_t done = time_ticks() - t0;
     while (ticks > done) {
         // usleep() oversleeps by up to about 19 ms
-        if (ticks - done > uint64_t{19 * 90}) {
+        if (ticks - done > uint64_t{19} * 90) {
             usleep(static_cast<useconds_t>(((ticks - done) * 100U / 9U) - 19000U));
         }
         done = time_ticks() - t0;
@@ -683,7 +692,6 @@ void cDvdPlayer::Action() {
         esyslog("ERROR: dvd-plugin cannot open dvdnav device %s -> input thread ended (pid=%d) !", cDVD::DeviceName(),
                 getpid());
         active = running = false;
-        fflush(nullptr);
         return;
     }
     {
@@ -886,12 +894,13 @@ void cDvdPlayer::Action() {
             if (iframe && iframeSize > 0) {
 #ifdef IFRAMEWRITE
                 static int ifnum = 0;
-                static char ifname[255];
-                snprintf(ifname, 255, "/tmp/dvd.iframe.%3.3d.asm.pes", ifnum++);
-                FILE *f = fopen(ifname, "wb");
-                if (f) {
-                    fwrite(iframe, 1, static_cast<size_t>(iframeSize), f);
-                    fclose(f);
+                const cString ifname = cString::sprintf("/tmp/dvd.iframe.%3.3d.asm.pes", ifnum++);
+                if (FILE *f = fopen(ifname, "wb")) {
+                    const bool written =
+                        fwrite(iframe, 1, static_cast<size_t>(iframeSize), f) == static_cast<size_t>(iframeSize);
+                    if (fclose(f) != 0 || !written) {
+                        esyslog("ERROR: dvd-plugin can't write %s", *ifname);
+                    }
                 }
 #endif
                 DeviceStillPicture(iframe, iframeSize);
@@ -905,7 +914,7 @@ void cDvdPlayer::Action() {
             iframeAssembler->Clear();
             IframeCnt = -1; // a still picture was played
             if (blk_size <= 0 && !skipPlayVideo) {
-                sleept = uint64_t{1 * 90}; // 1 ms
+                sleept = uint64_t{90}; // 1 ms
             }
 
             DEBUG_IFRAME("I-Frame: DeviceStillPicture: vpts=%8ums sleept=%llums\n",
@@ -1084,7 +1093,7 @@ void cDvdPlayer::Action() {
                 if (stillTimer != 0) {
                     seenVPTS(0);
                     if (stillTimer > currentTicks) {
-                        sleept = uint64_t{40 * 90}; // 40 ms
+                        sleept = uint64_t{40} * 90; // 40 ms
                     } else {
                         StillSkip();
                         sleept = 0;
@@ -1129,10 +1138,12 @@ void cDvdPlayer::Action() {
                     // one, -1 for none; bit 7 set means hide, and only let forced
                     // subtitles show (see vm.c from libdvdnav). The logical
                     // number it leaves out.
-                    const int physical = mode == cSpuDecoder::eSpuLetterBox ? ev.physical_letterbox
-                                                                            : // TV 4:3, DVD 16:9
-                                             mode == cSpuDecoder::eSpuPanAndScan ? ev.physical_pan_scan
-                                                                                 : ev.physical_wide;
+                    int physical = ev.physical_wide;
+                    if (mode == cSpuDecoder::eSpuLetterBox) { // TV 4:3, DVD 16:9
+                        physical = ev.physical_letterbox;
+                    } else if (mode == cSpuDecoder::eSpuPanAndScan) {
+                        physical = ev.physical_pan_scan;
+                    }
                     currentNavSubpPhysical = physical < 0 ? -1 : physical & SubpStreamMask;
                     currentNavSubpStream = -1;
                     if (ev.physical_wide >= 0) {
@@ -1157,6 +1168,7 @@ void cDvdPlayer::Action() {
             case DVDNAV_AUDIO_STREAM_CHANGE: {
                 DEBUG_NAV("%s:%d:NAV AUDIO STREAM CHANGE\n", __FILE__, __LINE__);
                 if (!currentNavAudioTrackUsrLocked) {
+                    // NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c) -- a stream number, -1 for none
                     const int id = dvdnav_get_active_audio_stream(nav);
                     if (id >= 0) {
                         // Only Dolby Digital and DTS are Dolby tracks for VDR; it
@@ -1241,7 +1253,7 @@ void cDvdPlayer::Action() {
                 printCellInfo(lastCellEventInfo, pgcTicksPerBlock);
 #endif
                 // The cell that ended may have ended in a still picture.
-                SendIframe(stillFrame & CELL_STILL);
+                SendIframe((stillFrame & CELL_STILL) != 0);
                 stillFrame = (dvdnav_get_next_still_flag(nav) != 0) ? CELL_STILL : 0;
                 SetTitleInfoString();
                 if (next_cell_change) {
@@ -1253,7 +1265,7 @@ void cDvdPlayer::Action() {
             case DVDNAV_NAV_PACKET: {
                 DEBUG_NAV0("%s:%d:NAV PACKET\n", __FILE__, __LINE__);
                 current_pci = dvdnav_get_current_nav_pci(nav);
-                menuButtons = current_pci && current_pci->hli.hl_gi.hli_ss;
+                menuButtons = current_pci != nullptr && current_pci->hli.hl_gi.hli_ss != 0;
                 DEBUG_NAV0("NAV: %x, prev_e_ptm: %8d, s_ptm: %8d, ", stillFrame, prev_e_ptm,
                            current_pci->pci_gi.vobu_s_ptm);
                 if (prev_e_ptm) {
@@ -1268,7 +1280,7 @@ void cDvdPlayer::Action() {
                     UpdateButtonHighlight(nullptr);
                 }
                 const dsi_t *dsi = dvdnav_get_current_nav_dsi(nav);
-                SendIframe(stillFrame & NAV_STILL);
+                SendIframe((stillFrame & NAV_STILL) != 0);
                 if (dsi->vobu_sri.next_video == 0xbfffffff) {
                     stillFrame |= NAV_STILL;
                 } else {
@@ -1312,7 +1324,7 @@ void cDvdPlayer::Action() {
         }
 #ifdef DVDDEBUG
         if ((event != DVDNAV_BLOCK_OK) && (event != DVDNAV_NAV_PACKET) && (event != DVDNAV_STILL_FRAME)) {
-            DEBUGDVD("got event (%d)%s, len %d\n", event, dvd_ev[event], len);
+            DEBUGDVD("got event (%d)%s, len %d\n", event, EventName(event), len);
         }
 #endif
         if (cache_ptr != nullptr && cache_ptr != event_buf.data()) {
@@ -1330,7 +1342,6 @@ void cDvdPlayer::Action() {
         Skins.QueueMessage(mtError, tr("Error.DVD$Error fetching data from DVD!"));
     }
     Empty();
-    fflush(nullptr);
 
     running = false;
 
@@ -1348,7 +1359,6 @@ void cDvdPlayer::Action() {
     }
 
     DEBUGDVD("%s:%d: input thread ended (pid=%d)\n", __FILE__, __LINE__, getpid());
-    fflush(nullptr);
 
     // Last: DVDRemoveable() now tells the control to end the replay.
     active = false;
@@ -1357,7 +1367,7 @@ void cDvdPlayer::Action() {
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(6, 1, 0)
 void cDvdPlayer::NavLog(void *Player, dvdnav_logger_level_t Level, const char *Format, va_list Args) {
     std::array<char, 256> buffer{};
-    vsnprintf(buffer.data(), buffer.size(), Format, Args);
+    (void)vsnprintf(buffer.data(), buffer.size(), Format, Args); // a longer note is cut
     const char *msg = buffer.data();
     auto *player = static_cast<cDvdPlayer *>(Player);
     // libdvdnav repeats its notes: on a disc without menus in the menu
@@ -1476,8 +1486,8 @@ void cDvdPlayer::UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt) {
             }
 
             if (button_ptr && button_ptr->btn_coln != 0) {
-                const int sx = button_ptr->x_start;
-                int ex = button_ptr->x_end;
+                const auto sx = static_cast<int>(button_ptr->x_start);
+                auto ex = static_cast<int>(button_ptr->x_end);
                 if ((ex - sx + 1) & 0x03) {
                     ex += 4 - ((ex - sx + 1) & 0x03);
                 }
@@ -1518,7 +1528,7 @@ void cDvdPlayer::UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt) {
 
 // The aspect ratio of a sequence header, as the DVD allows it on the TV:
 // 1 = square pixels, 2 = 4:3, 3 = 16:9, 4 = 2.21:1.
-void cDvdPlayer::DoScaleMode(int &vaspect) {
+void cDvdPlayer::DoScaleMode(int &vaspect) const {
     // Only for a DVD that is not 4:3, on a 4:3 TV.
     if (!Setup.VideoFormat && dvd_aspect != 0) {
         if (vaspect != 2) {
@@ -1626,7 +1636,7 @@ auto cDvdPlayer::SubtitlesShown(int Stream) const -> bool {
     if (currentNavSubpStreamUsrLocked) {
         return true;
     }
-    return !(Stream & 0x80) && (DVDSetup.ShowSubtitles || subpMenuChoice);
+    return (Stream & 0x80) == 0 && (DVDSetup.ShowSubtitles != 0 || subpMenuChoice);
 }
 
 void cDvdPlayer::ReportSubtitleTrack() {
@@ -1641,7 +1651,7 @@ void cDvdPlayer::ReportSubtitleTrack() {
     subtitleTrackSync = false;
 }
 
-void cDvdPlayer::SetSubtitleTrack(eTrackType Type, const tTrackId *) {
+void cDvdPlayer::SetSubtitleTrack(eTrackType Type, const tTrackId * /*TrackId*/) {
     LOCK_THREAD; // also orders the flag with the player thread setting it
     // While the player announces or reports a track, VDR's call back only
     // echoes the player's own state, or VDR's guess at one.
@@ -1682,7 +1692,7 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
 
     switch (streamType) {
         case VIDEO_STREAM_S: {
-            const bool ptsFlag = ((sector[7] & 0x80) && sector[8] >= 5);
+            const bool ptsFlag = (sector[7] & 0x80) != 0 && sector[8] >= 5;
             if (ptsFlag) {
                 pktpts = cPStream::fromPTS(sector + 9) + static_cast<uint64_t>(ptm_offs);
             }
@@ -1710,7 +1720,7 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
             int blankTo = 0;
 
             uint8_t currentFrameType = 0;
-            const bool do_copy = (lastFrameType == I_FRAME) && !(data[0] == 0 && data[1] == 0 && data[2] == 1);
+            const bool do_copy = (lastFrameType == I_FRAME) && (data[0] != 0 || data[1] != 0 || data[2] != 1);
             bool havePictureHeader = false;
             bool haveSliceBeforePicture = false;
             while (datalen >= 6) { // a picture header's type is in its 6th byte
@@ -1783,10 +1793,9 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                     } else if (ptype2 == PADDING_STREAM) {
                         DEBUGDVD("PADDING_STREAM @ %d\n", static_cast<int>(data - sector));
                         break;
-                    } else if (0x01 <= ptype2 && ptype2 <= 0xaf) {
-                        if (!havePictureHeader && iframeAssembler->Available() == 0) {
-                            haveSliceBeforePicture = true;
-                        }
+                    } else if (0x01 <= ptype2 && ptype2 <= 0xaf && !havePictureHeader &&
+                               iframeAssembler->Available() == 0) {
+                        haveSliceBeforePicture = true; // a slice, before a picture header
                     }
                 }
                 data++;
@@ -1887,7 +1896,7 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
             // skip the packet's start code, stream id and length
             data += 6;
 
-            const bool ptsFlag = (sector[7] & 0xC0) && sector[8] >= 5;
+            const bool ptsFlag = (sector[7] & 0xC0) != 0 && sector[8] >= 5;
             if (ptsFlag) {
                 pktpts = cPStream::fromPTS(sector + 9) + static_cast<uint64_t>(ptm_offs);
             }
@@ -2148,9 +2157,9 @@ void cDvdPlayer::Backward() {
     }
 }
 
-inline auto cDvdPlayer::GetPGCLengthInTicks() -> int64_t { return lastCellEventInfo.pgc_length; }
+inline auto cDvdPlayer::GetPGCLengthInTicks() const -> int64_t { return lastCellEventInfo.pgc_length; }
 
-void cDvdPlayer::BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks) {
+void cDvdPlayer::BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &TotalTicks) const {
     TotalTicks = GetPGCLengthInTicks();
     if (pgcTotalBlockNum > 0) {
         Ticks = BlockNum * (TotalTicks / pgcTotalBlockNum);
@@ -2159,13 +2168,13 @@ void cDvdPlayer::BlocksToPGCTicks(uint32_t BlockNum, int64_t &Ticks, int64_t &To
     }
 }
 
-void cDvdPlayer::PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum) {
+void cDvdPlayer::PGCTicksToBlocks(int64_t Ticks, int64_t &BlockNum, uint32_t &TotalBlockNum) const {
     const int64_t totalTicks = GetPGCLengthInTicks();
     TotalBlockNum = pgcTotalBlockNum;
     BlockNum = totalTicks > 0 ? (Ticks * TotalBlockNum / totalTicks) : 0;
 }
 
-auto cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool) -> bool {
+auto cDvdPlayer::GetIndex(int &CurrentFrame, int &TotalFrame, bool /*SnapToIFrame*/) -> bool {
     // The position the player thread read last: the control polls this from
     // VDR's main loop, which must not wait for the thread's lock.
     const cMutexLock MutexLock(&infoMutex);
@@ -2201,7 +2210,7 @@ void cDvdPlayer::UpdateVTSInfo() {
     if (nav) {
         dvd_aspect = dvdnav_get_video_aspect(nav);
         dvd_scaleperm = dvdnav_get_video_scale_permission(nav);
-        isInFeature = dvdnav_is_domain_vts(nav);
+        isInFeature = dvdnav_is_domain_vts(nav) != 0;
 
 #if APIVERSNUM >= 30012 // cSpuDecoder::setResolution(), VDR 2.8.1
         uint32_t dvd_width = 0;
@@ -2254,7 +2263,7 @@ void cDvdPlayer::PlayFromBlock(int64_t Block) {
     Play();
 }
 
-auto cDvdPlayer::GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) -> bool {
+auto cDvdPlayer::GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) const -> bool {
     int64_t currentTicks = 0;
     int64_t totalTicks = 0;
 
@@ -2270,7 +2279,7 @@ auto cDvdPlayer::GetPositionInSec(int64_t &CurrentSec, int64_t &TotalSec) -> boo
     return true;
 }
 
-void cDvdPlayer::GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) {
+void cDvdPlayer::GetPositionInTicks(int64_t &CurrentTicks, int64_t &TotalTicks) const {
     BlocksToPGCTicks(pgcCurrentBlockNum, CurrentTicks, TotalTicks);
 }
 
@@ -2498,27 +2507,24 @@ auto cDvdPlayer::SearchSubpStream(int SubpStreamId) const -> int {
 }
 
 void cDvdPlayer::notifySeenSubpStream(int navSubpStream) {
-    const int i = SearchSubpStream(navSubpStream);
-
-    if (i < 0) {
-        // only a stream the program chain has
-        if (navSubpStream == -1 ||
-            (nav && dvdnav_get_spu_logical_stream(nav, static_cast<uint8_t>(navSubpStream)) >= 0)) {
-            // The subtitle key steps through this list: keep it in stream
-            // order, "off" (-1) first, not in the order the first packets of
-            // the streams turned up, which made the key start anywhere.
-            IntegerListObject *before = navSubpStreamSeen.First();
-            while (before && before->getValue() < navSubpStream) {
-                before = navSubpStreamSeen.Next(before);
-            }
-            if (before) {
-                navSubpStreamSeen.Ins(new IntegerListObject(navSubpStream), before);
-            } else {
-                navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
-            }
-            if (navSubpStream >= 0) {
-                AnnounceSubtitleTrack(navSubpStream);
-            }
+    // a new stream, and only one the program chain has
+    if (SearchSubpStream(navSubpStream) < 0 &&
+        (navSubpStream == -1 ||
+         (nav && dvdnav_get_spu_logical_stream(nav, static_cast<uint8_t>(navSubpStream)) >= 0))) {
+        // The subtitle key steps through this list: keep it in stream
+        // order, "off" (-1) first, not in the order the first packets of
+        // the streams turned up, which made the key start anywhere.
+        IntegerListObject *before = navSubpStreamSeen.First();
+        while (before && before->getValue() < navSubpStream) {
+            before = navSubpStreamSeen.Next(before);
+        }
+        if (before) {
+            navSubpStreamSeen.Ins(new IntegerListObject(navSubpStream), before);
+        } else {
+            navSubpStreamSeen.Add(new IntegerListObject(navSubpStream));
+        }
+        if (navSubpStream >= 0) {
+            AnnounceSubtitleTrack(navSubpStream);
         }
     }
 }
@@ -2632,13 +2638,13 @@ void cDvdPlayer::notifySeenAudioTrack(int navAudioTrack) {
         int channel_active = 0;
         if (nav != nullptr) {
             audioLanguageCode = GetAudioTrackLanguageCode(navAudioTrack);
+            // NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c) -- a stream number, -1 for none
             channel_active = dvdnav_get_active_audio_stream(nav);
         }
         // The language code has its first letter in the low byte.
         printf("cDvdPlayer::cDvdPlayer: seen new audio id: 0x%X (%d), <%c%c>; 0x%X (%d)\n", navAudioTrack,
                navAudioTrack, static_cast<char>(audioLanguageCode & 0xFF), static_cast<char>(audioLanguageCode >> 8),
                channel_active, channel_active);
-        fflush(nullptr);
 #endif
         navAudioTracksSeen.Add(new IntegerListObject(navAudioTrack));
     }
@@ -2674,7 +2680,7 @@ void cDvdPlayer::SetAudioTrack(eTrackType Type, const tTrackId *TrackId) {
     if (cThread::ThreadId() != playerThreadId) {
         const cMutexLock MutexLock(&audioTrackRequestMutex);
         audioTrackRequest = Type;
-        audioTrackRequestByViewer = cThread::IsMainThread();
+        audioTrackRequestByViewer = cThread::IsMainThread() != 0; // VDR returns it as a tThreadId
         return;
     }
     SwitchAudioTrack(Type, false);
@@ -2854,6 +2860,7 @@ auto cDvdPlayer::PhysicalSubpStream(int Logical) const -> int {
     if (!nav || Logical < 0) {
         return -1;
     }
+    // NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c) -- a stream number, -1 for none
     const int physical = dvdnav_get_spu_logical_stream(nav, Logical & SubpStreamMask);
     return physical >= 0 ? physical & SubpStreamMask : -1;
 }
@@ -2870,6 +2877,42 @@ auto cDvdPlayer::GetAudioTrackLanguageCode(int Channel) const -> uint16_t {
     }
     return audioStreamLanguageCode;
 }
+
+namespace {
+
+// The marker of an audio track's code extension, NULL for a plain track.
+auto AudioExtension(unsigned int CodeExtension) -> const char * {
+    switch (CodeExtension) {
+        case 2:
+            return tr("DVD$visually impaired");
+        case 3: // the director's comments
+        case 4: // alternate ones
+            return tr("DVD$comments");
+        default:
+            return nullptr;
+    }
+}
+
+// The marker of a subtitle stream's code extension, NULL for plain subtitles
+// in any size.
+auto SubtitleExtension(unsigned int CodeExtension) -> const char * {
+    switch (CodeExtension) {
+        case 9:
+            return tr("DVD$forced");
+        case 5: // in the normal size
+        case 6: // large
+        case 7: // for children
+            return tr("DVD$captions");
+        case 13: // the director's comments, in the normal size
+        case 14: // large
+        case 15: // for children
+            return tr("DVD$comments");
+        default:
+            return nullptr;
+    }
+}
+
+} // namespace
 
 auto cDvdPlayer::AudioTrackDescription(int Channel, const char *LanguageName) const -> cString {
     // VDR's audio menu shows this description in place of the bare language
@@ -2892,10 +2935,7 @@ auto cDvdPlayer::AudioTrackDescription(int Channel, const char *LanguageName) co
     } else {
         d = cString::sprintf("%s%s%d.0", *d, **d ? " " : "", channels);
     }
-    const char *ext = attr.code_extension == 2                               ? tr("DVD$visually impaired")
-                      : attr.code_extension == 3 || attr.code_extension == 4 ? tr("DVD$comments")
-                                                                             : nullptr;
-    if (ext) {
+    if (const char *ext = AudioExtension(attr.code_extension)) {
         d = cString::sprintf("%s (%s)", *d, ext);
     }
     return **d ? d : cString(LanguageName);
@@ -2910,10 +2950,7 @@ auto cDvdPlayer::SubtitleTrackDescription(int Channel, const char *LanguageName)
     if (!nav || Channel < 0 || dvdnav_get_spu_attr(nav, Channel & SubpStreamMask, &attr) != DVDNAV_STATUS_OK) {
         return {LanguageName};
     }
-    const char *ext = attr.code_extension == 9                                 ? tr("DVD$forced")
-                      : attr.code_extension >= 5 && attr.code_extension <= 7   ? tr("DVD$captions")
-                      : attr.code_extension >= 13 && attr.code_extension <= 15 ? tr("DVD$comments")
-                                                                               : nullptr;
+    const char *ext = SubtitleExtension(attr.code_extension);
     if (!ext) {
         return {LanguageName};
     }
@@ -3034,8 +3071,8 @@ void cDvdPlayer::UpdateTrackInfo() {
     }
 
     const cMutexLock MutexLock(&infoMutex);
-    infoAudio = audio;
-    infoSubtitle = subtitle;
+    infoAudio = std::move(audio);
+    infoSubtitle = std::move(subtitle);
 }
 
 void cDvdPlayer::SetAspectString() {
