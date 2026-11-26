@@ -88,19 +88,11 @@
 #include "dvdspu.h"
 
 // C++ Standard Library
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 
 // --- simpleFIFO ------------------------------------------------------------
-
-simpleFIFO::simpleFIFO(int Size) {
-    size = Size;
-    head = tail = 0;
-    buffer = static_cast<uint8_t *>(malloc(static_cast<size_t>(size)));
-}
-
-simpleFIFO::~simpleFIFO() { free(buffer); }
 
 auto simpleFIFO::Put(const uint8_t *Data, int Count) -> int {
     if (Count > 0) {
@@ -114,13 +106,13 @@ auto simpleFIFO::Put(const uint8_t *Data, int Count) -> int {
             Count = free;
         }
         if (Count >= rest) {
-            memcpy(buffer + head, Data, static_cast<size_t>(rest));
+            memcpy(buffer.data() + head, Data, static_cast<size_t>(rest));
             if (Count - rest) {
-                memcpy(buffer, Data + rest, static_cast<size_t>(Count - rest));
+                memcpy(buffer.data(), Data + rest, static_cast<size_t>(Count - rest));
             }
             head = Count - rest;
         } else {
-            memcpy(buffer + head, Data, static_cast<size_t>(Count));
+            memcpy(buffer.data() + head, Data, static_cast<size_t>(Count));
             head += Count;
         }
     }
@@ -139,13 +131,13 @@ auto simpleFIFO::Get(uint8_t *Data, int Count) -> int {
             Count = cont;
         }
         if (Count >= rest) {
-            memcpy(Data, buffer + tail, static_cast<size_t>(rest));
+            memcpy(Data, buffer.data() + tail, static_cast<size_t>(rest));
             if (Count - rest) {
-                memcpy(Data + rest, buffer, static_cast<size_t>(Count - rest));
+                memcpy(Data + rest, buffer.data(), static_cast<size_t>(Count - rest));
             }
             tail = Count - rest;
         } else {
-            memcpy(Data, buffer + tail, static_cast<size_t>(Count));
+            memcpy(Data, buffer.data() + tail, static_cast<size_t>(Count));
             tail += Count;
         }
     }

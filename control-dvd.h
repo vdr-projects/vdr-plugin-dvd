@@ -69,13 +69,16 @@ class cDvdPlayerControl : public cControl {
 
   public:
     cDvdPlayerControl();
+    cDvdPlayerControl(const cDvdPlayerControl &) = delete;
+    cDvdPlayerControl(cDvdPlayerControl &&) noexcept = delete;
+    auto operator=(const cDvdPlayerControl &) -> cDvdPlayerControl & = delete;
+    auto operator=(cDvdPlayerControl &&) noexcept -> cDvdPlayerControl & = delete;
     ~cDvdPlayerControl() override;
     void Hide() override;
     auto ProcessKey(eKeys Key) -> eOSState override;
     void Show() override;
     static auto DVDActive() -> bool { return dvd_active; }
     auto DvdNavigation(eKeys Key) -> bool;
-    auto GetDisplayHeaderLine() -> cString;
     auto OsdVisible(const void *me) -> bool;
     auto OsdTaken(const void *me) -> bool;
     auto TakeOsd(void *obj) -> bool;

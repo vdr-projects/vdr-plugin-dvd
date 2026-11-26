@@ -17,8 +17,10 @@
 #include "tools-dvd.h"
 
 // C++ Standard Library
+#include <array>
 #include <cctype>
 #include <cerrno>
+#include <charconv>
 #include <cinttypes>
 #include <cstdarg>
 #include <cstddef>
@@ -26,8 +28,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <vector>
 
 // POSIX
+#include <string.h>
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -79,37 +88,26 @@ static void printCellInfo(const dvdnav_cell_change_event_t &lastCellEventInfo, i
 // Only used with the player's thread lock held.
 class cIframeAssembler {
   private:
-    int head;
+    int head{0};
     int size;
-    unsigned char *buf;
+    std::vector<unsigned char> buf;
 
   public:
-    explicit cIframeAssembler(int Size);
-    cIframeAssembler(const cIframeAssembler &) = delete;
-    auto operator=(const cIframeAssembler &) -> cIframeAssembler & = delete;
-    ~cIframeAssembler();
+    explicit cIframeAssembler(int Size) : size(Size), buf(static_cast<size_t>(Size)) {}
     [[nodiscard]] auto Available() const -> int { return head; }
     void Clear() { head = 0; }
     auto Get(int &Length) -> unsigned char *;
     void Put(const unsigned char *Data, int Length);
 };
 
-cIframeAssembler::cIframeAssembler(int Size) {
-    size = Size;
-    head = 0;
-    buf = MALLOC(unsigned char, (size_t)Size);
-}
-
-cIframeAssembler::~cIframeAssembler() { free(buf); }
-
 auto cIframeAssembler::Get(int &Length) -> unsigned char * {
     Length = head;
-    return buf;
+    return buf.data();
 }
 
 void cIframeAssembler::Put(const unsigned char *Data, int Length) {
     if (head + Length < size) {
-        memcpy(buf + head, Data, static_cast<size_t>(Length));
+        memcpy(buf.data() + head, Data, static_cast<size_t>(Length));
         head += Length;
     } else {
         esyslog("ERROR: dvd-plugin iframeassembler full %d", head + Length);
@@ -121,15 +119,30 @@ void cIframeAssembler::Put(const unsigned char *Data, int Length) {
 // The resume file and its entries come from the mplayer plugin.
 class cResumeEntry : public cListObject {
   public:
-    char *key = nullptr;
+    std::string key;
     int title = 0;
     int chapter = 0;
     int64_t second = 0;
-    cResumeEntry() = default;
-    cResumeEntry(const cResumeEntry &) = delete;
-    auto operator=(const cResumeEntry &) -> cResumeEntry & = delete;
-    ~cResumeEntry() override { free(key); }
 };
+
+// A line of the resume file, "title:chapter:second:key"; false if it is none.
+static auto ParseResume(std::string_view Line, cResumeEntry &Entry) -> bool {
+    const char *p = Line.data();
+    const char *end = p + Line.size();
+    const auto field = [&p, end](auto &Value) {
+        const auto [next, error] = std::from_chars(p, end, Value);
+        if (error != std::errc() || next == end || *next != ':') {
+            return false;
+        }
+        p = next + 1;
+        return true;
+    };
+    if (!field(Entry.title) || !field(Entry.chapter) || !field(Entry.second) || p == end) {
+        return false;
+    }
+    Entry.key.assign(p, end);
+    return true;
+}
 
 // --- cDVDPlayerResume ----------------------------------------------------------
 
@@ -153,6 +166,10 @@ class cDVDPlayerResume : public cList<cResumeEntry> {
 
   public:
     cDVDPlayerResume();
+    cDVDPlayerResume(const cDVDPlayerResume &) = delete;
+    cDVDPlayerResume(cDVDPlayerResume &&) noexcept = delete;
+    auto operator=(const cDVDPlayerResume &) -> cDVDPlayerResume & = delete;
+    auto operator=(cDVDPlayerResume &&) noexcept -> cDVDPlayerResume & = delete;
     ~cDVDPlayerResume() override;
     // Both read the file first, which keeps the other discs' entries.
     // Stores the position for the key and writes the file.
@@ -173,7 +190,7 @@ void cDVDPlayerResume::SetResume(const char *key, int title, int chapter, int64_
         DEBUGDVD("resume: setting resume %d:%d:%lld (update)", title, chapter, static_cast<long long>(second));
     } else {
         re = new cResumeEntry;
-        re->key = strdup(key);
+        re->key = key;
         Add(re);
         DEBUGDVD("resume: setting resume %d:%d:%lld (new)", title, chapter, static_cast<long long>(second));
     }
@@ -201,25 +218,15 @@ void cDVDPlayerResume::LoadResume() {
     Clear();
     modified = false;
     DEBUGDVD("resume: resume file is \"%s\"\n", *resfile);
-    FILE *f = fopen(resfile, "r");
-    if (f) {
-        DEBUGDVD("resume: successfully opened resume file\n");
-        char line[768];
-        while (fgets(line, sizeof(line), f)) {
-            char key[512];
-            int t = 0;
-            int c = 0;
-            int64_t s = 0;
-            if (sscanf(line, "%d:%d:%" SCNd64 ":%511[^\n]", &t, &c, &s, key) == 4) {
-                auto *re = new cResumeEntry;
-                re->key = strdup(key);
-                re->title = t;
-                re->chapter = c;
-                re->second = s;
-                Add(re);
-            }
+    std::ifstream file(*resfile);
+    std::string line;
+    while (std::getline(file, line)) {
+        auto *re = new cResumeEntry;
+        if (ParseResume(line, *re)) {
+            Add(re);
+        } else {
+            delete re;
         }
-        fclose(f);
     }
 }
 
@@ -229,10 +236,12 @@ auto cDVDPlayerResume::SaveResume() -> bool {
         cSafeFile f(resfile);
         if (f.Open()) {
             for (const cResumeEntry *re = First(); re; re = Next(re)) {
-                fprintf(f, "%d:%d:%" PRId64 ":%s\n", re->title, re->chapter, re->second, re->key);
+                // The error stays in the stream: Close() keeps the old file.
+                if (fprintf(f, "%d:%d:%" PRId64 ":%s\n", re->title, re->chapter, re->second, re->key.c_str()) < 0) {
+                    break;
+                }
             }
-            f.Close();
-            return true;
+            return f.Close();
         }
         DEBUGDVD("resume: failed to save resume file\n");
         return false;
@@ -243,7 +252,7 @@ auto cDVDPlayerResume::SaveResume() -> bool {
 auto cDVDPlayerResume::FindResume(const char *key) -> cResumeEntry * {
     DEBUGDVD("resume: searching resume position for \"%s\"\n", key);
     for (cResumeEntry *re = First(); re; re = Next(re)) {
-        if (!strcasecmp(re->key, key)) {
+        if (!strcasecmp(re->key.c_str(), key)) {
             DEBUGDVD("resume: found resume position %d:%d:%lld\n", re->title, re->chapter,
                      static_cast<long long>(re->second));
             return re;
@@ -254,6 +263,13 @@ auto cDVDPlayerResume::FindResume(const char *key) -> cResumeEntry * {
 }
 
 // --- cDvdPlayer ------------------------------------------------------------
+
+// The two letters of a language code of libdvdnav's, the first in the low
+// byte as the player keeps it, and a terminating 0.
+using LanguageLetters = std::array<char, 3>;
+static auto Letters(uint16_t LanguageCode) -> LanguageLetters {
+    return {static_cast<char>(LanguageCode & 0xFF), static_cast<char>(LanguageCode >> 8), 0};
+}
 
 // The ring buffer of the packets for the device.
 constexpr int VIDEOBUFSIZE = MEGABYTE(1);
@@ -269,32 +285,19 @@ constexpr int MAX_MAX_SPEEDS = MAX_SPEEDS * MAX_SPEEDS; // the offset of the max
 constexpr int SPEED_MULT = 12;                          // the speed multiplier
 int cDvdPlayer::Speeds[] = {0, 0, 0, 0, 0, 0, 0, -2, -4, -8, 1, 2, 4, 12, 0, 0, 0, 0, 0, 0, 0};
 
-const char *cDvdPlayer::dummy_title = "DVD Title";
-const char *cDvdPlayer::dummy_n_a = "n.a.";
-
 cDvdPlayer::cDvdPlayer()
-    : cThread("dvd-plugin"), iframeAssembler(new cIframeAssembler(KILOBYTE(CIF_MAXSIZE))),
-      ringBuffer(new cRingBufferFrame(VIDEOBUFSIZE)), trickSpeed(NORMAL_SPEED), resume(new cDVDPlayerResume) {
+    : cThread("dvd-plugin"), iframeAssembler(std::make_unique<cIframeAssembler>(KILOBYTE(CIF_MAXSIZE))),
+      ringBuffer(std::make_unique<cRingBufferFrame>(VIDEOBUFSIZE)), trickSpeed(NORMAL_SPEED),
+      resume(std::make_unique<cDVDPlayerResume>()) {
     DEBUGDVD("cDvdPlayer::cDvdPlayer(void)\n");
     DEBUG_SUBP_ID("SPU showSubs=%d\n", DVDSetup.ShowSubtitles);
     clearSeenSubpStream();
     clearSeenAudioTrack();
-    strn0cpy(infoAudio, dummy_n_a, sizeof(infoAudio));
-    strn0cpy(infoSubtitle, dummy_n_a, sizeof(infoSubtitle));
-    SetTitleInfoString();
-    SetTitleString();
-    SetAspectString();
 }
 
 cDvdPlayer::~cDvdPlayer() {
     DEBUGDVD("destructor cDvdPlayer::~cDvdPlayer()\n");
     Detach();
-    delete iframeAssembler;
-    delete ringBuffer;
-    free(titleinfo_str);
-    free(title_str);
-    free(aspect_str);
-    delete resume;
 }
 
 void cDvdPlayer::setController(cDvdPlayerControl *ctrl) { controller = ctrl; }
@@ -570,27 +573,24 @@ void cDvdPlayer::delay_ticks(uint64_t ticks) {
     }
 }
 
-auto cDvdPlayer::GetDVDResumeKey() const -> char * {
+auto cDvdPlayer::GetDVDResumeKey() const -> cString {
     // "DVDName_TotalTitles_OverallChapters". Not unique, but libdvdnav tells
     // neither the disc's serial number nor its size.
     int totalTitles = 0;
-    if (dvdnav_get_number_of_titles(nav, &totalTitles)) {
-        int totalChapters = 0;
-        for (int t = 1; t <= totalTitles; t++) {
-            int curChapters = 0;
-            dvdnav_get_number_of_parts(nav, t, &curChapters);
-            totalChapters += curChapters;
-            DEBUGDVD("resume: cDvdPlayer::Action() Title %d has %d chapters.\n", t, curChapters);
-        }
-        DEBUGDVD("resume: cDvdPlayer::Action() Titles: %d with %d chapters all together, Title: \"%s\"\n", totalTitles,
-                 totalChapters, title_str);
-        char *key = nullptr;
-        if (asprintf(&key, "%s_%d_%d", title_str, totalTitles, totalChapters) < 0) {
-            return nullptr;
-        }
-        return key;
+    if (dvdnav_get_number_of_titles(nav, &totalTitles) != DVDNAV_STATUS_OK) {
+        return {};
     }
-    return nullptr;
+    int totalChapters = 0;
+    for (int t = 1; t <= totalTitles; t++) {
+        int curChapters = 0;
+        dvdnav_get_number_of_parts(nav, t, &curChapters);
+        totalChapters += curChapters;
+        DEBUGDVD("resume: cDvdPlayer::Action() Title %d has %d chapters.\n", t, curChapters);
+    }
+    const cMutexLock MutexLock(&infoMutex);
+    DEBUGDVD("resume: cDvdPlayer::Action() Titles: %d with %d chapters all together, Title: \"%s\"\n", totalTitles,
+             totalChapters, *title_str);
+    return cString::sprintf("%s_%d_%d", *title_str, totalTitles, totalChapters);
 }
 
 void cDvdPlayer::SaveResume() {
@@ -601,29 +601,27 @@ void cDvdPlayer::SaveResume() {
         DEBUGDVD("resume: ERROR fetching current title and chapter (maybe in menus?).\n");
         return;
     }
-    char *key = GetDVDResumeKey();
-    if (!key) {
+    const cString key = GetDVDResumeKey();
+    if (!*key) {
         DEBUGDVD("resume: ERROR computing resume key for this dvd!\n");
         return;
     }
     int64_t currentSec = 0;
     int64_t totalSec = 0;
     GetPositionInSec(currentSec, totalSec);
-    DEBUGDVD("resume->SetResume(\"%s\", %d, %d, %lld)\n", key, currentTitle, currentChapter,
+    DEBUGDVD("resume->SetResume(\"%s\", %d, %d, %lld)\n", *key, currentTitle, currentChapter,
              static_cast<long long>(currentSec));
     resume->SetResume(key, currentTitle, currentChapter, currentSec);
-    free(key);
 }
 
 auto cDvdPlayer::LoadResume(int &title, int &chapter, int64_t &second) -> bool {
-    char *key = GetDVDResumeKey();
-    if (!key) {
+    const cString key = GetDVDResumeKey();
+    if (!*key) {
         DEBUGDVD("resume: ERROR computing resume key for this dvd.\n");
         return false;
     }
-    DEBUGDVD("resume->GetResume(\"%s\", ...): ", key);
+    DEBUGDVD("resume->GetResume(\"%s\", ...): ", *key);
     const bool found = resume->GetResume(key, title, chapter, second);
-    free(key);
     if (!found) {
         DEBUGDVD("<none>\n");
         return false;
@@ -1371,7 +1369,7 @@ auto cDvdPlayer::NavLogFirst(const char *Msg) -> bool {
     }
     // A bound for a disc with endless different notes, which are logged then.
     if (navLogged.Size() < 100) {
-        navLogged.Append(strdup(Msg));
+        navLogged.Append(strdup(Msg)); // cStringList frees it
     }
     return true;
 }
@@ -1554,17 +1552,15 @@ void cDvdPlayer::playSPU(int spuId) {
 
 // The ISO 639-1 code a DVD gives for a track's language in Language, empty
 // if there is none, and the language's name, or NULL.
-static auto TrackLanguage(uint16_t LanguageCode, char *Language) -> const char * {
-    Language[0] = static_cast<char>(LanguageCode & 0xFF);
-    Language[1] = static_cast<char>(LanguageCode >> 8);
-    Language[2] = 0;
-    if (LanguageCode == 0xFFFF || !isalpha(static_cast<unsigned char>(Language[0])) ||
-        !isalpha(static_cast<unsigned char>(Language[1]))) {
-        Language[0] = 0;
+static auto TrackLanguage(uint16_t LanguageCode, LanguageLetters &Language) -> const char * {
+    Language = Letters(LanguageCode);
+    if (LanguageCode == 0xFFFF || !isalpha(static_cast<unsigned char>(Language.at(0))) ||
+        !isalpha(static_cast<unsigned char>(Language.at(1)))) {
+        Language.at(0) = 0;
         return nullptr;
     }
     for (int i = 0; i < ISO639codes; i++) {
-        if (!strcasecmp(Language, ISO639code[i])) {
+        if (!strcasecmp(Language.data(), ISO639code[i])) {
             return DvdLanguageName[i];
         }
     }
@@ -1587,21 +1583,21 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
         }
         announcedLanguageCode[track] = languageCode;
     }
-    char language[3];
+    LanguageLetters language{};
     const char *languageName = TrackLanguage(languageCode, language);
     const cString trackDescription = AudioTrackDescription(Id & AC3AudioTrackMask, languageName);
-    DeviceSetAvailableTrack(Type, Index, Id, language[0] ? language : nullptr, trackDescription);
+    DeviceSetAvailableTrack(Type, Index, Id, language.at(0) ? language.data() : nullptr, trackDescription);
 }
 
 void cDvdPlayer::AnnounceSubtitleTrack(int Stream) {
     // VDR's subtitle menu lists the subtitle tracks; this player draws the
     // subtitles itself, VDR never gets their packets.
-    char language[3];
+    LanguageLetters language{};
     const char *languageName = TrackLanguage(GetSubtitleLanguageCode(Stream), language);
     const cString trackDescription = SubtitleTrackDescription(Stream, languageName);
     subtitleTrackSync = true;
-    DeviceSetAvailableTrack(ttSubtitle, Stream, static_cast<uint16_t>(0x20 | Stream), language[0] ? language : nullptr,
-                            trackDescription);
+    DeviceSetAvailableTrack(ttSubtitle, Stream, static_cast<uint16_t>(0x20 | Stream),
+                            language.at(0) ? language.data() : nullptr, trackDescription);
     subtitleTrackSync = false;
 }
 
@@ -2529,9 +2525,8 @@ void cDvdPlayer::SelectSubpStream() {
     currentNavSubpPhysical = PhysicalSubpStream(currentNavSubpStream);
     const uint16_t subtitleLanguageCode = GetSubtitleLanguageCode(currentNavSubpStream);
     if (subtitleLanguageCode != 0xFFFF && nav) {
-        char code[3] = {static_cast<char>(subtitleLanguageCode & 0xFF), static_cast<char>(subtitleLanguageCode >> 8),
-                        0};
-        dvdnav_spu_language_select(nav, code);
+        LanguageLetters code = Letters(subtitleLanguageCode);
+        dvdnav_spu_language_select(nav, code.data());
     }
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
     // And the disc's subpicture stream register, as a player's subtitle button
@@ -2720,9 +2715,8 @@ void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer) {
         const uint16_t audioTrackLangCode = GetAudioTrackLanguageCode(currentNavAudioTrack);
 
         if (audioTrackLangCode != 0xFFFF) {
-            char code[3] = {static_cast<char>(audioTrackLangCode & 0xFF), static_cast<char>(audioTrackLangCode >> 8),
-                            0};
-            dvdnav_audio_language_select(nav, code);
+            LanguageLetters code = Letters(audioTrackLangCode);
+            dvdnav_audio_language_select(nav, code.data());
         }
 #if DVDNAV_VERSION >= DVDNAV_VERSION_CODE(7, 0, 0)
         // And the disc's audio stream register, as a player's Audio button
@@ -2924,39 +2918,30 @@ auto cDvdPlayer::GetSubtitleLanguageCode(int Channel) const -> uint16_t {
     return subtitleStreamLanguageCode;
 }
 
-void cDvdPlayer::ReplaceInfoString(char *&Str, char *New) {
-    char *old = nullptr;
-    {
-        const cMutexLock MutexLock(&infoMutex);
-        old = Str;
-        Str = New;
-    }
-    free(old);
+void cDvdPlayer::ReplaceInfoString(cString &Str, const char *New) {
+    const cMutexLock MutexLock(&infoMutex);
+    Str = New;
 }
 
-auto cDvdPlayer::GetTitleString() const -> char * {
+auto cDvdPlayer::GetDisplayHeaderLine() const -> cString {
     const cMutexLock MutexLock(&infoMutex);
-    return strdup(title_str);
+    return cString::sprintf("%s, %s, %s, %s, %s    ", *titleinfo_str, *infoAudio, *infoSubtitle, *aspect_str,
+                            *title_str);
 }
 
 void cDvdPlayer::SetTitleString() {
     const char *title_holder = nullptr;
 
     if (DVDActiveAndRunning() && dvdnav_get_title_string(nav, &title_holder) == DVDNAV_STATUS_OK) {
-        ReplaceInfoString(title_str, strdup(title_holder));
+        ReplaceInfoString(title_str, title_holder);
     } else {
-        ReplaceInfoString(title_str, strdup(dummy_title));
+        ReplaceInfoString(title_str, dummy_title);
     }
-}
-
-auto cDvdPlayer::GetTitleInfoString() const -> char * {
-    const cMutexLock MutexLock(&infoMutex);
-    return strdup(titleinfo_str);
 }
 
 void cDvdPlayer::SetTitleInfoString() {
     if (!DVDActiveAndRunning()) {
-        ReplaceInfoString(titleinfo_str, strdup(dummy_title));
+        ReplaceInfoString(titleinfo_str, dummy_title);
         return;
     }
 
@@ -2985,17 +2970,14 @@ void cDvdPlayer::SetTitleInfoString() {
     } else {
         info = cString::sprintf("%d/%d %d/%d", titleNumber, titleNumbers, chapterNumber, chapterNumbers);
     }
-    ReplaceInfoString(titleinfo_str, strdup(info));
+    ReplaceInfoString(titleinfo_str, info);
 }
 
 void cDvdPlayer::UpdateTrackInfo() {
-    char audio[100];
-    char subtitle[100];
+    cString audio = dummy_n_a;
+    cString subtitle = dummy_n_a; // no subtitles, or only the "no subtitles" entry
 
-    if (!DVDActiveAndRunning()) {
-        strn0cpy(audio, dummy_n_a, sizeof(audio));
-        strn0cpy(subtitle, dummy_n_a, sizeof(subtitle));
-    } else {
+    if (DVDActiveAndRunning()) {
         const char *audioTypeDescr = nullptr;
         switch (currentNavAudioTrackType) {
             case aAC3:
@@ -3016,55 +2998,31 @@ void cDvdPlayer::UpdateTrackInfo() {
         }
 
         const uint16_t audioStreamLanguageCode = GetAudioTrackLanguageCode(currentNavAudioTrack);
-        const char audioLanguageStr[3] = {static_cast<char>(audioStreamLanguageCode),
-                                          static_cast<char>(audioStreamLanguageCode >> 8), 0};
+        const LanguageLetters audioLanguage = Letters(audioStreamLanguageCode);
+        const char *audioLanguageStr = audioStreamLanguageCode != 0xFFFF ? audioLanguage.data() : "";
         if (GetAudioStreamNumbers() > 1) {
-            snprintf(audio, sizeof(audio), "%s %d/%d %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "",
-                     GetCurrentNavAudioTrackIdx() + 1, GetAudioStreamNumbers(), audioTypeDescr);
+            audio = cString::sprintf("%s %d/%d %s", audioLanguageStr, GetCurrentNavAudioTrackIdx() + 1,
+                                     GetAudioStreamNumbers(), audioTypeDescr);
         } else {
-            snprintf(audio, sizeof(audio), "%s %s", audioStreamLanguageCode != 0xFFFF ? audioLanguageStr : "",
-                     audioTypeDescr);
+            audio = cString::sprintf("%s %s", audioLanguageStr, audioTypeDescr);
         }
 
         // As in VDR's menu, forced subtitles only count as none.
         const int shownSubpStream = SubtitlesShown(currentNavSubpStream) ? currentNavSubpStream : -1;
-        const int subtitleStreamLanguageCode = GetSubtitleLanguageCode(shownSubpStream);
-        const char subtitleLanguageStr[3] = {static_cast<char>(subtitleStreamLanguageCode),
-                                             static_cast<char>(subtitleStreamLanguageCode >> 8), 0};
+        const uint16_t subtitleStreamLanguageCode = GetSubtitleLanguageCode(shownSubpStream);
+        const LanguageLetters subtitleLanguage = Letters(subtitleStreamLanguageCode);
+        const bool known = subtitleStreamLanguageCode != 0xFFFF;
         if (GetSubtitleStreamNumbers() > 2) {
-            snprintf(subtitle, sizeof(subtitle), "%s %d/%d",
-                     subtitleStreamLanguageCode != 0xFFFF ? subtitleLanguageStr : "", SearchSubpStream(shownSubpStream),
-                     GetSubtitleStreamNumbers() - 1);
+            subtitle = cString::sprintf("%s %d/%d", known ? subtitleLanguage.data() : "",
+                                        SearchSubpStream(shownSubpStream), GetSubtitleStreamNumbers() - 1);
         } else if (GetSubtitleStreamNumbers() > 1) {
-            snprintf(subtitle, sizeof(subtitle), "%s",
-                     subtitleStreamLanguageCode != 0xFFFF ? subtitleLanguageStr : "n.a.");
-        } else {
-            strn0cpy(subtitle, dummy_n_a, sizeof(subtitle)); // no subtitles, or only the "no subtitles" entry
+            subtitle = known ? subtitleLanguage.data() : dummy_n_a;
         }
     }
 
     const cMutexLock MutexLock(&infoMutex);
-    strn0cpy(infoAudio, audio, sizeof(infoAudio));
-    strn0cpy(infoSubtitle, subtitle, sizeof(infoSubtitle));
-}
-
-void cDvdPlayer::GetAudioLanguageStr(const char **AudioLanguageStr) const {
-    static char buffer[100]; // only the control's thread calls this
-    const cMutexLock MutexLock(&infoMutex);
-    strn0cpy(buffer, infoAudio, sizeof(buffer));
-    *AudioLanguageStr = buffer;
-}
-
-void cDvdPlayer::GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const {
-    static char buffer[100]; // only the control's thread calls this
-    const cMutexLock MutexLock(&infoMutex);
-    strn0cpy(buffer, infoSubtitle, sizeof(buffer));
-    *SubtitleLanguageStr = buffer;
-}
-
-auto cDvdPlayer::GetAspectString() const -> char * {
-    const cMutexLock MutexLock(&infoMutex);
-    return strdup(aspect_str);
+    infoAudio = audio;
+    infoSubtitle = subtitle;
 }
 
 void cDvdPlayer::SetAspectString() {
@@ -3085,7 +3043,7 @@ void cDvdPlayer::SetAspectString() {
                 break;
         }
     }
-    ReplaceInfoString(aspect_str, strdup(aspect));
+    ReplaceInfoString(aspect_str, aspect);
 }
 
 auto cDvdPlayer::GetReplayMode(bool &Playing, bool &Forwards, int &Speed) -> bool {

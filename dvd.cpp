@@ -14,7 +14,6 @@
 #include "setup-dvd.h"
 
 // C++ Standard Library
-#include <cstddef>
 #include <cstdio>
 
 // POSIX

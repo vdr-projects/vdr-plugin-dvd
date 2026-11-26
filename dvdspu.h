@@ -14,29 +14,29 @@
 #define VDR_DVD_DVDSPU_H
 
 // C++ Standard Library
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 inline constexpr int SPU_BUFFER_SIZE = 128 * 1024;
 
 class simpleFIFO {
   private:
-    uint8_t *buffer;
-    int head;
-    int tail;
+    std::vector<uint8_t> buffer;
+    int head{0};
+    int tail{0};
     int size;
 
   public:
-    explicit simpleFIFO(int Size);
-    simpleFIFO(const simpleFIFO &) = delete;
-    auto operator=(const simpleFIFO &) -> simpleFIFO & = delete;
-    ~simpleFIFO();
+    explicit simpleFIFO(int Size) : buffer(static_cast<size_t>(Size)), size(Size) {}
     auto Put(const uint8_t *Data, int Count) -> int;
     auto Get(uint8_t *Data, int Count) -> int;
     void Clear() { head = tail = 0; }
 
     [[nodiscard]] auto Free() const -> int { return ((size + tail) - head - 1) % size; }
     [[nodiscard]] auto Available() const -> int { return ((head + size) - tail) % size; }
-    auto operator[](int i) const -> const uint8_t & { return buffer[(tail + i) % size]; }
+    // The byte i after the oldest.
+    [[nodiscard]] auto Peek(int i) const -> uint8_t { return buffer.at(static_cast<size_t>((tail + i) % size)); }
 };
 
 class cSPUassembler : public simpleFIFO {
@@ -54,8 +54,8 @@ class cSPUassembler : public simpleFIFO {
     [[nodiscard]] auto valid() const -> bool {
         return getSize() >= 4 && getCmdOffs() >= 4 && getCmdOffs() + 5 <= getSize();
     }
-    [[nodiscard]] auto getSize() const -> int { return (operator[](0) << 8) | operator[](1); }
-    [[nodiscard]] auto getCmdOffs() const -> int { return (operator[](2) << 8) | operator[](3); }
+    [[nodiscard]] auto getSize() const -> int { return (Peek(0) << 8) | Peek(1); }
+    [[nodiscard]] auto getCmdOffs() const -> int { return (Peek(2) << 8) | Peek(3); }
     [[nodiscard]] auto getPts() const -> uint64_t { return pts; }
 
     void Reset();

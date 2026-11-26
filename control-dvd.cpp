@@ -14,9 +14,7 @@
 
 // C++ Standard Library
 #include <cassert>
-#include <cstddef>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <utility>
@@ -188,23 +186,6 @@ void cDvdPlayerControl::ShowMode() {
     }
 }
 
-auto cDvdPlayerControl::GetDisplayHeaderLine() -> cString {
-    const char *audiolang_str = nullptr;
-    const char *spulang_str = nullptr;
-    char *titleinfo_str = player->GetTitleInfoString();
-    char *title_str = player->GetTitleString();
-    char *aspect_str = player->GetAspectString();
-    player->GetAudioLanguageStr(&audiolang_str);
-    player->GetSubtitleLanguageStr(&spulang_str);
-
-    cString line =
-        cString::sprintf("%s, %s, %s, %s, %s    ", titleinfo_str, audiolang_str, spulang_str, aspect_str, title_str);
-    free(titleinfo_str);
-    free(title_str);
-    free(aspect_str);
-    return line;
-}
-
 auto cDvdPlayerControl::ShowProgress(bool Initial) -> bool {
     int Current = 0;
     int Total = 0;
@@ -226,7 +207,7 @@ auto cDvdPlayerControl::ShowProgress(bool Initial) -> bool {
             cStatus::MsgReplaying(this, "unknown title", nullptr, true);
         }
 
-        cString title = GetDisplayHeaderLine();
+        cString title = player->GetDisplayHeaderLine();
         if (!*shownTitle || strcmp(title, shownTitle) != 0) {
             displayReplay->SetTitle(title);
             if (!Initial) {
@@ -453,7 +434,7 @@ void cDvdPlayerControl::UpdateShow(bool force) {
             shown = ShowProgress(!shown) || shown;
         }
     } else {
-        const cString title = GetDisplayHeaderLine();
+        const cString title = player->GetDisplayHeaderLine();
         if (!*reportedTitle || strcmp(title, reportedTitle) != 0) {
             reportedTitle = title;
             cStatus::MsgReplaying(this, title, nullptr, true);

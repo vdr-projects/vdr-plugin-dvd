@@ -19,6 +19,7 @@
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 // libdvdnav
 #include <dvdnav/dvd_types.h>
@@ -67,11 +68,11 @@ class cDvdPlayer : public cPlayer, cThread {
     cSPUassembler SPUassembler;
     cSpuDecoder *SPUdecoder{nullptr};
 
-    cIframeAssembler *iframeAssembler;
+    std::unique_ptr<cIframeAssembler> iframeAssembler;
     int IframeCnt{0};
     uint8_t event_buf[4096]{}; // for dvdnav_get_next_cache_block(), at least a block
 
-    cRingBufferFrame *ringBuffer;
+    std::unique_ptr<cRingBufferFrame> ringBuffer;
     cFrame *rframe{nullptr};
     cFrame *pframe{nullptr};
 
@@ -161,11 +162,8 @@ class cDvdPlayer : public cPlayer, cThread {
     ePlayDirs playDir{pdForward};
     int trickSpeed;
 
-    static const char *dummy_title;
-    static const char *dummy_n_a;
-    char *title_str{nullptr};
-    char *titleinfo_str{nullptr};
-    char *aspect_str{nullptr};
+    static constexpr const char *dummy_title = "DVD Title";
+    static constexpr const char *dummy_n_a = "n.a.";
     void SetTitleString();
     void SetTitleInfoString();
     void SetAspectString();
@@ -178,10 +176,13 @@ class cDvdPlayer : public cPlayer, cThread {
     uint32_t infoCurrentBlock{0};
     uint32_t infoTotalBlock{0};
     int64_t infoPgcLength{0};
-    char infoAudio[100]{};
-    char infoSubtitle[100]{};
+    cString title_str{dummy_title};
+    cString titleinfo_str{dummy_title};
+    cString aspect_str{dummy_n_a};
+    cString infoAudio{dummy_n_a};
+    cString infoSubtitle{dummy_n_a};
     std::atomic<bool> menuButtons{false}; // IsInMenuDomain()
-    void ReplaceInfoString(char *&Str, char *New);
+    void ReplaceInfoString(cString &Str, const char *New);
     void UpdateTrackInfo();
 
     // Playback
@@ -235,10 +236,10 @@ class cDvdPlayer : public cPlayer, cThread {
     auto GetSubtitleStreamNumbers() const -> int;
 
     // Resuming
-    cDVDPlayerResume *resume; // never NULL
-    // The disc's key in the resume file, allocated: the caller frees it. NULL
-    // if libdvdnav can't tell the number of titles.
-    auto GetDVDResumeKey() const -> char *;
+    std::unique_ptr<cDVDPlayerResume> resume; // never NULL
+    // The disc's key in the resume file, NULL if libdvdnav can't tell the
+    // number of titles.
+    [[nodiscard]] auto GetDVDResumeKey() const -> cString;
     // Stores the position in the title (not in a menu) in the resume file.
     void SaveResume();
     // The position the resume file has for the disc, 30 seconds back; false
@@ -275,12 +276,14 @@ class cDvdPlayer : public cPlayer, cThread {
     static constexpr int SubpStreamMask = 0x1F;
 
     cDvdPlayer();
+    cDvdPlayer(const cDvdPlayer &) = delete;
+    cDvdPlayer(cDvdPlayer &&) noexcept = delete;
+    auto operator=(const cDvdPlayer &) -> cDvdPlayer & = delete;
+    auto operator=(cDvdPlayer &&) noexcept -> cDvdPlayer & = delete;
     ~cDvdPlayer() override;
     auto Active() const -> bool { return active; }
     auto DVDActiveAndRunning() const -> bool { return active && nav != nullptr && running; }
     auto DVDRemoveable() const -> bool { return !active && !running; }
-    void GetAudioLanguageStr(const char **AudioLanguageStr) const;
-    void GetSubtitleLanguageStr(const char **SubtitleLanguageStr) const;
 
     // For the control
     void setController(cDvdPlayerControl *ctrl);
@@ -298,10 +301,9 @@ class cDvdPlayer : public cPlayer, cThread {
     void Forward();
     void Backward();
 
-    // Allocated copies: the caller frees them.
-    auto GetTitleString() const -> char *;
-    auto GetTitleInfoString() const -> char *;
-    auto GetAspectString() const -> char *;
+    // The title, its position, the tracks and the aspect ratio for the
+    // header of the replay display.
+    [[nodiscard]] auto GetDisplayHeaderLine() const -> cString;
 
     // The length of the program chain (mostly the whole title) in PTS ticks,
     // 90000 a second.

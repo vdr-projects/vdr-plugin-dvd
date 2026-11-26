@@ -18,6 +18,7 @@
 
 // VDR
 #include <vdr/i18n.h>
+#include <vdr/menuitems.h>
 
 cDVDSetup DVDSetup;
 
