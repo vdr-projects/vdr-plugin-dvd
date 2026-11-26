@@ -209,6 +209,10 @@ class cDvdPlayer : public cPlayer, cThread {
     void SwitchAudioTrack(eTrackType Type, bool ByViewer);
     void SwitchRequestedAudioTrack();
     void playSPU(int spuId);
+    // The control shows its display, or another one than the player has the OSD.
+    [[nodiscard]] auto OsdInUse() const -> bool;
+    // The player takes the OSD for the subpicture, unless another one has it.
+    auto TakeOsd() -> bool;
 
     static auto DolbyTrackIndex(int SubStreamId) -> int;
     bool subtitleTrackSync; // the player announces or reports a subtitle track to VDR
@@ -351,8 +355,6 @@ class cDvdPlayer : public cPlayer, cThread {
 
     static auto PTSTicksToSec(int64_t ticks) -> int64_t { return ticks / 90000L; }
 };
-
-#define CIF_MAXSIZE 512
 
 // --- cDvdPlayer ---------------------------------------------------
 

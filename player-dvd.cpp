@@ -51,10 +51,7 @@
 #include <vdr/videodir.h>
 
 // 100 ms each: a device that takes no data for 10 seconds in normal play.
-#define POLLTIMEOUTS_BEFORE_DEVICECLEAR 100
-
-#define OsdInUse() ((controller != NULL) ? controller->OsdVisible(this) : false)
-#define TakeOsd() ((controller != NULL) ? controller->TakeOsd(this) : false)
+constexpr int POLLTIMEOUTS_BEFORE_DEVICECLEAR = 100;
 
 #ifdef CTRLDEBUG
 
@@ -135,7 +132,7 @@ class cResumeEntry : public cListObject {
 // --- cDVDPlayerResume ----------------------------------------------------------
 
 // The resume file, in VDR's video directory unless RESUMEDIR names another.
-#define RESUME_FILE "dvdplayer.resume"
+constexpr const char *RESUME_FILE = "dvdplayer.resume";
 #ifndef RESUMEDIR
 #define RESUMEDIR cVideoDirectory::Name()
 #endif
@@ -256,14 +253,17 @@ auto cDVDPlayerResume::FindResume(const char *key) -> cResumeEntry * {
 // --- cDvdPlayer ------------------------------------------------------------
 
 // The ring buffer of the packets for the device.
-#define VIDEOBUFSIZE MEGABYTE(1)
+constexpr int VIDEOBUFSIZE = MEGABYTE(1);
+
+// The buffer of the I-frame of a still picture.
+constexpr int CIF_MAXSIZE = 512; // KB
 
 // The speeds as in VDR's player; beyond MAX_SPEEDS, the player skips blocks.
-#define MAX_VIDEO_SLOWMOTION 63 // the largest Speed for DeviceTrickSpeed(), as VDR's player passes it
-#define NORMAL_SPEED 10         // the index of the '1' entry in the following array
-#define MAX_SPEEDS 3            // the offset of the maximum speed from normal speed in either direction
-#define MAX_MAX_SPEEDS (MAX_SPEEDS * MAX_SPEEDS) // the offset of the maximum speed skipping blocks
-#define SPEED_MULT 12                            // the speed multiplier
+constexpr int MAX_VIDEO_SLOWMOTION = 63; // the largest Speed for DeviceTrickSpeed(), as VDR's player passes it
+constexpr int NORMAL_SPEED = 10;         // the index of the '1' entry in the following array
+constexpr int MAX_SPEEDS = 3;            // the offset of the maximum speed from normal speed in either direction
+constexpr int MAX_MAX_SPEEDS = MAX_SPEEDS * MAX_SPEEDS; // the offset of the maximum speed skipping blocks
+constexpr int SPEED_MULT = 12;                          // the speed multiplier
 int cDvdPlayer::Speeds[] = {0, 0, 0, 0, 0, 0, 0, -2, -4, -8, 1, 2, 4, 12, 0, 0, 0, 0, 0, 0, 0};
 
 const int cDvdPlayer::MaxAudioTracks = 0x20;
@@ -365,6 +365,10 @@ auto cDvdPlayer::IsDvdNavigationForced() const -> bool {
     return (controller ? controller->IsDvdNavigationForced() : false);
 }
 
+auto cDvdPlayer::OsdInUse() const -> bool { return controller ? controller->OsdVisible(this) : false; }
+
+auto cDvdPlayer::TakeOsd() -> bool { return controller ? controller->TakeOsd(this) : false; }
+
 void cDvdPlayer::TrickSpeed(int Increment) {
     const int nts = trickSpeed + Increment;
     cntVidBlocksPlayed = 0;
@@ -435,20 +439,20 @@ void cDvdPlayer::ClearDevice() {
 }
 
 // How often the player thread refreshes the track info the control shows.
-#define TRACKINFOINTERVALMS 200
+constexpr int TRACKINFOINTERVALMS = 200;
 
 // Consecutive read errors after which the player gives up.
-#define MAXREADERRORS 5
+constexpr int MAXREADERRORS = 5;
 
 #if APIVERSNUM > 30013
 // How long the picture may stand still in normal play before
 // WaitDeviceDrained() stops waiting: the device holds no more than that
 // picture then, or it can't tell that it has played out - VDR's default
 // DrainDevice() never does.
-#define DRAINSTALLMS 1000
+constexpr uint64_t DRAINSTALLMS = 1000;
 #else
 // How long WaitDeviceDrained() waits at most for the device to play out.
-#define DRAINTIMEOUTMS 6000
+constexpr int DRAINTIMEOUTMS = 6000;
 #endif
 
 auto cDvdPlayer::WaitDeviceDrained() -> bool {
@@ -606,8 +610,8 @@ static const char *dvd_ev[] = {
 #endif
 
 // stillFrame: the cell ends in a still picture, the VOBU is one.
-#define CELL_STILL 0x02
-#define NAV_STILL 0x04
+constexpr int CELL_STILL = 0x02;
+constexpr int NAV_STILL = 0x04;
 
 // Time in ticks of the 90 kHz MPEG clock: 90 a millisecond.
 auto cDvdPlayer::time_ticks() -> uint64_t {

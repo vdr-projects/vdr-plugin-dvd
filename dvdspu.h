@@ -16,7 +16,7 @@
 // C++ Standard Library
 #include <cstdint>
 
-#define SPU_BUFFER_SIZE (128 * 1024)
+inline constexpr int SPU_BUFFER_SIZE = 128 * 1024;
 
 class simpleFIFO {
   private:

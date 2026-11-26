@@ -34,7 +34,7 @@
 #include <vdr/thread.h>
 #include <vdr/tools.h>
 
-#define MODETIMEOUT 3 // seconds
+constexpr int MODETIMEOUT = 3; // seconds
 
 bool cDvdPlayerControl::dvd_active = false;
 
@@ -334,7 +334,7 @@ void cDvdPlayerControl::TimeSearchDisplay() {
 }
 
 void cDvdPlayerControl::TimeSearchProcess(eKeys Key) {
-#define STAY_SECONDS_OFF_END 10
+    constexpr int STAY_SECONDS_OFF_END = 10;
     int Seconds = ((timeSearchTime >> 24) * 36000) + (((timeSearchTime & 0x00FF0000) >> 16) * 3600) +
                   (((timeSearchTime & 0x0000FF00) >> 8) * 600) + ((timeSearchTime & 0x000000FF) * 60);
     const int Current = int(lastCurrent / FramesPerSecond());
