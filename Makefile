@@ -75,6 +75,8 @@ endif
 ### The object files (add further files here):
 
 OBJS = $(PLUGIN).o dvddev.o player-dvd.o control-dvd.o dvdspu.o setup-dvd.o
+SOURCES = $(OBJS:%.o=%.cpp)
+HEADERS = $(wildcard *.h)
 
 ### The main target:
 
@@ -91,7 +93,7 @@ all: $(SOFILE) i18n
 MAKEDEP = $(CXX) -MM -MG
 DEPFILE = .dependencies
 $(DEPFILE): Makefile
-	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cpp) > $@
+	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(SOURCES) > $@
 
 -include $(DEPFILE)
 
@@ -144,6 +146,17 @@ dist: $(I18Npo) clean
 	@tar czf $(PACKAGE).tgz -C $(TMPDIR) $(ARCHIVE)
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
 	@echo Distribution package created as $(PACKAGE).tgz
+
+### Formatting (the style is in .clang-format):
+
+.PHONY: indent
+indent:
+	@if command -v clang-format >/dev/null 2>&1; then \
+		clang-format -i $(SOURCES) $(HEADERS); \
+		echo "Code formatted with clang-format"; \
+	else \
+		echo "clang-format not found, skipping formatting"; \
+	fi
 
 retain-sym:
 	echo "VDRPluginCreator" > retain-sym

@@ -19,7 +19,7 @@
 // --- cPluginDvd ------------------------------------------------------------
 
 class cPluginDvd : public cPlugin {
-public:
+  public:
     const char *Version(void) override;
     const char *Description(void) override;
     const char *CommandLineHelp(void) override;

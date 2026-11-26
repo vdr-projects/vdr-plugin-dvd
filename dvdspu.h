@@ -19,13 +19,13 @@
 #define SPU_BUFFER_SIZE (128 * 1024)
 
 class simpleFIFO {
-private:
+  private:
     uint8_t *buffer;
     int head;
     int tail;
     int size;
 
-public:
+  public:
     explicit simpleFIFO(int Size);
     simpleFIFO(const simpleFIFO &) = delete;
     simpleFIFO &operator=(const simpleFIFO &) = delete;
@@ -40,11 +40,11 @@ public:
 };
 
 class cSPUassembler : public simpleFIFO {
-private:
+  private:
     uint64_t pts;
     int stream;
 
-public:
+  public:
     cSPUassembler();
 
     // A unit starts with its size and the offset of its control sequence,
@@ -58,8 +58,7 @@ public:
 
     void Reset(void);
     // A packet of Stream that isn't put: the unit it belongs to stays incomplete.
-    void Skip(int Stream)
-    {
+    void Skip(int Stream) {
         if (Stream == stream)
             Reset();
     }

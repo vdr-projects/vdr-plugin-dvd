@@ -29,7 +29,7 @@ enum InputProcessType { NoneInput, TimeSearchInput, TrackSearchInput };
 class cDvdPlayerControl : public cControl {
     friend class cDvdPlayer;
 
-private:
+  private:
     static bool dvd_active;
     bool displayFrames;
     bool forceDvdNavigation;
@@ -65,7 +65,7 @@ private:
     void TrackSearch(void);
     void UpdateShow(bool force = false);
 
-public:
+  public:
     cDvdPlayerControl(void);
     ~cDvdPlayerControl() override;
     void Hide(void) override;
@@ -78,14 +78,14 @@ public:
     bool OsdTaken(const void *me);
     bool TakeOsd(void *obj);
 
-protected:
+  protected:
     void HideOwnOsd(void);
 
-private:
+  private:
     cDvdPlayer *player; // cControl's, never NULL
     cSkinDisplayReplay *displayReplay;
 
-public:
+  public:
     bool Active(void);
     void Stop(void);
     // Stops the current replay session (if any).

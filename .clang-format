@@ -1,17 +1,11 @@
-# Style of the plugin's sources; apply with `clang-format -i *.cpp *.h`.
-BasedOnStyle: LLVM
+# Code style of the plugin, the one of vdr-plugin-vaapivideo; apply with
+# `make indent`.
+
+---
 Language: Cpp
+BasedOnStyle: LLVM
 Standard: c++17
+
 ColumnLimit: 120
-IndentWidth: 4
-UseTab: Never
-AccessModifierOffset: -4
 IndentCaseLabels: true
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterFunction: true
-AllowShortFunctionsOnASingleLine: Inline
-AlignConsecutiveMacros: Consecutive
-SortIncludes: Never
-ReflowComments: false
-BreakStringLiterals: false
+IndentWidth: 4

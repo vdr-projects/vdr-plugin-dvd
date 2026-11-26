@@ -43,10 +43,10 @@
 class cDvdPlayer;
 
 class IntegerListObject : public cListObject {
-private:
+  private:
     int value;
 
-public:
+  public:
     explicit IntegerListObject(int i) : value(i) {}
 
     int getValue() const { return value; }
@@ -57,7 +57,7 @@ class cIframeAssembler;
 class cDVDPlayerResume;
 
 class cDvdPlayer : public cPlayer, cThread {
-private:
+  private:
     enum ePlayModes { pmPlay, pmPause, pmSlow, pmFast, pmStill };
     enum ePlayDirs { pdForward, pdBackward };
     enum ePacketType { pktNone = 0, pktVideo = 1, pktAudio = 2 };
@@ -237,7 +237,7 @@ private:
     // if it has none.
     bool LoadResume(int &title, int &chapter, int64_t &second);
 
-protected:
+  protected:
     void Activate(bool On) override;
     void Action(void) override;
     void DeviceReset(void);
@@ -245,7 +245,7 @@ protected:
     bool WaitDeviceDrained(void);
     int emptyCount; // Empty() calls, for WaitDeviceDrained(); under the thread lock
 
-public:
+  public:
     // The position in the program chain and its length, in frames at
     // FramesPerSecond(): from the block numbers, as if all blocks played
     // equally long. SnapToIFrame has no effect.
@@ -254,12 +254,12 @@ public:
     void SetAudioTrack(eTrackType Type, const tTrackId *TrackId) override;
     void SetSubtitleTrack(eTrackType Type, const tTrackId *TrackId) override;
 
-protected:
+  protected:
     void seenSpuPts(uint64_t pts);
     uint64_t time_ticks(void);
     void delay_ticks(uint64_t ticks);
 
-public:
+  public:
     static const int MaxAudioTracks;
     static const int AudioTrackMask;
     static const int AC3AudioTrackMask;
@@ -356,8 +356,7 @@ public:
 
 // --- cDvdPlayer ---------------------------------------------------
 
-inline bool cDvdPlayer::IsInMenuDomain() const
-{
+inline bool cDvdPlayer::IsInMenuDomain() const {
     // current_pci->hli.hl_gi.hli_ss as of the last NAV packet; current_pci
     // points into nav, which the player thread closes when it ends
     return menuButtons;
@@ -365,8 +364,7 @@ inline bool cDvdPlayer::IsInMenuDomain() const
 
 // Moving between a menu's buttons
 
-inline void cDvdPlayer::selectUpButton(void)
-{
+inline void cDvdPlayer::selectUpButton(void) {
     DEBUGDVD("selectUpButton\n");
     LOCK_THREAD;
     if (nav && current_pci) {
@@ -374,8 +372,7 @@ inline void cDvdPlayer::selectUpButton(void)
     }
 }
 
-inline void cDvdPlayer::selectDownButton(void)
-{
+inline void cDvdPlayer::selectDownButton(void) {
     DEBUGDVD("selectDownButton\n");
     LOCK_THREAD;
     if (nav && current_pci) {
@@ -383,8 +380,7 @@ inline void cDvdPlayer::selectDownButton(void)
     }
 }
 
-inline void cDvdPlayer::selectLeftButton(void)
-{
+inline void cDvdPlayer::selectLeftButton(void) {
     DEBUGDVD("selectLeftButton\n");
     LOCK_THREAD;
     if (nav && current_pci) {
@@ -392,8 +388,7 @@ inline void cDvdPlayer::selectLeftButton(void)
     }
 }
 
-inline void cDvdPlayer::selectRightButton(void)
-{
+inline void cDvdPlayer::selectRightButton(void) {
     DEBUGDVD("selectRightButton\n");
     LOCK_THREAD;
     if (nav && current_pci) {

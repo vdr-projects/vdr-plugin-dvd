@@ -21,8 +21,7 @@
 // udev only creates /dev/cdrom (for sr0), no /dev/dvd
 const char *cDVD::deviceName = "/dev/cdrom";
 
-void cDVD::SetDeviceName(const char *Name)
-{
+void cDVD::SetDeviceName(const char *Name) {
     // static, not new: the plugin keeps it until it is unloaded, and
     // LeakSanitizer then reports an object nobody deleted
     static std::string name;
@@ -30,12 +29,6 @@ void cDVD::SetDeviceName(const char *Name)
     deviceName = name.c_str();
 }
 
-const char *cDVD::DeviceName(void)
-{
-    return deviceName;
-}
+const char *cDVD::DeviceName(void) { return deviceName; }
 
-bool cDVD::DriveExists(void)
-{
-    return access(deviceName, F_OK) == 0;
-}
+bool cDVD::DriveExists(void) { return access(deviceName, F_OK) == 0; }

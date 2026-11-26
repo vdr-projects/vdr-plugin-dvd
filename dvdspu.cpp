@@ -11,25 +11,25 @@
  */
 
 /*****
-*
-* This file is part of the VDR program.
-* This file was part of the OMS program.
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2, or (at your option)
-* any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; see the file COPYING.  If not, write to
-* the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-*
-*****/
+ *
+ * This file is part of the VDR program.
+ * This file was part of the OMS program.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; see the file COPYING.  If not, write to
+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *****/
 
 /*
  * subpic_decode.c - converts DVD subtitles to an XPM image
@@ -74,7 +74,8 @@
  *
  * weak@pimps.at
  *
- * Code of checkSPUHeader and related functions are based on SPUClass.cpp from the NMM - Network-Integrated Multimedia Environment (www.networkmultimedia.org)
+ * Code of checkSPUHeader and related functions are based on SPUClass.cpp from the NMM - Network-Integrated Multimedia
+ * Environment (www.networkmultimedia.org)
  *
  */
 
@@ -93,20 +94,15 @@
 
 // --- simpleFIFO ------------------------------------------------------------
 
-simpleFIFO::simpleFIFO(int Size)
-{
+simpleFIFO::simpleFIFO(int Size) {
     size = Size;
     head = tail = 0;
     buffer = static_cast<uint8_t *>(malloc((size_t)size));
 }
 
-simpleFIFO::~simpleFIFO()
-{
-    free(buffer);
-}
+simpleFIFO::~simpleFIFO() { free(buffer); }
 
-int simpleFIFO::Put(const uint8_t *Data, int Count)
-{
+int simpleFIFO::Put(const uint8_t *Data, int Count) {
     if (Count > 0) {
         int rest = size - head;
         int free = Free();
@@ -128,8 +124,7 @@ int simpleFIFO::Put(const uint8_t *Data, int Count)
     return Count;
 }
 
-int simpleFIFO::Get(uint8_t *Data, int Count)
-{
+int simpleFIFO::Get(uint8_t *Data, int Count) {
     if (Count > 0) {
         int rest = size - tail;
         int cont = Available();
@@ -153,20 +148,17 @@ int simpleFIFO::Get(uint8_t *Data, int Count)
 
 // --- cSPUassembler ---------------------------------------------------------
 
-cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE)
-{
+cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE) {
     pts = 0;
     stream = -1;
 }
 
-void cSPUassembler::Reset(void)
-{
+void cSPUassembler::Reset(void) {
     Clear();
     stream = -1;
 }
 
-int cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream)
-{
+int cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream) {
     // The packets of a unit that a seek cut off, or of the stream shown
     // before, don't belong to the next unit: appended to them it came out
     // garbled, and so did every unit after it.

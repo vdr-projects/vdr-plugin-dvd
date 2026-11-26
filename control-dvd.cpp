@@ -46,8 +46,7 @@ static char osdReleasedTag;
 static void *const OsdReleased = &osdReleasedTag;
 
 cDvdPlayerControl::cDvdPlayerControl(void)
-    : cControl(new cDvdPlayer()), player(static_cast<cDvdPlayer *>(cControl::player))
-{
+    : cControl(new cDvdPlayer()), player(static_cast<cDvdPlayer *>(cControl::player)) {
     assert(dvd_active == false);
     dvd_active = true;
     visible = modeOnly = shown = displayFrames = false;
@@ -64,8 +63,7 @@ cDvdPlayerControl::cDvdPlayerControl(void)
     cStatus::MsgReplaying(this, "DVD", NULL, true);
 }
 
-cDvdPlayerControl::~cDvdPlayerControl()
-{
+cDvdPlayerControl::~cDvdPlayerControl() {
     cDvdPlayerControl::Hide();
     cStatus::MsgReplaying(this, NULL, NULL, false);
     Stop();
@@ -74,53 +72,25 @@ cDvdPlayerControl::~cDvdPlayerControl()
     delete player;
 }
 
-bool cDvdPlayerControl::Active(void)
-{
-    return player->Active();
-}
+bool cDvdPlayerControl::Active(void) { return player->Active(); }
 
-void cDvdPlayerControl::Stop(void)
-{
-    player->Stop();
-}
+void cDvdPlayerControl::Stop(void) { player->Stop(); }
 
-void cDvdPlayerControl::Pause(void)
-{
-    player->Pause();
-}
+void cDvdPlayerControl::Pause(void) { player->Pause(); }
 
-void cDvdPlayerControl::Play(void)
-{
-    player->Play();
-}
+void cDvdPlayerControl::Play(void) { player->Play(); }
 
-void cDvdPlayerControl::Forward(void)
-{
-    player->Forward();
-}
+void cDvdPlayerControl::Forward(void) { player->Forward(); }
 
-void cDvdPlayerControl::Backward(void)
-{
-    player->Backward();
-}
+void cDvdPlayerControl::Backward(void) { player->Backward(); }
 
-void cDvdPlayerControl::SkipSeconds(int Seconds)
-{
-    player->SkipSeconds(Seconds);
-}
+void cDvdPlayerControl::SkipSeconds(int Seconds) { player->SkipSeconds(Seconds); }
 
-void cDvdPlayerControl::Goto(int Seconds)
-{
-    player->Goto(Seconds);
-}
+void cDvdPlayerControl::Goto(int Seconds) { player->Goto(Seconds); }
 
-void cDvdPlayerControl::OsdClose()
-{
-    DELETENULL(displayReplay);
-}
+void cDvdPlayerControl::OsdClose() { DELETENULL(displayReplay); }
 
-void cDvdPlayerControl::OsdOpen(void)
-{
+void cDvdPlayerControl::OsdOpen(void) {
     if (visible) {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdOpen: already visible\n");
         return;
@@ -144,8 +114,7 @@ void cDvdPlayerControl::OsdOpen(void)
     }
 }
 
-void cDvdPlayerControl::ShowTimed(int Seconds)
-{
+void cDvdPlayerControl::ShowTimed(int Seconds) {
     if (modeOnly)
         Hide();
     if (!visible) {
@@ -154,13 +123,9 @@ void cDvdPlayerControl::ShowTimed(int Seconds)
     }
 }
 
-void cDvdPlayerControl::Show(void)
-{
-    ShowTimed();
-}
+void cDvdPlayerControl::Show(void) { ShowTimed(); }
 
-void cDvdPlayerControl::Hide(void)
-{
+void cDvdPlayerControl::Hide(void) {
     DEBUG_SHOW("DVD-Ctrl: Hide\n");
 
     TakeOsd(OsdReleased); // another OSD may open now
@@ -168,8 +133,7 @@ void cDvdPlayerControl::Hide(void)
     HideOwnOsd();
 }
 
-void cDvdPlayerControl::HideOwnOsd(void)
-{
+void cDvdPlayerControl::HideOwnOsd(void) {
     DEBUG_SHOW("DVD-Ctrl: HideOwnOsd: visible=%d\n", visible.load());
 
     if (visible) {
@@ -181,8 +145,7 @@ void cDvdPlayerControl::HideOwnOsd(void)
     }
 }
 
-bool cDvdPlayerControl::TakeOsd(void *owner)
-{
+bool cDvdPlayerControl::TakeOsd(void *owner) {
     if (owner == OsdReleased || !OsdTaken(owner) || osdTaker == OsdReleased) {
         DEBUG_OSDCTRL("DVD-Ctrl: TakeOsd(%p) new owner!\n", owner);
         osdTaker = owner;
@@ -193,8 +156,7 @@ bool cDvdPlayerControl::TakeOsd(void *owner)
     return false;
 }
 
-bool cDvdPlayerControl::OsdTaken(const void *me)
-{
+bool cDvdPlayerControl::OsdTaken(const void *me) {
     if (osdTaker && !cOsd::IsOpen()) {
         DEBUG_OSDCTRL("DVD-Ctrl: OsdTaken(%p) !IsOpen->taker:=NULL\n", me);
         osdTaker = NULL; // the owner's OSD has been closed
@@ -203,13 +165,9 @@ bool cDvdPlayerControl::OsdTaken(const void *me)
     return osdTaker != NULL && osdTaker != me;
 }
 
-bool cDvdPlayerControl::OsdVisible(const void *me)
-{
-    return visible || OsdTaken(me);
-}
+bool cDvdPlayerControl::OsdVisible(const void *me) { return visible || OsdTaken(me); }
 
-void cDvdPlayerControl::ShowMode(void)
-{
+void cDvdPlayerControl::ShowMode(void) {
     if (Setup.ShowReplayMode && inputActive == NoneInput) {
         bool Playing, Forwards;
         int Speed;
@@ -234,8 +192,7 @@ void cDvdPlayerControl::ShowMode(void)
     }
 }
 
-cString cDvdPlayerControl::GetDisplayHeaderLine(void)
-{
+cString cDvdPlayerControl::GetDisplayHeaderLine(void) {
     const char *audiolang_str = NULL;
     const char *spulang_str = NULL;
     char *titleinfo_str = player->GetTitleInfoString();
@@ -252,8 +209,7 @@ cString cDvdPlayerControl::GetDisplayHeaderLine(void)
     return line;
 }
 
-bool cDvdPlayerControl::ShowProgress(bool Initial)
-{
+bool cDvdPlayerControl::ShowProgress(bool Initial) {
     int Current, Total;
 
     if (GetIndex(Current, Total) && Total > 0) {
@@ -298,15 +254,13 @@ bool cDvdPlayerControl::ShowProgress(bool Initial)
     return false;
 }
 
-void cDvdPlayerControl::InputIntDisplay(const char *msg, int val)
-{
+void cDvdPlayerControl::InputIntDisplay(const char *msg, int val) {
     char buf[120];
     snprintf(buf, sizeof(buf), "%s %d", msg, val);
     displayReplay->SetJump(buf);
 }
 
-void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val)
-{
+void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val) {
     switch (Key) {
         case k0:
         case k1:
@@ -342,8 +296,7 @@ void cDvdPlayerControl::InputIntProcess(eKeys Key, const char *msg, int &val)
     }
 }
 
-void cDvdPlayerControl::TrackSearch(void)
-{
+void cDvdPlayerControl::TrackSearch(void) {
     inputIntVal = 0;
     inputIntMsg = "Track: ";
     inputHide = false;
@@ -357,8 +310,7 @@ void cDvdPlayerControl::TrackSearch(void)
     inputActive = TrackSearchInput;
 }
 
-void cDvdPlayerControl::TimeSearchDisplay(void)
-{
+void cDvdPlayerControl::TimeSearchDisplay(void) {
     char h10 = char('0' + (timeSearchTime >> 24));
     char h1 = char('0' + ((timeSearchTime & 0x00FF0000) >> 16));
     char m10 = char('0' + ((timeSearchTime & 0x0000FF00) >> 8));
@@ -370,8 +322,7 @@ void cDvdPlayerControl::TimeSearchDisplay(void)
     displayReplay->SetJump(cString::sprintf("%s%c%c:%c%c", trVDR("Jump: "), ch10, ch1, cm10, cm1));
 }
 
-void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
-{
+void cDvdPlayerControl::TimeSearchProcess(eKeys Key) {
 #define STAY_SECONDS_OFF_END 10
     int Seconds = (timeSearchTime >> 24) * 36000 + ((timeSearchTime & 0x00FF0000) >> 16) * 3600 +
                   ((timeSearchTime & 0x0000FF00) >> 8) * 600 + (timeSearchTime & 0x000000FF) * 60;
@@ -426,8 +377,7 @@ void cDvdPlayerControl::TimeSearchProcess(eKeys Key)
     }
 }
 
-void cDvdPlayerControl::TimeSearch(void)
-{
+void cDvdPlayerControl::TimeSearch(void) {
     timeSearchTime = timeSearchPos = 0;
     inputHide = false;
     Show();
@@ -440,8 +390,7 @@ void cDvdPlayerControl::TimeSearch(void)
     inputActive = TimeSearchInput;
 }
 
-bool cDvdPlayerControl::DvdNavigation(eKeys Key)
-{
+bool cDvdPlayerControl::DvdNavigation(eKeys Key) {
     HideOwnOsd();
     player->DrawSPU();
 
@@ -484,8 +433,7 @@ bool cDvdPlayerControl::DvdNavigation(eKeys Key)
     return true;
 }
 
-void cDvdPlayerControl::UpdateShow(bool force)
-{
+void cDvdPlayerControl::UpdateShow(bool force) {
     DEBUG_SHOW("DVD-Ctrl: updateShow: force=%d, visible=%d, modeOnly=%d\n", force, visible.load(), modeOnly);
     if (visible || force) {
         if (timeoutShow && time(NULL) > timeoutShow) {
@@ -507,8 +455,7 @@ void cDvdPlayerControl::UpdateShow(bool force)
     }
 }
 
-eOSState cDvdPlayerControl::ProcessKey(eKeys Key)
-{
+eOSState cDvdPlayerControl::ProcessKey(eKeys Key) {
     DEBUG_KEY("DVD-Ctrl: ProcessKey BEGIN\n");
 
     eOSState state = cOsdObject::ProcessKey(Key);

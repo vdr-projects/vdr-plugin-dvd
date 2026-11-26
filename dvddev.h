@@ -12,10 +12,10 @@
 #define VDR_DVD_DVDDEV_H
 
 class cDVD {
-private:
+  private:
     static const char *deviceName;
 
-public:
+  public:
     static void SetDeviceName(const char *Name);
     static const char *DeviceName(void);
     static bool DriveExists(void);

@@ -37,8 +37,7 @@ static_assert(sizeof(DvdLanguageName) == sizeof(ISO639code), "a name for each co
 
 // --- cDVDSetup -----------------------------------------------------------
 
-cDVDSetup::cDVDSetup(void)
-{
+cDVDSetup::cDVDSetup(void) {
     MenuLanguage = 0;
     AudioLanguage = 0;
     SpuLanguage = 0;
@@ -50,16 +49,14 @@ cDVDSetup::cDVDSetup(void)
 
 // Value if it is one the setup menu offers, else Default: the languages
 // index ISO639code, the region code is a shift count.
-static int SetupValue(const char *Value, int Min, int Max, int Default)
-{
+static int SetupValue(const char *Value, int Min, int Max, int Default) {
     char *end;
     errno = 0;
     long v = strtol(Value, &end, 10);
     return end != Value && !*end && !errno && Min <= v && v <= Max ? int(v) : Default;
 }
 
-bool cDVDSetup::SetupParse(const char *Name, const char *Value)
-{
+bool cDVDSetup::SetupParse(const char *Name, const char *Value) {
     if (!strcasecmp(Name, "MenuLanguage"))
         MenuLanguage = SetupValue(Value, 0, ISO639codes - 1, MenuLanguage);
     else if (!strcasecmp(Name, "AudioLanguage"))
@@ -83,8 +80,7 @@ bool cDVDSetup::SetupParse(const char *Name, const char *Value)
 
 // --- cMenuSetupDVD --------------------------------------------------------
 
-cMenuSetupDVD::cMenuSetupDVD(void) : data(DVDSetup)
-{
+cMenuSetupDVD::cMenuSetupDVD(void) : data(DVDSetup) {
     SetSection(tr("Plugin.DVD$DVD"));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"), &data.MenuLanguage, ISO639codes, ISO639code));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"), &data.AudioLanguage, ISO639codes, ISO639code));
@@ -95,8 +91,7 @@ cMenuSetupDVD::cMenuSetupDVD(void) : data(DVDSetup)
     Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"), &data.ReadAHead));
 }
 
-void cMenuSetupDVD::Store(void)
-{
+void cMenuSetupDVD::Store(void) {
     DVDSetup = data;
     SetupStore("MenuLanguage", DVDSetup.MenuLanguage);
     SetupStore("AudioLanguage", DVDSetup.AudioLanguage);

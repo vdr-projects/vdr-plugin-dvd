@@ -15,22 +15,22 @@
 #include <cstdio>
 
 // Debug output on stdout, one switch per area.
-//#define CTRLDEBUG
-//#define DVDDEBUG
-//#define PTSDEBUG
-//#define PTSDEBUG2
-//#define AUDIOIDDEBUG
-//#define AUDIOPLAYDEBUG2
-//#define NAVDEBUG
-//#define NAV0DEBUG
-//#define SUBPDEBUG
-//#define IFRAMEDEBUG
-//#define IFRAMEDEBUG2
-//#define KEYDEBUG
-//#define SHOWDEBUG
-//#define OSDCTRLDEBUG
+// #define CTRLDEBUG
+// #define DVDDEBUG
+// #define PTSDEBUG
+// #define PTSDEBUG2
+// #define AUDIOIDDEBUG
+// #define AUDIOPLAYDEBUG2
+// #define NAVDEBUG
+// #define NAV0DEBUG
+// #define SUBPDEBUG
+// #define IFRAMEDEBUG
+// #define IFRAMEDEBUG2
+// #define KEYDEBUG
+// #define SHOWDEBUG
+// #define OSDCTRLDEBUG
 // Writes the I-frame of each still picture to /tmp/dvd.iframe.NNN.asm.pes.
-//#define IFRAMEWRITE
+// #define IFRAMEWRITE
 
 #ifdef DVDDEBUG
 #define DEBUGDVD(...) printf(__VA_ARGS__)
