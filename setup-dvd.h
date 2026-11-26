@@ -25,9 +25,9 @@ class cDVDSetup {
     int ReadAHead;
 
   public:
-    cDVDSetup(void);
+    cDVDSetup();
 
-    bool SetupParse(const char *Name, const char *Value);
+    auto SetupParse(const char *Name, const char *Value) -> bool;
 };
 
 class cMenuSetupDVD : public cMenuSetupPage {
@@ -35,10 +35,10 @@ class cMenuSetupDVD : public cMenuSetupPage {
     cDVDSetup data;
 
   protected:
-    void Store(void) override;
+    void Store() override;
 
   public:
-    cMenuSetupDVD(void);
+    cMenuSetupDVD();
 };
 
 extern cDVDSetup DVDSetup;

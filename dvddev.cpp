@@ -29,6 +29,6 @@ void cDVD::SetDeviceName(const char *Name) {
     deviceName = name.c_str();
 }
 
-const char *cDVD::DeviceName(void) { return deviceName; }
+auto cDVD::DeviceName() -> const char * { return deviceName; }
 
-bool cDVD::DriveExists(void) { return access(deviceName, F_OK) == 0; }
+auto cDVD::DriveExists() -> bool { return access(deviceName, F_OK) == 0; }

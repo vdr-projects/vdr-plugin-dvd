@@ -39,31 +39,32 @@ static const char *MAINMENUENTRY = trNOOP("Plugin.DVD$DVD");
 
 // --- cPluginDvd ------------------------------------------------------------
 
-const char *cPluginDvd::Description(void) { return tr(DESCRIPTION); }
+auto cPluginDvd::Description() -> const char * { return tr(DESCRIPTION); }
 
-const char *cPluginDvd::MainMenuEntry(void) { return DVDSetup.HideMainMenu ? NULL : tr(MAINMENUENTRY); }
+auto cPluginDvd::MainMenuEntry() -> const char * { return DVDSetup.HideMainMenu ? nullptr : tr(MAINMENUENTRY); }
 
-const char *cPluginDvd::Version(void) { return VERSION; }
+auto cPluginDvd::Version() -> const char * { return VERSION; }
 
-const char *cPluginDvd::CommandLineHelp(void) {
+auto cPluginDvd::CommandLineHelp() -> const char * {
     return "  -C DEV,   --dvd=DEV      use DEV as the DVD device (default: /dev/cdrom)\n";
 }
 
-bool cPluginDvd::ProcessArgs(int argc, char *argv[]) {
+auto cPluginDvd::ProcessArgs(int argc, char *argv[]) -> bool {
     static struct option long_options[] = {
-        {"dvd", required_argument, NULL, 'C'},
-        {NULL, 0, NULL, 0},
+        {"dvd", required_argument, nullptr, 'C'},
+        {nullptr, 0, nullptr, 0},
     };
 
     int c;
-    while ((c = getopt_long(argc, argv, "C:", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "C:", long_options, nullptr)) != -1) {
         switch (c) {
             case 'C':
                 cDVD::SetDeviceName(optarg);
                 // A USB drive may be plugged in later, and returning false
                 // here would keep VDR from starting at all.
-                if (!cDVD::DriveExists())
+                if (!cDVD::DriveExists()) {
                     isyslog("dvd: DVD drive %s not found (yet)", optarg);
+                }
                 break;
             default:
                 fprintf(stderr, "arg char: %c\n", c);
@@ -73,17 +74,18 @@ bool cPluginDvd::ProcessArgs(int argc, char *argv[]) {
     return true;
 }
 
-cOsdMenu *cPluginDvd::MainMenuAction(void) {
+auto cPluginDvd::MainMenuAction() -> cOsdMenu * {
     // VDR owns the control, which the analyzer can't see.
     // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
-    if (!cDvdPlayerControl::DVDActive())
+    if (!cDvdPlayerControl::DVDActive()) {
         cControl::Launch(new cDvdPlayerControl);
-    return NULL;
+    }
+    return nullptr;
     // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
-cMenuSetupPage *cPluginDvd::SetupMenu(void) { return new cMenuSetupDVD; }
+auto cPluginDvd::SetupMenu() -> cMenuSetupPage * { return new cMenuSetupDVD; }
 
-bool cPluginDvd::SetupParse(const char *Name, const char *Value) { return DVDSetup.SetupParse(Name, Value); }
+auto cPluginDvd::SetupParse(const char *Name, const char *Value) -> bool { return DVDSetup.SetupParse(Name, Value); }
 
 VDRPLUGINCREATOR(cPluginDvd); // Don't touch this!

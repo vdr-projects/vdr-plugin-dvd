@@ -102,19 +102,22 @@ simpleFIFO::simpleFIFO(int Size) {
 
 simpleFIFO::~simpleFIFO() { free(buffer); }
 
-int simpleFIFO::Put(const uint8_t *Data, int Count) {
+auto simpleFIFO::Put(const uint8_t *Data, int Count) -> int {
     if (Count > 0) {
-        int rest = size - head;
-        int free = Free();
+        const int rest = size - head;
+        const int free = Free();
 
-        if (free <= 0)
+        if (free <= 0) {
             return 0;
-        if (free < Count)
+        }
+        if (free < Count) {
             Count = free;
+        }
         if (Count >= rest) {
             memcpy(buffer + head, Data, (size_t)rest);
-            if (Count - rest)
+            if (Count - rest) {
                 memcpy(buffer, Data + rest, (size_t)(Count - rest));
+            }
             head = Count - rest;
         } else {
             memcpy(buffer + head, Data, (size_t)Count);
@@ -124,19 +127,22 @@ int simpleFIFO::Put(const uint8_t *Data, int Count) {
     return Count;
 }
 
-int simpleFIFO::Get(uint8_t *Data, int Count) {
+auto simpleFIFO::Get(uint8_t *Data, int Count) -> int {
     if (Count > 0) {
-        int rest = size - tail;
-        int cont = Available();
+        const int rest = size - tail;
+        const int cont = Available();
 
-        if (rest <= 0)
+        if (rest <= 0) {
             return 0;
-        if (cont < Count)
+        }
+        if (cont < Count) {
             Count = cont;
+        }
         if (Count >= rest) {
             memcpy(Data, buffer + tail, (size_t)rest);
-            if (Count - rest)
+            if (Count - rest) {
                 memcpy(Data + rest, buffer, (size_t)(Count - rest));
+            }
             tail = Count - rest;
         } else {
             memcpy(Data, buffer + tail, (size_t)Count);
@@ -153,12 +159,12 @@ cSPUassembler::cSPUassembler() : simpleFIFO(SPU_BUFFER_SIZE) {
     stream = -1;
 }
 
-void cSPUassembler::Reset(void) {
+void cSPUassembler::Reset() {
     Clear();
     stream = -1;
 }
 
-int cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream) {
+auto cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream) -> int {
     // The packets of a unit that a seek cut off, or of the stream shown
     // before, don't belong to the next unit: appended to them it came out
     // garbled, and so did every unit after it.
@@ -168,7 +174,8 @@ int cSPUassembler::Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts
     }
     // The first packet of a unit has its PTS. Not that of the last packet
     // with a PTS, which can be an audio packet's.
-    if (HasPts)
+    if (HasPts) {
         pts = Pts;
+    }
     return simpleFIFO::Put(Data, Count);
 }

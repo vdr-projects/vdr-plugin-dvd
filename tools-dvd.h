@@ -16,14 +16,16 @@
 
 class cPStream {
   public:
-    static bool packetStart(const uint8_t *data) { return (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x01); }
+    static auto packetStart(const uint8_t *data) -> bool {
+        return (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x01);
+    }
 
-    static int packetType(const uint8_t *data) { return data[3]; }
-    static int stuffingLength(const uint8_t *data) { return data[13] & 0x07; }
-    static int packetLength(const uint8_t *data) { return (data[4] << 8) + data[5] + 6; }
-    static int PESHeaderLength(const uint8_t *data) { return (data[8]); }
+    static auto packetType(const uint8_t *data) -> int { return data[3]; }
+    static auto stuffingLength(const uint8_t *data) -> int { return data[13] & 0x07; }
+    static auto packetLength(const uint8_t *data) -> int { return (data[4] << 8) + data[5] + 6; }
+    static auto PESHeaderLength(const uint8_t *data) -> int { return data[8]; }
 
-    static uint64_t fromPTS(const uint8_t *p) {
+    static auto fromPTS(const uint8_t *p) -> uint64_t {
         uint64_t lpts = 0;
         lpts = (((uint64_t)p[0]) & 0x0e) << 29;
         lpts |= ((uint64_t)p[1]) << 22;

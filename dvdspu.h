@@ -28,15 +28,15 @@ class simpleFIFO {
   public:
     explicit simpleFIFO(int Size);
     simpleFIFO(const simpleFIFO &) = delete;
-    simpleFIFO &operator=(const simpleFIFO &) = delete;
+    auto operator=(const simpleFIFO &) -> simpleFIFO & = delete;
     ~simpleFIFO();
-    int Put(const uint8_t *Data, int Count);
-    int Get(uint8_t *Data, int Count);
-    void Clear(void) { head = tail = 0; }
+    auto Put(const uint8_t *Data, int Count) -> int;
+    auto Get(uint8_t *Data, int Count) -> int;
+    void Clear() { head = tail = 0; }
 
-    int Free(void) const { return ((size + tail) - head - 1) % size; };
-    int Available(void) const { return ((head + size) - tail) % size; };
-    uint8_t const &operator[](int i) const { return buffer[(tail + i) % size]; };
+    [[nodiscard]] auto Free() const -> int { return ((size + tail) - head - 1) % size; }
+    [[nodiscard]] auto Available() const -> int { return ((head + size) - tail) % size; }
+    auto operator[](int i) const -> const uint8_t & { return buffer[(tail + i) % size]; }
 };
 
 class cSPUassembler : public simpleFIFO {
@@ -50,19 +50,22 @@ class cSPUassembler : public simpleFIFO {
     // A unit starts with its size and the offset of its control sequence,
     // which ends with at least its delay, the next one's offset and the end
     // command.
-    bool ready(void) const { return Available() >= 4 && (Available() >= getSize() || !valid()); };
-    bool valid(void) const { return getSize() >= 4 && getCmdOffs() >= 4 && getCmdOffs() + 5 <= getSize(); }
-    int getSize(void) const { return ((operator[](0)) << 8) | operator[](1); };
-    int getCmdOffs(void) const { return ((operator[](2)) << 8) | operator[](3); };
-    uint64_t getPts(void) const { return pts; };
+    [[nodiscard]] auto ready() const -> bool { return Available() >= 4 && (Available() >= getSize() || !valid()); }
+    [[nodiscard]] auto valid() const -> bool {
+        return getSize() >= 4 && getCmdOffs() >= 4 && getCmdOffs() + 5 <= getSize();
+    }
+    [[nodiscard]] auto getSize() const -> int { return (operator[](0) << 8) | operator[](1); }
+    [[nodiscard]] auto getCmdOffs() const -> int { return (operator[](2) << 8) | operator[](3); }
+    [[nodiscard]] auto getPts() const -> uint64_t { return pts; }
 
-    void Reset(void);
+    void Reset();
     // A packet of Stream that isn't put: the unit it belongs to stays incomplete.
     void Skip(int Stream) {
-        if (Stream == stream)
+        if (Stream == stream) {
             Reset();
+        }
     }
-    int Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream);
+    auto Put(const uint8_t *Data, int Count, bool HasPts, uint64_t Pts, int Stream) -> int;
 };
 
 #endif // VDR_DVD_DVDSPU_H

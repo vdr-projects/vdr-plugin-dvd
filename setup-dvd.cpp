@@ -37,7 +37,7 @@ static_assert(sizeof(DvdLanguageName) == sizeof(ISO639code), "a name for each co
 
 // --- cDVDSetup -----------------------------------------------------------
 
-cDVDSetup::cDVDSetup(void) {
+cDVDSetup::cDVDSetup() {
     MenuLanguage = 0;
     AudioLanguage = 0;
     SpuLanguage = 0;
@@ -49,38 +49,39 @@ cDVDSetup::cDVDSetup(void) {
 
 // Value if it is one the setup menu offers, else Default: the languages
 // index ISO639code, the region code is a shift count.
-static int SetupValue(const char *Value, int Min, int Max, int Default) {
+static auto SetupValue(const char *Value, int Min, int Max, int Default) -> int {
     char *end;
     errno = 0;
-    long v = strtol(Value, &end, 10);
+    const long v = strtol(Value, &end, 10);
     return end != Value && !*end && !errno && Min <= v && v <= Max ? int(v) : Default;
 }
 
-bool cDVDSetup::SetupParse(const char *Name, const char *Value) {
-    if (!strcasecmp(Name, "MenuLanguage"))
+auto cDVDSetup::SetupParse(const char *Name, const char *Value) -> bool {
+    if (!strcasecmp(Name, "MenuLanguage")) {
         MenuLanguage = SetupValue(Value, 0, ISO639codes - 1, MenuLanguage);
-    else if (!strcasecmp(Name, "AudioLanguage"))
+    } else if (!strcasecmp(Name, "AudioLanguage")) {
         AudioLanguage = SetupValue(Value, 0, ISO639codes - 1, AudioLanguage);
-    else if (!strcasecmp(Name, "SpuLanguage"))
+    } else if (!strcasecmp(Name, "SpuLanguage")) {
         SpuLanguage = SetupValue(Value, 0, ISO639codes - 1, SpuLanguage);
-    else if (!strcasecmp(Name, "PlayerRCE"))
+    } else if (!strcasecmp(Name, "PlayerRCE")) {
         PlayerRCE = SetupValue(Value, 0, 8, PlayerRCE);
-    else if (!strcasecmp(Name, "ShowSubtitles"))
+    } else if (!strcasecmp(Name, "ShowSubtitles")) {
         ShowSubtitles = SetupValue(Value, 0, 1, ShowSubtitles);
-    else if (!strcasecmp(Name, "HideMainMenu"))
+    } else if (!strcasecmp(Name, "HideMainMenu")) {
         HideMainMenu = SetupValue(Value, 0, 1, HideMainMenu);
-    else if (!strcasecmp(Name, "ReadAHead"))
+    } else if (!strcasecmp(Name, "ReadAHead")) {
         ReadAHead = SetupValue(Value, 0, 1, ReadAHead);
-    else if (!strcasecmp(Name, "Gain"))
+    } else if (!strcasecmp(Name, "Gain")) {
         ; // removed with the AC-3 decoder; ignored, or VDR logs it as an error
-    else
+    } else {
         return false;
+    }
     return true;
 }
 
 // --- cMenuSetupDVD --------------------------------------------------------
 
-cMenuSetupDVD::cMenuSetupDVD(void) : data(DVDSetup) {
+cMenuSetupDVD::cMenuSetupDVD() : data(DVDSetup) {
     SetSection(tr("Plugin.DVD$DVD"));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred menu language"), &data.MenuLanguage, ISO639codes, ISO639code));
     Add(new cMenuEditStraItem(tr("Setup.DVD$Preferred audio language"), &data.AudioLanguage, ISO639codes, ISO639code));
@@ -91,7 +92,7 @@ cMenuSetupDVD::cMenuSetupDVD(void) : data(DVDSetup) {
     Add(new cMenuEditBoolItem(tr("Setup.DVD$ReadAHead"), &data.ReadAHead));
 }
 
-void cMenuSetupDVD::Store(void) {
+void cMenuSetupDVD::Store() {
     DVDSetup = data;
     SetupStore("MenuLanguage", DVDSetup.MenuLanguage);
     SetupStore("AudioLanguage", DVDSetup.AudioLanguage);

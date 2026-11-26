@@ -17,8 +17,8 @@ class cDVD {
 
   public:
     static void SetDeviceName(const char *Name);
-    static const char *DeviceName(void);
-    static bool DriveExists(void);
+    static auto DeviceName() -> const char *;
+    static auto DriveExists() -> bool;
 };
 
 #endif // VDR_DVD_DVDDEV_H

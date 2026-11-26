@@ -53,49 +53,49 @@ class cDvdPlayerControl : public cControl {
     const char *inputIntMsg;
     void InputIntDisplay(const char *msg, int val);
     void InputIntProcess(eKeys Key, const char *msg, int &val);
-    bool IsDvdNavigationForced(void) { return forceDvdNavigation; }
-    void OsdOpen(void);
+    auto IsDvdNavigationForced() -> bool { return forceDvdNavigation; }
+    void OsdOpen();
     void OsdClose();
     void ShowTimed(int Seconds = 0);
-    void ShowMode(void);
-    bool ShowProgress(bool Initial);
-    void TimeSearchDisplay(void);
+    void ShowMode();
+    auto ShowProgress(bool Initial) -> bool;
+    void TimeSearchDisplay();
     void TimeSearchProcess(eKeys Key);
-    void TimeSearch(void);
-    void TrackSearch(void);
+    void TimeSearch();
+    void TrackSearch();
     void UpdateShow(bool force = false);
 
   public:
-    cDvdPlayerControl(void);
+    cDvdPlayerControl();
     ~cDvdPlayerControl() override;
-    void Hide(void) override;
-    eOSState ProcessKey(eKeys Key) override;
-    void Show(void) override;
-    static bool DVDActive() { return dvd_active; };
-    bool DvdNavigation(eKeys Key);
-    cString GetDisplayHeaderLine(void);
-    bool OsdVisible(const void *me);
-    bool OsdTaken(const void *me);
-    bool TakeOsd(void *obj);
+    void Hide() override;
+    auto ProcessKey(eKeys Key) -> eOSState override;
+    void Show() override;
+    static auto DVDActive() -> bool { return dvd_active; }
+    auto DvdNavigation(eKeys Key) -> bool;
+    auto GetDisplayHeaderLine() -> cString;
+    auto OsdVisible(const void *me) -> bool;
+    auto OsdTaken(const void *me) -> bool;
+    auto TakeOsd(void *obj) -> bool;
 
   protected:
-    void HideOwnOsd(void);
+    void HideOwnOsd();
 
   private:
     cDvdPlayer *player; // cControl's, never NULL
     cSkinDisplayReplay *displayReplay;
 
   public:
-    bool Active(void);
-    void Stop(void);
+    auto Active() -> bool;
+    void Stop();
     // Stops the current replay session (if any).
-    void Pause(void);
+    void Pause();
     // Pauses the current replay session, or resumes a paused session.
-    void Play(void);
+    void Play();
     // Resumes normal replay mode.
-    void Forward(void);
+    void Forward();
     // Runs the current replay session forward at a higher speed.
-    void Backward(void);
+    void Backward();
     // Runs the current replay session backwards at a higher speed.
     void SkipSeconds(int Seconds);
     // Skips the given number of seconds in the current replay session.

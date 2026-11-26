@@ -20,14 +20,14 @@
 
 class cPluginDvd : public cPlugin {
   public:
-    const char *Version(void) override;
-    const char *Description(void) override;
-    const char *CommandLineHelp(void) override;
-    bool ProcessArgs(int argc, char *argv[]) override;
-    const char *MainMenuEntry(void) override;
-    cOsdMenu *MainMenuAction(void) override;
-    cMenuSetupPage *SetupMenu(void) override;
-    bool SetupParse(const char *Name, const char *Value) override;
+    auto Version() -> const char * override;
+    auto Description() -> const char * override;
+    auto CommandLineHelp() -> const char * override;
+    auto ProcessArgs(int argc, char *argv[]) -> bool override;
+    auto MainMenuEntry() -> const char * override;
+    auto MainMenuAction() -> cOsdMenu * override;
+    auto SetupMenu() -> cMenuSetupPage * override;
+    auto SetupParse(const char *Name, const char *Value) -> bool override;
 };
 
 #endif // VDR_DVD_DVD_H
