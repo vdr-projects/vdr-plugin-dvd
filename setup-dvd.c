@@ -19,15 +19,13 @@ cDVDSetup DVDSetup;
 // handling uses three-letter codes and does not cover this.
 const char *ISO639code[] = {"en", "de", "sl", "it", "nl", "pt", "fr", "no", "fi", "pl", "es",
                             "el", "sv", "ro", "hu", "ca", "ru", "hr", "et", "da", "cs", "tr"};
-const int ISO639codes = sizeof(ISO639code) / sizeof(ISO639code[0]);
+const int ISO639codes = int(sizeof(ISO639code) / sizeof(ISO639code[0]));
 
-const char *DvdLanguageCode[][2] = {{"en", "English"},    {"de", "Deutsch"},   {"sl", "Slovenski"}, {"it", "Italiano"},
-                                    {"nl", "Nederlands"}, {"pt", "Portugues"}, {"fr", "Francais"},  {"no", "Norsk"},
-                                    {"fi", "Suomi"},      {"pl", "Polski"},    {"es", "Espanol"},   {"el", "Greek"},
-                                    {"sv", "Svenska"},    {"ro", "Romaneste"}, {"hu", "Magyar"},    {"ca", "Catala"},
-                                    {"ru", "Russian"},    {"hr", "Hrvatski"},  {"et", "Eesti"},     {"da", "Dansk"},
-                                    {"cs", "Czech"},      {"tr", "Turkce"}};
-const int DvdLanguageCodes = sizeof(DvdLanguageCode) / sizeof(DvdLanguageCode[0]);
+const char *DvdLanguageName[] = {"English",  "Deutsch",   "Slovenski", "Italiano", "Nederlands", "Portugues",
+                                 "Francais", "Norsk",     "Suomi",     "Polski",   "Espanol",    "Greek",
+                                 "Svenska",  "Romaneste", "Magyar",    "Catala",   "Russian",    "Hrvatski",
+                                 "Eesti",    "Dansk",     "Czech",     "Turkce"};
+static_assert(sizeof(DvdLanguageName) == sizeof(ISO639code), "a name for each code");
 
 // --- cDVDSetup -----------------------------------------------------------
 

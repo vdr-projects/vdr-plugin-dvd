@@ -43,7 +43,7 @@ public:
 extern cDVDSetup DVDSetup;
 
 extern const char *ISO639code[];
-extern const char *DvdLanguageCode[][2];
-extern const int DvdLanguageCodes;
+extern const char *DvdLanguageName[]; // of each code
+extern const int ISO639codes;
 
 #endif // __SETUP_DVD_H

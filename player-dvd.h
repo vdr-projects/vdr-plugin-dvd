@@ -61,7 +61,7 @@ private:
 
     cIframeAssembler *iframeAssembler;
     int IframeCnt;
-    uint8_t *event_buf;
+    uint8_t event_buf[4096]; // for dvdnav_get_next_cache_block(), at least a block
 
     cRingBufferFrame *ringBuffer;
     cFrame *rframe, *pframe;
@@ -219,7 +219,7 @@ private:
     int GetSubtitleStreamNumbers(void) const;
 
     // Resuming
-    cDVDPlayerResume *resume;
+    cDVDPlayerResume *resume; // never NULL
     // The disc's key in the resume file, allocated: the caller frees it. NULL
     // if libdvdnav can't tell the number of titles.
     char *GetDVDResumeKey() const;
