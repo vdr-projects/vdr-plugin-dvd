@@ -33,7 +33,7 @@
 #endif
 
 // NOLINTNEXTLINE(misc-use-anonymous-namespace) -- the Makefile greps this line for the version (VDR's plugin template)
-static const char *VERSION = "1.0.0 RC3";
+static const char *VERSION = "1.0.0 RC4";
 
 namespace {
 
