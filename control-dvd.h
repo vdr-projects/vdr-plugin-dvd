@@ -38,6 +38,8 @@ private:
     int lastSpeed;
     int timeSearchPos;
     int timeSearchTime;
+    cString shownTitle;    // in the replay display
+    cString reportedTitle; // to cStatus while the display is closed
     InputProcessType inputActive;
     time_t timeoutShow;
     const char *inputIntMsg;
@@ -57,22 +59,22 @@ private:
 
 public:
     cDvdPlayerControl(void);
-    virtual ~cDvdPlayerControl();
-    virtual void Hide(void);
-    virtual eOSState ProcessKey(eKeys Key);
-    virtual void Show(void);
+    ~cDvdPlayerControl() override;
+    void Hide(void) override;
+    eOSState ProcessKey(eKeys Key) override;
+    void Show(void) override;
     static bool DVDActive() { return dvd_active; };
     bool DvdNavigation(eKeys Key);
-    const char *GetDisplayHeaderLine();
-    bool OsdVisible(void *me);
-    bool OsdTaken(void *me);
+    cString GetDisplayHeaderLine(void);
+    bool OsdVisible(const void *me);
+    bool OsdTaken(const void *me);
     bool TakeOsd(void *obj);
 
 protected:
     void HideOwnOsd(void);
 
 private:
-    cDvdPlayer *player;
+    cDvdPlayer *player; // cControl's, never NULL
     cSkinDisplayReplay *displayReplay;
 
 public:
@@ -92,15 +94,6 @@ public:
     // The sign of 'Seconds' determines the direction in which to skip.
     // Use a very large negative value to go all the way back to the
     // beginning of the program chain.
-    bool GetIndex(int &Current, int &Total, bool SnapToIFrame = false);
-    // Returns the current and total frame index of the program chain.
-    // SnapToIFrame has no effect.
-    bool GetReplayMode(bool &Play, bool &Forward, int &Speed);
-    // Returns the current replay mode (if applicable).
-    // 'Play' tells whether we are playing or pausing, 'Forward' tells whether
-    // we are going forward or backward and 'Speed' is -1 if this is normal
-    // play/pause mode, 0 if it is single speed fast/slow forward/back mode
-    // and >0 if this is multi speed mode.
     void Goto(int Seconds);
     // Positions to the given second of the current program chain.
 };
