@@ -1,10 +1,12 @@
-# Code style of the plugin; apply with `make indent`.
-
+# Code style of the plugin; apply with `make indent`. The first section is
+# the style of every language, C as well as C++; the C++ section adds the
+# language standard.
 ---
-Language: Cpp
 BasedOnStyle: LLVM
-Standard: c++17
-
 ColumnLimit: 120
 IndentCaseLabels: true
 IndentWidth: 4
+---
+Language: Cpp
+Standard: c++17
+...
