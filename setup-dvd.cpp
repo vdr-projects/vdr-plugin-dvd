@@ -32,8 +32,8 @@ namespace {
 auto SetupValue(const char *Value, int Min, int Max, int Default) -> int {
     char *end = nullptr;
     errno = 0;
-    const long v = strtol(Value, &end, 10);
-    return end != Value && !*end && !errno && Min <= v && v <= Max ? static_cast<int>(v) : Default;
+    const long number = strtol(Value, &end, 10);
+    return end != Value && !*end && !errno && Min <= number && number <= Max ? static_cast<int>(number) : Default;
 }
 
 } // namespace

@@ -135,20 +135,20 @@ class cResumeEntry : public cListObject {
 
 // A line of the resume file, "title:chapter:second:key"; false if it is none.
 auto ParseResume(std::string_view Line, cResumeEntry &Entry) -> bool {
-    const char *p = Line.data();
-    const char *end = p + Line.size();
-    const auto field = [&p, end](auto &Value) -> bool {
-        const auto [next, error] = std::from_chars(p, end, Value);
+    const char *pos = Line.data();
+    const char *end = pos + Line.size();
+    const auto field = [&pos, end](auto &Value) -> bool {
+        const auto [next, error] = std::from_chars(pos, end, Value);
         if (error != std::errc() || next == end || *next != ':') {
             return false;
         }
-        p = next + 1;
+        pos = next + 1;
         return true;
     };
-    if (!field(Entry.title) || !field(Entry.chapter) || !field(Entry.second) || p == end) {
+    if (!field(Entry.title) || !field(Entry.chapter) || !field(Entry.second) || pos == end) {
         return false;
     }
-    Entry.key.assign(p, end);
+    Entry.key.assign(pos, end);
     return true;
 }
 
@@ -243,15 +243,15 @@ void cDVDPlayerResume::LoadResume() {
 auto cDVDPlayerResume::SaveResume() -> bool {
     if (modified) {
         DEBUGDVD("resume: saving resume file\n");
-        cSafeFile f(resfile);
-        if (f.Open()) {
+        cSafeFile file(resfile);
+        if (file.Open()) {
             for (const cResumeEntry *re = First(); re; re = Next(re)) {
                 // The error stays in the stream: Close() keeps the old file.
-                if (fprintf(f, "%d:%d:%" PRId64 ":%s\n", re->title, re->chapter, re->second, re->key.c_str()) < 0) {
+                if (fprintf(file, "%d:%d:%" PRId64 ":%s\n", re->title, re->chapter, re->second, re->key.c_str()) < 0) {
                     break;
                 }
             }
-            return f.Close();
+            return file.Close();
         }
         DEBUGDVD("resume: failed to save resume file\n");
         return false;
@@ -631,11 +631,11 @@ auto cDvdPlayer::GetDVDResumeKey() const -> cString {
         return {};
     }
     int totalChapters = 0;
-    for (int t = 1; t <= totalTitles; t++) {
+    for (int title = 1; title <= totalTitles; title++) {
         int curChapters = 0;
-        dvdnav_get_number_of_parts(nav, t, &curChapters);
+        dvdnav_get_number_of_parts(nav, title, &curChapters);
         totalChapters += curChapters;
-        DEBUGDVD("resume: cDvdPlayer::Action() Title %d has %d chapters.\n", t, curChapters);
+        DEBUGDVD("resume: cDvdPlayer::Action() Title %d has %d chapters.\n", title, curChapters);
     }
     const cMutexLock MutexLock(&infoMutex);
     DEBUGDVD("resume: cDvdPlayer::Action() Titles: %d with %d chapters all together, Title: \"%s\"\n", totalTitles,
@@ -908,10 +908,10 @@ void cDvdPlayer::Action() {
 #ifdef IFRAMEWRITE
                 static int ifnum = 0;
                 const cString ifname = cString::sprintf("/tmp/dvd.iframe.%3.3d.asm.pes", ifnum++);
-                if (FILE *f = fopen(ifname, "wb")) {
+                if (FILE *file = fopen(ifname, "wb")) {
                     const bool written =
-                        fwrite(iframe, 1, static_cast<size_t>(iframeSize), f) == static_cast<size_t>(iframeSize);
-                    if (fclose(f) != 0 || !written) {
+                        fwrite(iframe, 1, static_cast<size_t>(iframeSize), file) == static_cast<size_t>(iframeSize);
+                    if (fclose(file) != 0 || !written) {
                         esyslog("ERROR: dvd-plugin can't write %s", *ifname);
                     }
                 }
@@ -1691,12 +1691,12 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
 
     const int offset = 14 + cPStream::stuffingLength(sector);
     sector += offset;
-    const int r = DVD_VIDEO_LB_LEN - offset;
+    const int blockBytes = DVD_VIDEO_LB_LEN - offset;
 
     sector[6] &= 0x8f;
 
     uchar *data = sector;
-    int datalen = r;
+    int datalen = blockBytes;
 
     // MPEG video and audio streams have a range of ids each.
     int streamType = cPStream::packetType(sector);
@@ -1721,7 +1721,7 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
             // length without the header data counted 3 bytes of the next block,
             // and a sequence header starting at the end of a packet had its
             // aspect ratio "corrected" there, in libdvdnav's read cache.
-            datalen = min(cPStream::packetLength(sector), r) - static_cast<int>(data - sector);
+            datalen = min(cPStream::packetLength(sector), blockBytes) - static_cast<int>(data - sector);
 
             // Trick modes play I-frames only, from their start: not the rest of
             // a picture that was under way when the trick mode began.
@@ -1825,8 +1825,8 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                                   static_cast<int>(haveSliceBeforePicture), cntVidBlocksPlayed);
                     lastFrameType = 0xff;
                 } else {
-                    DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", r, iframeAssembler->Available());
-                    iframeAssembler->Put(sector, r);
+                    DEBUG_IFRAME2("I-Frame: Put MB .. %d+%d=", blockBytes, iframeAssembler->Available());
+                    iframeAssembler->Put(sector, blockBytes);
                     DEBUG_IFRAME2("%d (%d,%d,c:%d,p:%d,x:%d,v:%d)\n", iframeAssembler->Available(), currentFrameType,
                                   lastFrameType, do_copy, havePictureHeader, haveSliceBeforePicture,
                                   cntVidBlocksPlayed);
@@ -1838,8 +1838,8 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                 cPStream::toPTS(sector + 9, pktpts);
             }
 
-            rframe = new cFrame(sector, r, ftVideo);
-            if (blankTo > blankFrom && blankTo <= r) {
+            rframe = new cFrame(sector, blockBytes, ftVideo);
+            if (blankTo > blankFrom && blankTo <= blockBytes) {
                 memset(rframe->Data() + blankFrom, 0, static_cast<size_t>(blankTo - blankFrom));
             }
 
@@ -1878,7 +1878,7 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                 cPStream::toPTS(sector + 9, pktpts);
             }
 
-            rframe = new cFrame(sector, r, ftAudio);
+            rframe = new cFrame(sector, blockBytes, ftAudio);
 
             if (ptsFlag) {
                 seenAPTS(pktpts);
@@ -1889,7 +1889,7 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
         case PRIVATE_STREAM1: {
             // Within the block, as for video: a packet's length beyond it
             // had subtitles read past it.
-            datalen = min(cPStream::packetLength(sector), r);
+            datalen = min(cPStream::packetLength(sector), blockBytes);
 
             // skip the optional and the mandatory header bytes
             datalen -= cPStream::PESHeaderLength(sector);
@@ -1943,10 +1943,10 @@ auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAu
                     // AC-3, DTS and LPCM go to the device as they are, which
                     // decodes them. VDR before 2.8.3 drops AC-3 and DTS with
                     // "Use Dolby Digital" off.
-                    rframe = new cFrame(sector, r, ftDolby);
+                    rframe = new cFrame(sector, blockBytes, ftDolby);
                     DEBUG_AUDIO_PLAY2("dvd audio menu=%d, apts=%8ums vpts=%8ums len=%d\n", IsInMenuDomain(),
                                       static_cast<unsigned int>(ptsFlag ? pktpts / 90U : 0),
-                                      static_cast<unsigned int>(VideoPts / 90U), r);
+                                      static_cast<unsigned int>(VideoPts / 90U), blockBytes);
                     if (ptsFlag) {
                         seenAPTS(pktpts);
                     }
@@ -2511,15 +2511,15 @@ auto cDvdPlayer::SearchSubpStream(int SubpStreamId) const -> int {
     if (SubpStreamId != -1) {
         SubpStreamId &= SubpStreamMask;
     }
-    int i = navSubpStreamSeen.Count() - 1;
-    while (i >= 0) {
+    int index = navSubpStreamSeen.Count() - 1;
+    while (index >= 0) {
         // the list holds stream numbers without bit 7, and -1
-        if (SubpStreamId == navSubpStreamSeen.Get(i)->getValue()) {
+        if (SubpStreamId == navSubpStreamSeen.Get(index)->getValue()) {
             break; // found
         }
-        i--;
+        index--;
     }
-    return i;
+    return index;
 }
 
 void cDvdPlayer::notifySeenSubpStream(int navSubpStream) {
@@ -2578,9 +2578,9 @@ void cDvdPlayer::SelectSubpStream() {
 void cDvdPlayer::SetSubpStream(int id) {
     LOCK_THREAD;
 
-    const int i = SearchSubpStream(id);
+    const int index = SearchSubpStream(id);
 
-    if (i < 0) {
+    if (index < 0) {
         id = navSubpStreamSeen.Get(0)->getValue();
     }
 
@@ -2590,7 +2590,7 @@ void cDvdPlayer::SetSubpStream(int id) {
     UpdateTrackInfo();
 
     DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: curNavSpu next to 0x%X, idx=%d, physical %d, locked=%d\n",
-                  currentNavSubpStream, i, currentNavSubpPhysical, currentNavSubpStreamUsrLocked);
+                  currentNavSubpStream, index, currentNavSubpPhysical, currentNavSubpStreamUsrLocked);
 }
 
 void cDvdPlayer::NextSubpStream() {
@@ -2600,13 +2600,13 @@ void cDvdPlayer::NextSubpStream() {
 
     LOCK_THREAD;
 
-    int i = SearchSubpStream(currentNavSubpStream);
+    int index = SearchSubpStream(currentNavSubpStream);
 
-    i = (i + 1) % navSubpStreamSeen.Count();
+    index = (index + 1) % navSubpStreamSeen.Count();
 
-    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: found curNavSubp(0x%X) at idx = %d\n", currentNavSubpStream, i);
+    DEBUG_SUBP_ID("cDvdPlayer::cDvdPlayer: found curNavSubp(0x%X) at idx = %d\n", currentNavSubpStream, index);
 
-    currentNavSubpStream = navSubpStreamSeen.Get(i)->getValue();
+    currentNavSubpStream = navSubpStreamSeen.Get(index)->getValue();
     SetCurrentNavSubpStreamUsrLocked(true);
     SelectSubpStream();
     UpdateTrackInfo();
@@ -2637,14 +2637,14 @@ void cDvdPlayer::setAllAudioTracks() {
 }
 
 auto cDvdPlayer::SearchAudioStream(int AudioStreamId) const -> int {
-    int i = navAudioTracksSeen.Count() - 1;
-    while (i >= 0) {
-        if (AudioStreamId == navAudioTracksSeen.Get(i)->getValue()) {
+    int index = navAudioTracksSeen.Count() - 1;
+    while (index >= 0) {
+        if (AudioStreamId == navAudioTracksSeen.Get(index)->getValue()) {
             break; // found
         }
-        i--;
+        index--;
     }
-    return i;
+    return index;
 }
 
 void cDvdPlayer::notifySeenAudioTrack(int navAudioTrack) {
@@ -2731,9 +2731,9 @@ void cDvdPlayer::SwitchAudioTrack(eTrackType Type, bool ByViewer) {
 
     DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: dd=%d, index=%d, id=0x%2X\n", IS_DOLBY_TRACK(Type), Type, id);
 
-    const int i = SearchAudioStream(id);
+    const int index = SearchAudioStream(id);
 
-    if (i < 0 && navAudioTracksSeen.Count() > 0) {
+    if (index < 0 && navAudioTracksSeen.Count() > 0) {
         id = navAudioTracksSeen.Get(0)->getValue();
         DEBUG_AUDIO_ID("cDvdPlayer::SetAudioTrack: .. not found !\n");
     } else {
@@ -2939,20 +2939,20 @@ auto cDvdPlayer::AudioTrackDescription(int Channel, const char *LanguageName) co
     if (logical < 0 || dvdnav_get_audio_attr(nav, static_cast<uint8_t>(logical), &attr) != DVDNAV_STATUS_OK) {
         return {LanguageName}; // cString(NULL) keeps whatever VDR already has
     }
-    cString d(LanguageName ? LanguageName : "");
-    if (const char *c = Codec.at(attr.audio_format & 0x07U)) {
-        d = cString::sprintf("%s%s%s", *d, **d ? " " : "", c);
+    cString text(LanguageName ? LanguageName : "");
+    if (const char *codec = Codec.at(attr.audio_format & 0x07U)) {
+        text = cString::sprintf("%s%s%s", *text, **text ? " " : "", codec);
     }
     const int channels = attr.channels + 1; // the field holds the count minus one
     if (channels == 6) {
-        d = cString::sprintf("%s%s5.1", *d, **d ? " " : "");
+        text = cString::sprintf("%s%s5.1", *text, **text ? " " : "");
     } else {
-        d = cString::sprintf("%s%s%d.0", *d, **d ? " " : "", channels);
+        text = cString::sprintf("%s%s%d.0", *text, **text ? " " : "", channels);
     }
     if (const char *ext = AudioExtension(attr.code_extension)) {
-        d = cString::sprintf("%s (%s)", *d, ext);
+        text = cString::sprintf("%s (%s)", *text, ext);
     }
-    return **d ? d : cString(LanguageName);
+    return **text ? text : cString(LanguageName);
 }
 
 auto cDvdPlayer::SubtitleTrackDescription(int Channel, const char *LanguageName) const -> cString {

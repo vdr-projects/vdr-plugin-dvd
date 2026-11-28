@@ -61,9 +61,9 @@ auto cPluginDvd::ProcessArgs(int argc, char **argv) -> bool {
         option{nullptr, 0, nullptr, 0},
     };
 
-    int c = 0;
-    while ((c = getopt_long(argc, argv, "C:", long_options.data(), nullptr)) != -1) {
-        if (c != 'C') {
+    int opt = 0;
+    while ((opt = getopt_long(argc, argv, "C:", long_options.data(), nullptr)) != -1) {
+        if (opt != 'C') {
             esyslog("ERROR: dvd-plugin unknown command line option, see stderr");
             return false;
         }

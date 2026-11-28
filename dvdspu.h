@@ -35,8 +35,10 @@ class simpleFIFO {
 
     [[nodiscard]] auto Free() const -> int { return ((size + tail) - head - 1) % size; }
     [[nodiscard]] auto Available() const -> int { return ((head + size) - tail) % size; }
-    // The byte i after the oldest.
-    [[nodiscard]] auto Peek(int i) const -> uint8_t { return buffer.at(static_cast<size_t>((tail + i) % size)); }
+    // The byte Offset places after the oldest.
+    [[nodiscard]] auto Peek(int Offset) const -> uint8_t {
+        return buffer.at(static_cast<size_t>((tail + Offset) % size));
+    }
 };
 
 class cSPUassembler : public simpleFIFO {

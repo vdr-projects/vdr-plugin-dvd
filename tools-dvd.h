@@ -25,22 +25,22 @@ class cPStream {
     static auto packetLength(const uint8_t *data) -> int { return (data[4] << 8) + data[5] + 6; }
     static auto PESHeaderLength(const uint8_t *data) -> int { return data[8]; }
 
-    static auto fromPTS(const uint8_t *p) -> uint64_t {
+    static auto fromPTS(const uint8_t *data) -> uint64_t {
         uint64_t lpts = 0;
-        lpts = ((static_cast<uint64_t>(p[0])) & 0x0e) << 29;
-        lpts |= (static_cast<uint64_t>(p[1])) << 22;
-        lpts |= ((static_cast<uint64_t>(p[2])) & 0xfe) << 14;
-        lpts |= (static_cast<uint64_t>(p[3])) << 7;
-        lpts |= ((static_cast<uint64_t>(p[4])) & 0xfe) >> 1;
+        lpts = ((static_cast<uint64_t>(data[0])) & 0x0e) << 29;
+        lpts |= (static_cast<uint64_t>(data[1])) << 22;
+        lpts |= ((static_cast<uint64_t>(data[2])) & 0xfe) << 14;
+        lpts |= (static_cast<uint64_t>(data[3])) << 7;
+        lpts |= ((static_cast<uint64_t>(data[4])) & 0xfe) >> 1;
         return lpts;
     }
 
-    static void toPTS(uint8_t *p, uint64_t lpts) {
-        p[0] = (static_cast<uint8_t>(lpts >> 29) & 0x0e) | 0x21;
-        p[1] = static_cast<uint8_t>(lpts >> 22);
-        p[2] = 0x01 | static_cast<uint8_t>(lpts >> 14);
-        p[3] = static_cast<uint8_t>(lpts >> 7);
-        p[4] = 0x01 | static_cast<uint8_t>(lpts << 1);
+    static void toPTS(uint8_t *data, uint64_t lpts) {
+        data[0] = (static_cast<uint8_t>(lpts >> 29) & 0x0e) | 0x21;
+        data[1] = static_cast<uint8_t>(lpts >> 22);
+        data[2] = 0x01 | static_cast<uint8_t>(lpts >> 14);
+        data[3] = static_cast<uint8_t>(lpts >> 7);
+        data[4] = 0x01 | static_cast<uint8_t>(lpts << 1);
     }
 };
 

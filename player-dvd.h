@@ -49,7 +49,7 @@ class IntegerListObject : public cListObject {
     int value;
 
   public:
-    explicit IntegerListObject(int i) : value(i) {}
+    explicit IntegerListObject(int Value) : value(Value) {}
 
     [[nodiscard]] auto getValue() const -> int { return value; }
 };

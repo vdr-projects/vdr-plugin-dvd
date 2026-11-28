@@ -24,7 +24,6 @@ FormatStyle: file
 #   cppcoreguidelines-pro-type-vararg -- VDR formats with cString::sprintf() and logs with printf-style
 #     macros, the resume file is written with fprintf().
 #   readability-function-cognitive-complexity -- the player loop and the key handling read best whole.
-#   readability-identifier-length -- x/y/w/h, pts and loop counters are clearer short.
 Checks: >
   -*,
   bugprone-*,
@@ -43,7 +42,6 @@ Checks: >
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-vararg,
   -readability-function-cognitive-complexity,
-  -readability-identifier-length,
   -readability-magic-numbers
 
 CheckOptions:
@@ -56,6 +54,10 @@ CheckOptions:
   # Private glibc headers behind <getopt.h>: no IWYU mapping to the public header. dvdnav.h includes
   # dvdnav/version.h only since libdvdnav 6.1.0, the plugin builds with 5.0.0, too.
   misc-include-cleaner.IgnoreHeaders: 'getopt\.h;bits/getopt_.*\.h;dvdnav/version\.h'
+  # Two letters say enough (id, ok, sx for the start x); one letter only the loop counters i, j and k, and
+  # the parameter n.
+  readability-identifier-length.MinimumParameterNameLength: 2
+  readability-identifier-length.MinimumVariableNameLength: 2
   # if (!ptr) and if (count) are idiomatic; value conversions (bool b = ptr) still need an explicit test.
   readability-implicit-bool-conversion.AllowIntegerConditions: true
   readability-implicit-bool-conversion.AllowPointerConditions: true
