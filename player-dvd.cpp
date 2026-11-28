@@ -577,10 +577,23 @@ namespace {
 
 // The name of a libdvdnav event; it no longer sends 11, SEEK_DONE.
 auto EventName(int32_t Event) -> const char * {
-    static constexpr std::array<const char *, 15> Names{{"BLOCK_OK", "NOP", "STILL_FRAME", "SPU_STREAM_CHANGE",
-                                                         "AUDIO_STREAM_CHANGE", "VTS_CHANGE", "CELL_CHANGE",
-                                                         "NAV_PACKET", "STOP", "HIGHLIGHT", "SPU_CLUT_CHANGE",
-                                                         "SEEK_DONE", "HOP_CHANNEL", "WAIT", "TRICK_MODE_CHANGE"}};
+    static constexpr std::array<const char *, 15> Names{
+        "BLOCK_OK",
+        "NOP",
+        "STILL_FRAME",
+        "SPU_STREAM_CHANGE",
+        "AUDIO_STREAM_CHANGE",
+        "VTS_CHANGE",
+        "CELL_CHANGE",
+        "NAV_PACKET",
+        "STOP",
+        "HIGHLIGHT",
+        "SPU_CLUT_CHANGE",
+        "SEEK_DONE",
+        "HOP_CHANNEL",
+        "WAIT",
+        "TRICK_MODE_CHANGE",
+    };
     return Event >= 0 && static_cast<size_t>(Event) < Names.size() ? Names.at(static_cast<size_t>(Event)) : "?";
 }
 

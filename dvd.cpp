@@ -56,10 +56,10 @@ auto cPluginDvd::CommandLineHelp() -> const char * {
 }
 
 auto cPluginDvd::ProcessArgs(int argc, char **argv) -> bool {
-    static constexpr std::array<option, 2> long_options{{
-        {"dvd", required_argument, nullptr, 'C'},
-        {nullptr, 0, nullptr, 0},
-    }};
+    static constexpr std::array long_options{
+        option{"dvd", required_argument, nullptr, 'C'},
+        option{nullptr, 0, nullptr, 0},
+    };
 
     int c = 0;
     while ((c = getopt_long(argc, argv, "C:", long_options.data(), nullptr)) != -1) {

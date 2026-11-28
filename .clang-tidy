@@ -25,8 +25,6 @@ FormatStyle: file
 #     macros, the resume file is written with fprintf().
 #   readability-function-cognitive-complexity -- the player loop and the key handling read best whole.
 #   readability-identifier-length -- x/y/w/h, pts and loop counters are clearer short.
-#   readability-trailing-comma -- a trailing comma makes clang-format put each element of a braced list
-#     on its own line.
 Checks: >
   -*,
   bugprone-*,
@@ -46,8 +44,7 @@ Checks: >
   -cppcoreguidelines-pro-type-vararg,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
-  -readability-magic-numbers,
-  -readability-trailing-comma
+  -readability-magic-numbers
 
 CheckOptions:
   # libdvdnav's stream numbers are int8_t, -1 for none: numbers, not characters.
