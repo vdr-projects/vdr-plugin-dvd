@@ -34,7 +34,7 @@
 
 // The Makefile greps this line for the version (VDR's plugin template).
 // NOLINTNEXTLINE(misc-use-anonymous-namespace,cppcoreguidelines-avoid-non-const-global-variables)
-static const char *VERSION = "1.0.0 RC4";
+static const char *VERSION = "1.0.0 RC5";
 
 namespace {
 
