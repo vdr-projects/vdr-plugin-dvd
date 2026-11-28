@@ -1,9 +1,14 @@
 VDR Plugin 'dvd' Revision History
 ---------------------------------
 
-2026-11-26 Version 1.0.0
+2026-11-28 Version 1.0.0
+    - compile the sources as C++20, `make lint` too (thanks to Dirk Nehring)
+    - more checks of clang-tidy: array indexes, trailing commas, the length of names
+      and the cognitive complexity of functions; .clang-tidy says why each of its
+      options is there and why a check is left off (thanks to Dirk Nehring)
+    - clang-format formats C sources as C, C++ sources as C++20 (thanks to Dirk Nehring)
     - check the sources with clang-tidy (.clang-tidy), every finding is an
-      error (`make lint`) (thanks to Dirk Nehring)
+      error, `make lint` (thanks to Dirk Nehring)
     - report an unknown command line option through getopt, don't flush stdio's
       streams (thanks to Dirk Nehring)
     - debug output: don't read past an audio track's language code or the names
