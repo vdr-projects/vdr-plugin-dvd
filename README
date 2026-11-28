@@ -21,6 +21,8 @@ VDR       >= 2.6.6   https://www.tvdr.de/
 libdvdnav >= 5.0.0   https://www.videolan.org/developers/libdvdnav.html
 libdvdcss (optional) https://www.videolan.org/developers/libdvdcss.html
 
+and a C++20 compiler.
+
 Tested with VDR 2.8.4, libdvdnav 7.0.0, libdvdread 7.0.1 and libdvdcss
 1.5.0. VDR versions before 2.6.6 are no longer supported.
 

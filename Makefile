@@ -29,6 +29,9 @@ TMPDIR ?= /tmp
 export CFLAGS   = $(call PKGCFG,cflags)
 export CXXFLAGS = $(call PKGCFG,cxxflags)
 
+# The sources are C++20, which is not every compiler's default.
+CXXFLAGS += -std=c++20
+
 # Development warnings: off by default (safe for packaging); enable with
 # `make DEV_WARNINGS=1`.
 DEV_WARNINGS ?= 0

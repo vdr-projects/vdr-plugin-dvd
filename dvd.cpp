@@ -57,8 +57,8 @@ auto cPluginDvd::CommandLineHelp() -> const char * {
 
 auto cPluginDvd::ProcessArgs(int argc, char **argv) -> bool {
     static constexpr std::array long_options{
-        option{"dvd", required_argument, nullptr, 'C'},
-        option{nullptr, 0, nullptr, 0},
+        option{.name = "dvd", .has_arg = required_argument, .flag = nullptr, .val = 'C'},
+        option{.name = nullptr, .has_arg = 0, .flag = nullptr, .val = 0},
     };
 
     int opt = 0;

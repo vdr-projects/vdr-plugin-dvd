@@ -1619,7 +1619,7 @@ void cDvdPlayer::SetAvailableAudioTrack(eTrackType Type, int Index, uint16_t Id)
     // language and description without a lock: write them only once.
     const auto track = static_cast<eTrackType>(Type + Index);
     if (track > ttNone && track < ttMaxTrackTypes) {
-        if (announcedLanguageCode.at(track) == languageCode) {
+        if (std::cmp_equal(announcedLanguageCode.at(track), languageCode)) {
             DeviceSetAvailableTrack(Type, Index, Id);
             return;
         }
@@ -2272,7 +2272,7 @@ void cDvdPlayer::PlayFromBlock(int64_t Block) {
     // As VDR's player does it: from the start of the program chain at the
     // earliest, and a position past its end is ignored. A block number that
     // wrapped around made the seek fail, after the player had been emptied.
-    if (Block >= pgcTotalBlockNum) {
+    if (std::cmp_greater_equal(Block, pgcTotalBlockNum)) {
         return;
     }
     DEBUG_NAV("DVD NAV SPU clear & empty %s:%d\n", __FILE__, __LINE__);
