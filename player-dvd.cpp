@@ -1168,7 +1168,6 @@ void cDvdPlayer::Action() {
             case DVDNAV_AUDIO_STREAM_CHANGE: {
                 DEBUG_NAV("%s:%d:NAV AUDIO STREAM CHANGE\n", __FILE__, __LINE__);
                 if (!currentNavAudioTrackUsrLocked) {
-                    // NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c) -- a stream number, -1 for none
                     const int id = dvdnav_get_active_audio_stream(nav);
                     if (id >= 0) {
                         // Only Dolby Digital and DTS are Dolby tracks for VDR; it
@@ -2638,7 +2637,6 @@ void cDvdPlayer::notifySeenAudioTrack(int navAudioTrack) {
         int channel_active = 0;
         if (nav != nullptr) {
             audioLanguageCode = GetAudioTrackLanguageCode(navAudioTrack);
-            // NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c) -- a stream number, -1 for none
             channel_active = dvdnav_get_active_audio_stream(nav);
         }
         // The language code has its first letter in the low byte.
@@ -2860,7 +2858,6 @@ auto cDvdPlayer::PhysicalSubpStream(int Logical) const -> int {
     if (!nav || Logical < 0) {
         return -1;
     }
-    // NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c) -- a stream number, -1 for none
     const int physical = dvdnav_get_spu_logical_stream(nav, Logical & SubpStreamMask);
     return physical >= 0 ? physical & SubpStreamMask : -1;
 }

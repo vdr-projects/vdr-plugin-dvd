@@ -1,20 +1,28 @@
 # Checks of the plugin's sources; run with `make lint`.
 
+# The plugin's headers, not VDR's: in a VDR source tree they are no system
+# headers.
 HeaderFilterRegex: '(^|/)(common-dvd|control-dvd|dvd|dvddev|dvdspu|mpegtypes|player-dvd|setup-dvd|tools-dvd)\.h$'
-SystemHeaders: false
+# Every finding fails `make lint`.
 WarningsAsErrors: '*'
+# The fixes of `clang-tidy --fix` in the style of .clang-format.
 FormatStyle: file
 
 # Off, and why:
-#   bugprone-easily-swappable-parameters -- adjacent ints (title/part, x/y) are libdvdnav's and VDR's own shape.
-#   bugprone-signed-bitwise -- the MPEG and DVD structures' bytes promote to int and are masked with int
-#     literals; a cast at every mask would bury the bit layout.
-#   cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers -- stream ids, start codes and bit
-#     layouts are their own documentation; naming every field offset would not make them clearer.
-#   cppcoreguidelines-owning-memory -- VDR's API takes ownership of raw new'd objects (menus, OSDs, items).
+#   bugprone-easily-swappable-parameters -- VDR's virtual functions take such parameters (GetIndex(),
+#     GetReplayMode(), SetupParse()), the plugin's own pass a title, a chapter and a second alike.
+#   bugprone-signed-bitwise -- the bytes and bit fields of the MPEG and DVD structures promote to int, VDR's
+#     track ids and the stream numbers are int, and the time search packs its digits into an int as VDR's
+#     replay control does; a cast at every mask would bury the bit layout.
+#   cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers -- stream ids, start codes, bit
+#     layouts and the units of the 90 kHz clock are their own documentation; naming each would not make
+#     them clearer.
+#   cppcoreguidelines-owning-memory -- VDR's API takes ownership of raw new'd objects (the control, the
+#     setup page and its items, list objects, ring buffer frames, the subpicture data).
 #   cppcoreguidelines-pro-bounds-array-to-pointer-decay, -pro-bounds-constant-array-index,
 #   -pro-bounds-pointer-arithmetic -- PES parsing and libdvdnav's C structures index raw buffers.
-#   cppcoreguidelines-pro-type-vararg -- VDR's syslog macros and cString::sprintf are printf-style.
+#   cppcoreguidelines-pro-type-vararg -- VDR formats with cString::sprintf() and logs with printf-style
+#     macros, the resume file is written with fprintf().
 #   readability-function-cognitive-complexity -- the player loop and the key handling read best whole.
 #   readability-identifier-length -- x/y/w/h, pts and loop counters are clearer short.
 #   readability-trailing-comma -- a trailing comma makes clang-format put each element of a braced list
@@ -44,9 +52,11 @@ Checks: >
   -readability-trailing-comma
 
 CheckOptions:
-  # Variables in an anonymous namespace are file-local state, not globals.
-  cppcoreguidelines-avoid-non-const-global-variables.AllowInternalLinkage: true
-  # Plain structs (all members public) are aggregates, not classes with invariants.
+  # libdvdnav's stream numbers are int8_t, -1 for none: numbers, not characters.
+  bugprone-signed-char-misuse.CharTypedefsToIgnore: 'int8_t'
+  cert-str34-c.CharTypedefsToIgnore: 'int8_t'
+  # cDVDSetup keeps the setup values in public members, as VDR's cSetup does: the menu items edit them
+  # through pointers.
   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
   # Private glibc headers behind <getopt.h>: no IWYU mapping to the public header. dvdnav.h includes
   # dvdnav/version.h only since libdvdnav 6.1.0, the plugin builds with 5.0.0, too.
