@@ -19,8 +19,8 @@ FormatStyle: file
 #     them clearer.
 #   cppcoreguidelines-owning-memory -- VDR's API takes ownership of raw new'd objects (the control, the
 #     setup page and its items, list objects, ring buffer frames, the subpicture data).
-#   cppcoreguidelines-pro-bounds-array-to-pointer-decay, -pro-bounds-constant-array-index,
-#   -pro-bounds-pointer-arithmetic -- PES parsing and libdvdnav's C structures index raw buffers.
+#   cppcoreguidelines-pro-bounds-pointer-arithmetic -- PES parsing and libdvdnav's C structures index raw
+#     buffers.
 #   cppcoreguidelines-pro-type-vararg -- VDR formats with cString::sprintf() and logs with printf-style
 #     macros, the resume file is written with fprintf().
 #   readability-function-cognitive-complexity -- the player loop and the key handling read best whole.
@@ -42,8 +42,6 @@ Checks: >
   -bugprone-signed-bitwise,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-owning-memory,
-  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-  -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-vararg,
   -readability-function-cognitive-complexity,

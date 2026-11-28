@@ -1472,6 +1472,9 @@ void cDvdPlayer::UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt) {
             const btni_t *button_ptr = nullptr;
             const int modeMask = 1 << SPUdecoder->getScaleMode();
 
+            // libdvdnav's C arrays: a group holds 36 / btngr_ns buttons, so the
+            // index stays below 36; a colour number other than 0 is 1 to 3.
+            // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
             if (current_pci->hli.hl_gi.btngr1_dsp_ty & modeMask) {
                 button_ptr = &current_pci->hli.btnit[(0 * btns_per_group) + buttonN - 1];
             }
@@ -1496,6 +1499,7 @@ void cDvdPlayer::UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt) {
                                          current_pci->hli.btn_colit.btn_coli[button_ptr->btn_coln - 1][0]);
                 libdvd_workaround = true;
             }
+            // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         if (!libdvd_workaround && dvdnav_get_highlight_area(current_pci, buttonN, 0, &hl) == DVDNAV_STATUS_OK) {
