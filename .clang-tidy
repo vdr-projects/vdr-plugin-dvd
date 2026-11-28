@@ -23,7 +23,6 @@ FormatStyle: file
 #     buffers.
 #   cppcoreguidelines-pro-type-vararg -- VDR formats with cString::sprintf() and logs with printf-style
 #     macros, the resume file is written with fprintf().
-#   readability-function-cognitive-complexity -- the player loop and the key handling read best whole.
 Checks: >
   -*,
   bugprone-*,
@@ -41,7 +40,6 @@ Checks: >
   -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-vararg,
-  -readability-function-cognitive-complexity,
   -readability-magic-numbers
 
 CheckOptions:

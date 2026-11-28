@@ -443,6 +443,7 @@ void cDvdPlayerControl::UpdateShow(bool force) {
     }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity) -- one switch over the keys per input mode, menu and replay
 auto cDvdPlayerControl::ProcessKey(eKeys Key) -> eOSState {
     DEBUG_KEY("DVD-Ctrl: ProcessKey BEGIN\n");
 

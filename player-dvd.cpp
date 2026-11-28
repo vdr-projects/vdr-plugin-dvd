@@ -341,6 +341,7 @@ auto cDvdPlayer::OsdInUse() const -> bool { return controller ? controller->OsdV
 
 auto cDvdPlayer::TakeOsd() -> bool { return controller ? controller->TakeOsd(this) : false; }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity) -- speed steps per mode and direction, like VDR's player
 void cDvdPlayer::TrickSpeed(int Increment) {
     const int nts = trickSpeed + Increment;
     cntVidBlocksPlayed = 0;
@@ -685,6 +686,7 @@ auto cDvdPlayer::LoadResume(int &title, int &chapter, int64_t &second) -> bool {
     return true;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity) -- the player loop, one switch over libdvdnav's events
 void cDvdPlayer::Action() {
     playerThreadId = cThread::ThreadId();
     event_buf.fill(0);
@@ -1457,6 +1459,7 @@ void cDvdPlayer::activateButton() {
     }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity) -- libdvdnav's three button groups
 void cDvdPlayer::UpdateButtonHighlight(const dvdnav_highlight_event_t *hlevt) {
     LOCK_THREAD;
 
@@ -1677,6 +1680,7 @@ void cDvdPlayer::SetSubtitleTrack(eTrackType Type, const tTrackId * /*TrackId*/)
     SetSubpStream(IS_SUBTITLE_TRACK(Type) ? Type - ttSubtitleFirst : -1);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity) -- a block's packets, one branch per stream type
 auto cDvdPlayer::playPacket(unsigned char *&cache_buf, bool trickMode, bool noAudio) -> int {
     int playedPacket = pktNone;
     unsigned char *sector = cache_buf;
