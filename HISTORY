@@ -2,8 +2,8 @@ VDR Plugin 'dvd' Revision History
 ---------------------------------
 
 2026-11-26 Version 1.0.0
-    - check the sources with the clang-tidy checks of vdr-plugin-vaapivideo,
-      every finding is an error (`make lint`) (thanks to Dirk Nehring)
+    - check the sources with clang-tidy (.clang-tidy), every finding is an
+      error (`make lint`) (thanks to Dirk Nehring)
     - report an unknown command line option through getopt, don't flush stdio's
       streams (thanks to Dirk Nehring)
     - debug output: don't read past an audio track's language code or the names
@@ -16,7 +16,7 @@ VDR Plugin 'dvd' Revision History
     - initialize the members where they are declared (thanks to Dirk Nehring)
     - C++ casts, constants and functions instead of macros, the modernize and
       readability fixes of clang-tidy (thanks to Dirk Nehring)
-    - format the sources like vdr-plugin-vaapivideo (`make indent`) (thanks to Dirk Nehring)
+    - format the sources in LLVM style with 120 columns (`make indent`) (thanks to Dirk Nehring)
     - include what each file uses (thanks to Dirk Nehring)
     - name the C++ sources .cpp, clang deprecates compiling .c files as C++ (thanks to Dirk Nehring)
     - check the position before a skip in fast forward (thanks to Dirk Nehring)
@@ -32,7 +32,7 @@ VDR Plugin 'dvd' Revision History
     - remove dead code: #if 0 blocks, QNX and the bitstreamout, reelbox and xine plugins,
       unused functions and members (thanks to Dirk Nehring)
     - build without warnings with `make DEV_WARNINGS=1` (-pedantic-errors -Wall -Wextra -Wconversion
-      and more, as in vaapivideo), also with every debug switch (thanks to Dirk Nehring)
+      and more), also with every debug switch (thanks to Dirk Nehring)
     - format the sources consistently (.clang-format) (thanks to Dirk Nehring)
     - remove the AC-3 decoder (liba52) and its "Gain (analog)" setup: decoding the audio is the
       output device's job (thanks to Dirk Nehring)

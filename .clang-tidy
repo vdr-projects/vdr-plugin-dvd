@@ -1,5 +1,4 @@
-# Checks of the plugin's sources, the ones of vdr-plugin-vaapivideo; run with
-# `make lint`.
+# Checks of the plugin's sources; run with `make lint`.
 
 HeaderFilterRegex: '(^|/)(common-dvd|control-dvd|dvd|dvddev|dvdspu|mpegtypes|player-dvd|setup-dvd|tools-dvd)\.h$'
 SystemHeaders: false

@@ -428,9 +428,9 @@ constexpr int DRAINTIMEOUTMS = 6000;
 
 auto cDvdPlayer::WaitDeviceDrained() -> bool {
     // Called with the thread lock held, which is released while the device
-    // plays out: that takes as long as the device buffers, with vaapivideo
-    // up to nine seconds of a clip without audio, and the control's keys
-    // must not wait for it. Returns false if one of them emptied the player
+    // plays out: that takes as long as the device buffers, with some output
+    // devices up to nine seconds of a clip without audio, and the control's
+    // keys must not wait for it. Returns false if one of them emptied the player
     // or stopped it meanwhile: what the caller held is gone.
     // A fixed limit cut such a clip short.
 #if APIVERSNUM > 30013
@@ -2787,7 +2787,7 @@ auto cDvdPlayer::ReplayFromPicture() -> bool {
     // Reads on from the VOBU on screen, as VDR's own player does for a new
     // audio track. The device holds a second and more of what was read, so
     // the new track's audio, which starts after that, was that far ahead of
-    // the picture: vaapivideo dropped as much video to catch up.
+    // the picture: the output device dropped as much video to catch up.
     replayFromPictureOnPlay = false;
     const auto stc = static_cast<int64_t>(DeviceGetSTC());
     int32_t title = 0;

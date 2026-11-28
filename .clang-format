@@ -1,5 +1,4 @@
-# Code style of the plugin, the one of vdr-plugin-vaapivideo; apply with
-# `make indent`.
+# Code style of the plugin; apply with `make indent`.
 
 ---
 Language: Cpp
